@@ -171,12 +171,12 @@ class MejaController extends Controller
         abort_unless(auth()->user()->can('master.meja.print-qr'), 403);
         $this->pastikanAksesCabang($meja);
 
-        $qrSvg   = $this->qrCodeService->generate($meja->id);
+        $qrImg   = $this->qrCodeService->generate($meja->id);
         $orderUrl = $this->qrCodeService->buildOrderUrl($meja);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('master.meja.pdf.qr-sticker', [
             'meja'     => $meja,
-            'qrSvg'    => $qrSvg,
+            'qrImg'    => $qrImg,
             'orderUrl' => $orderUrl,
         ])->setPaper([0, 0, 283.5, 425.2]); // ~10x15cm dalam point
 

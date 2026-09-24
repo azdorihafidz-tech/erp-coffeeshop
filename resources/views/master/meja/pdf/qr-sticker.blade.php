@@ -16,7 +16,7 @@
         .brand-name { font-size: 12px; font-weight: bold; letter-spacing: 1px; margin-bottom: 2px; }
         .outlet-name { font-size: 9px; color: #555; margin-bottom: 10px; }
         .qr-box { margin: 10px 0; }
-        .qr-box svg { width: 160px; height: 160px; }
+        .qr-box img { width: 160px; height: 160px; }
         .meja-label { font-size: 22px; font-weight: bold; color: #2D6A4F; margin-top: 8px; }
         .scan-text { font-size: 10px; color: #444; margin-top: 4px; }
         .footer { margin-top: 14px; font-size: 7px; color: #888; border-top: 1px solid #ddd; padding-top: 6px; }
@@ -33,7 +33,7 @@
     <div class="outlet-name">{{ $meja->cabang->nama_cabang }}</div>
 
     <div class="qr-box">
-        {!! $qrSvg !!}
+        <img src="{{ $qrImg }}" alt="QR Meja {{ $meja->nomor_meja }}">
     </div>
 
     <div class="meja-label">MEJA {{ $meja->nomor_meja }}</div>
