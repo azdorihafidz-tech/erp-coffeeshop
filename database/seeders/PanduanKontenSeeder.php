@@ -3020,73 +3020,68 @@ MARKDOWN
         Panduan::updateOrCreate(['slug' => 'program-loyalty'], [
             'judul'  => 'Program Loyalty',
             'konten' => <<<'MARKDOWN'
-## Tujuan
-Ada 2 tipe Program Loyalty: **Auto-Track** (Fase 1 — sistem otomatis hitung kumulatif kg jasa giling per pelanggan, dibandingkan ke target, mis. "500 kg → dapat hadiah") dan **Event-Based** (Fase 2 — pelanggan klaim manual dengan bukti, mis. "post di sosmed + tag akun toko → dapat voucher Rp15.000", 1x per pelanggan, di-approve Owner/Admin Pusat).
+## Tentang
 
-Kedua tipe dipilih saat **Tambah Program** lewat dropdown "Tipe Program" — field yang muncul di form otomatis menyesuaikan (Target kg + Berulang cuma utk Auto-Track; Nominal Voucher cuma utk Event-Based).
+Program Loyalty membantu Kopi Drip Sidikalang menghargai pelanggan setia. Ada **2 tipe program**, dipilih saat **Tambah Program** (field di form menyesuaikan otomatis):
 
-## FASE 1 — Auto-Track (Progress Kg Otomatis)
+- **Auto-Track** — sistem menghitung sendiri progress tiap pelanggan dari transaksi POS (total belanja Rupiah atau jumlah kunjungan), lalu mencatat saat target tercapai. Contoh: *"Belanja kumulatif Rp500.000 → gratis 1 Kopi Susu"*.
+- **Event-Based** — pelanggan mengklaim manual dengan bukti, lalu Owner/Admin Pusat menyetujui. Contoh: *"Posting di Instagram + tag @kopidrip → voucher Rp15.000"* (1x per pelanggan).
 
-### Konsep Penting
+> **Catatan:** sistem ini **bukan sistem poin** (tidak ada "1 poin per Rp10.000" atau tukar poin di layar kasir). Yang dihitung adalah progress menuju target, dan hadiah diserahkan manual lalu ditandai di sistem.
 
-- **Sumber angka progress SELALU dari `orders.berat_daging_kg`** (kolom level-order, diisi kasir di POS saat berat gilingan diketahui) — **BUKAN** dari jumlah baris item (bumbu, kemasan, dll di dalam 1 order). Kalau dijumlah dari baris item, angkanya akan salah total (bisa sampai 7x lipat lebih besar) karena ikut menghitung kg tepung, kg bumbu, bahkan jumlah pcs kemasan sebagai kg.
-- **Kalau ada order jasa giling yang belum diisi berat gilingan-nya** (kolom kosong), order itu dihitung **0 kg untuk sementara** — bukan ditebak. Muncul badge kuning "X order tanpa data" di halaman Detail Program dan Detail Pelanggan supaya kelihatan progress-nya mungkin under-estimate.
-- **Periode All-time**: kosongkan Periode Mulai/Akhir saat bikin program → dihitung dari order pertama pelanggan sampai sekarang, tidak pernah reset.
-- **Berulang**: kalau dicentang, pelanggan bisa dapat hadiah lagi tiap kelipatan target terlewati (mis. 500kg, lalu 1000kg, dst — masing-masing 1 pencapaian terpisah). Default tidak dicentang (1x per pelanggan per program).
+## Auto-Track (Progress Otomatis dari Transaksi)
 
-### Cara Kelola (Owner/Admin Pusat)
+### Cara Setup (Owner / Admin Pusat)
 
-1. Buka menu **Master Data → Program Loyalty** dari sidebar
-2. Klik **Tambah Program** — pilih Tipe Program "Auto-Track", isi Nama, Target (kg), Hadiah, dan opsional Periode/Deskripsi
-3. Program **Aktif** langsung mulai dihitung progress-nya untuk semua pelanggan yang punya order jasa giling
-4. Klik **Detail** (ikon mata) untuk lihat progress SEMUA pelanggan ke program itu, diurutkan dari yang paling dekat target
-5. Kalau ada pelanggan yang sudah **Tercapai**, klik tombol **Tandai Hadiah** setelah hadiah benar-benar diserahkan — status berubah jadi "Hadiah Diberikan" dan tidak akan muncul lagi di widget dashboard
+1. Buka **Penjualan → Program Loyalty → Tambah Program**
+2. Pilih **Tipe Program: Auto-Track** dan isi:
+   - **Nama Program** (mis. "Kopi Drip Rewards 2026")
+   - **Basis Perhitungan**: *Total Belanja (Rp)* atau *Jumlah Transaksi* — menentukan satuan Target
+   - **Tipe Order Dihitung**: pilih **Penjualan** (opsi "Jasa Giling" dan "Berat Gilingan" adalah sisa sistem lama, jangan dipakai)
+   - **Target** (mis. 500000 untuk Rp500.000, atau 10 untuk 10 kunjungan) dan **Hadiah** (mis. "Gratis 1 Kopi Susu")
+   - **Periode Mulai/Akhir** (kosongkan = dihitung sejak transaksi pertama pelanggan, tidak pernah reset)
+   - **Berulang**: centang kalau pelanggan boleh dapat hadiah lagi tiap kelipatan target
+3. Program **Aktif** langsung dihitung untuk semua pelanggan **terdaftar** (transaksi walk-in tanpa data pelanggan tidak terhitung)
 
-Sistem otomatis cek setiap hari jam 03:00 WIB (`loyalty:cek-pencapaian`) — kalau ada pelanggan yang baru melewati target, otomatis dicatat sebagai "Tercapai". Owner bisa juga langsung klik **Tandai Hadiah** kapan saja — sistem cek ulang progress saat itu juga.
+### Memantau & Memberi Hadiah
 
-## FASE 2 — Event-Based (Klaim Manual + Bukti)
+1. Klik **Detail** program untuk melihat progress semua pelanggan, urut dari yang paling dekat target
+2. Pelanggan berstatus **Tercapai** → serahkan hadiah di outlet, lalu klik **Tandai Hadiah**
+3. Sistem mengecek pencapaian otomatis tiap hari pukul 03:00 WIB; dashboard menampilkan pelanggan yang sudah ≥80% target (maks 10)
 
-### Konsep Penting
+## Event-Based (Klaim + Bukti)
 
-- **1 pelanggan cuma bisa klaim 1x per program** — kalau klaim masih Pending/Approved/Issued, klaim baru ditolak sistem. Kalau klaim sebelumnya **Rejected**, pelanggan BOLEH klaim ulang (bukan jatah habis, cuma bukti sebelumnya yang tidak diterima).
-- **Bukti klaim** boleh **Link** (URL post sosmed/website) ATAU **Upload Foto** — minimal isi salah satu.
-- **Alur status**: Pending (baru diajukan) → **Approved** (Owner/Admin Pusat setuju + isi Nominal Voucher) → **Issued** (voucher sudah benar-benar diserahkan ke pelanggan) — atau Pending → **Rejected** (ditolak, wajib isi alasan).
-- **Nominal Voucher** di form Approve default terisi dari "Nominal Voucher Default" program (kalau diisi saat bikin program), tapi bisa diubah manual per klaim.
+### Kasir — Membuat Klaim
 
-### Cara Buat Klaim (Kasir)
+1. Setelah checkout pelanggan terdaftar, klik **Buat Klaim Loyalty untuk Order Ini** di struk, atau buka menu **Klaim Event → Buat Klaim**
+2. Pilih Program & Pelanggan, lalu isi **Link Bukti** (URL posting) atau **Upload Foto** — minimal salah satu
+3. Klaim berstatus **Pending** menunggu approval
 
-1. Buka menu **Master Data → Program Loyalty → Klaim Event** dari sidebar, atau klik tombol **"Buat Klaim Loyalty untuk Order Ini"** di modal struk setelah checkout POS (kalau pelanggan terdaftar & ada program event-based aktif)
-2. Klik **Buat Klaim**, pilih Program dan Pelanggan (otomatis ter-isi kalau datang dari tombol POS)
-3. Isi Link Bukti (URL post) atau Upload Foto Bukti — minimal salah satu
-4. Submit — klaim berstatus **Pending**, menunggu approval Owner/Admin Pusat
+### Owner / Admin Pusat — Memproses
 
-### Cara Approve/Reject/Tandai Diberikan (Owner/Admin Pusat)
+- **Setujui** (isi Nominal Voucher; default dari program) → **Approved**, lalu **Tandai Diberikan** setelah voucher benar-benar diserahkan → **Issued**
+- **Tolak** (wajib isi alasan) → pelanggan boleh mengajukan ulang
 
-1. Buka menu **Klaim Event** (atau Detail Program event-based → langsung tampil daftar klaim)
-2. Klaim **Pending** — klik ikon centang hijau (✓) utk **Setujui** (isi Nominal Voucher) atau ikon silang merah (✗) utk **Tolak** (wajib isi alasan)
-3. Klaim **Approved** — klik ikon hadiah utk **Tandai Diberikan** (voucher sudah benar-benar diserahkan) setelah pelanggan menerima vouchernya
+## Peringatan
 
-## Tampilan di Tempat Lain
+- Progress tidak berlaku surut ke transaksi **sebelum** periode program dan tidak memasukkan order yang **Dibatalkan**
+- Progress dihitung **lintas semua cabang** (tidak dipisah per outlet)
+- 1 pelanggan hanya bisa klaim **1x per program** Event-Based (kecuali klaim sebelumnya ditolak)
+- Program bisa dinonaktifkan kapan saja tanpa menghapus riwayat pencapaian/klaim
+- Hak akses: lihat program `loyalty.view`; Tandai Hadiah `loyalty.manage`; Buat Klaim `loyalty.klaim.buat` (Kasir); Setujui/Tolak/Diberikan hanya Owner + Admin Pusat
 
-- **Detail Pelanggan** — kartu "Total Kg Giling" + section "Program Loyalty" (progress Auto-Track) + section terpisah "Riwayat Klaim Loyalty (Event)" (klaim Event-Based, kalau ada)
-- **Dashboard** (cabang & pusat) — widget "Pelanggan Loyalty Progress" (Auto-Track, ≥80% progress, max 10) + widget "Klaim Menunggu Approval" (Event-Based, cuma tampil utk yang punya izin approve)
-- **POS** — tombol opsional "Buat Klaim Loyalty untuk Order Ini" di modal struk setelah checkout
+## Ide Program untuk Kopi Drip
 
-## Catatan Penting
-
-- Widget & progress **tidak dipisah per cabang** — kumulatif pelanggan/klaim dihitung lintas semua cabang.
-- Hanya order dengan status **bukan Dibatalkan** yang dihitung untuk progress Auto-Track.
-- Menghapus program (lewat Data Terhapus) tidak menghapus riwayat pencapaian/klaim yang sudah tercatat — riwayat tetap tersimpan untuk audit.
-- Program Event-Based **tidak masuk** perhitungan progress kg Auto-Track sama sekali (2 jalur terpisah total) — Target (kg) & Berulang tidak berlaku utk Event-Based.
+- **"Belanja 10x gratis 1"**: Auto-Track, basis *Jumlah Transaksi*, target 10, hadiah 1 minuman favorit
+- **Pelanggan Sultan**: Auto-Track *Total Belanja* target Rp1.000.000, hadiah 1 pack Roasted Bean 250 g
+- **Konten Sosmed**: Event-Based, voucher Rp15.000 untuk posting + tag akun Kopi Drip
+- Program berjangka (mis. Ramadan / anniversary outlet): isi Periode Mulai–Akhir
 
 ## Troubleshooting
 
-- **Menu Program Loyalty tidak muncul di sidebar?** Perlu izin `loyalty.view` — minta Owner mencentang di Pengaturan → Role & Hak Akses
-- **Progress Auto-Track pelanggan terasa kurang dari yang seharusnya?** Cek badge "order tanpa data" di Detail Program/Detail Pelanggan — mungkin ada order lama yang belum diisi berat gilingan-nya, minta Owner cek & lengkapi manual lewat Edit Order
-- **Tombol "Tandai Hadiah" (Auto-Track) tidak muncul?** Perlu izin `loyalty.manage`
-- **Menu/tombol "Buat Klaim" tidak muncul?** Perlu izin `loyalty.klaim.buat` (default sudah ada di role Kasir)
-- **Tombol Setujui/Tolak/Tandai Diberikan tidak muncul di daftar klaim?** Perlu izin `loyalty.klaim.approve`/`loyalty.klaim.reject`/`loyalty.klaim.issued` (default Owner + Admin Pusat)
-- **Tombol "Buat Klaim Loyalty" di struk POS tidak muncul?** Cek 3 syarat: pelanggan harus terdaftar (bukan walk-in), user harus punya izin `loyalty.klaim.buat`, dan minimal ada 1 program Event-Based berstatus Aktif
+- **Menu Program Loyalty tidak muncul?** Perlu izin `loyalty.view` (Owner mengaturnya di Pengaturan → Role & Hak Akses)
+- **Progress pelanggan 0 padahal sering belanja?** Pastikan pelanggan dipilih (terdaftar) saat transaksi di POS, dan Tipe Order Dihitung = Penjualan
+- **Tombol "Buat Klaim Loyalty" tidak muncul di struk?** Butuh pelanggan terdaftar, izin `loyalty.klaim.buat`, dan minimal 1 program Event-Based Aktif
 MARKDOWN
             ,
             'modul'  => 'lainnya',

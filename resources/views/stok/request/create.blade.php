@@ -60,7 +60,7 @@
         <div class="form-card p-4 mb-4">
             <div class="section-title"><i class="bi bi-chat-left-text me-1"></i>Informasi Permintaan</div>
             <div class="mb-0">
-                <label class="form-label fw-semibold" style="font-size:0.85rem">Catatan (Opsional)</label>
+                <label class="form-label fw-semibold" style="font-size:0.85rem">Catatan (Opsional) <x-tooltip key="stock_request.catatan" placement="top" /></label>
                 <textarea name="catatan" rows="2"
                     class="form-control @error('catatan') is-invalid @enderror"
                     placeholder="cth: Permintaan mendesak untuk produksi minggu ini...">{{ old('catatan') }}</textarea>
@@ -73,7 +73,7 @@
         {{-- DAFTAR ITEM --}}
         <div class="form-card p-4">
             <div class="section-title d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-list-check me-1"></i>Daftar Item yang Diminta</span>
+                <span><i class="bi bi-list-check me-1"></i>Daftar Item yang Diminta <x-tooltip key="stock_request.daftar_item" placement="top" /></span>
                 <button type="button" id="btnTambahItem"
                     class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1"
                     style="font-size:0.8rem;padding:0.3rem 0.75rem">

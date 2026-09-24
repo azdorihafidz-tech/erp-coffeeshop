@@ -107,6 +107,37 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'transfer_dana.keterangan', 'title' => 'Keterangan', 'modul' => 'keuangan', 'urutan' => 4,
              'content' => 'Tujuan transfer yang jelas (mis. "Setoran penjualan 24 Sep OUT001" atau "Modal operasional bulan Oktober") agar mudah diaudit. Wajib diisi; bukti transfer diunggah di bawahnya.'],
 
+            // ===== Polish (2026-09-24): 4 menu yang tadinya di-skip (field disesuaikan form nyata) =====
+            ['key' => 'pelanggan.kode_pelanggan', 'title' => 'Kode Pelanggan', 'modul' => 'pelanggan', 'urutan' => 1,
+             'content' => 'Kode unik pelanggan (terisi otomatis). Boleh diganti selama belum dipakai pelanggan lain. Dipakai di riwayat order dan program loyalty.'],
+            ['key' => 'pelanggan.telepon', 'title' => 'Telepon / WhatsApp', 'modul' => 'pelanggan', 'urutan' => 2,
+             'content' => 'Nomor HP atau WhatsApp pelanggan. Opsional, tapi sangat berguna untuk menghubungi pelanggan (info promo, klaim loyalty) dan mengenali pelanggan yang sama saat transaksi berikutnya.'],
+            ['key' => 'pelanggan.alamat', 'title' => 'Alamat', 'modul' => 'pelanggan', 'urutan' => 3,
+             'content' => 'Opsional. Isi kalau pelanggan sering minta antar atau untuk keperluan pemasaran/pengiriman biji kopi (roasted bean).'],
+
+            ['key' => 'stock_request.catatan', 'title' => 'Catatan Permintaan', 'modul' => 'stok', 'urutan' => 1,
+             'content' => 'Opsional. Jelaskan alasan atau urgensi ke Gudang Pusat, mis. "stok susu hampir habis, tolong dikirim sebelum weekend" atau "persiapan event". Permintaan dikirim ke Gudang Pusat untuk disetujui lalu dikirim lewat Transfer Stok.'],
+            ['key' => 'stock_request.daftar_item', 'title' => 'Daftar Item yang Diminta', 'modul' => 'stok', 'urutan' => 2,
+             'content' => 'Pilih item dan jumlah yang dibutuhkan cabang Anda (mis. roasted curah, susu, cup). Gudang Pusat boleh menyetujui jumlah lebih kecil sesuai stok yang tersedia. Satuan mengikuti master barang.'],
+
+            ['key' => 'pemakaian_perlengkapan.item', 'title' => 'Item Perlengkapan', 'modul' => 'stok', 'urutan' => 1,
+             'content' => 'Pilih perlengkapan operasional yang dipakai (mis. sabun cuci, tisu, kain lap). Hanya item berjenis Perlengkapan yang muncul; bahan baku menu terpotong otomatis lewat resep, bukan lewat form ini.'],
+            ['key' => 'pemakaian_perlengkapan.cabang', 'title' => 'Cabang', 'modul' => 'stok', 'urutan' => 2,
+             'content' => 'Cabang tempat perlengkapan dipakai. Stok cabang inilah yang berkurang.'],
+            ['key' => 'pemakaian_perlengkapan.qty', 'title' => 'Qty Dipakai', 'modul' => 'stok', 'urutan' => 3,
+             'content' => 'Jumlah yang dipakai, dalam satuan item. Nilainya dicatat untuk laporan pemakaian perlengkapan.'],
+            ['key' => 'pemakaian_perlengkapan.tanggal', 'title' => 'Tanggal Pemakaian', 'modul' => 'stok', 'urutan' => 4,
+             'content' => 'Tanggal perlengkapan benar-benar dipakai (bukan tanggal input). Menentukan periode di laporan pemakaian.'],
+            ['key' => 'pemakaian_perlengkapan.keterangan', 'title' => 'Keterangan', 'modul' => 'stok', 'urutan' => 5,
+             'content' => 'Opsional. Contoh: "cleaning mendalam mesin espresso" atau "ganti stok bar". Bantu penelusuran kalau pemakaian terlihat tinggi.'],
+
+            ['key' => 'evaluasi.cabang_periode', 'title' => 'Cabang Periode Penilaian', 'modul' => 'evaluasi', 'urutan' => 10,
+             'content' => 'Cabang yang karyawannya dinilai pada periode ini. Periode ini khusus untuk cabang yang dipilih.'],
+            ['key' => 'evaluasi.tanggal_mulai', 'title' => 'Tanggal Mulai', 'modul' => 'evaluasi', 'urutan' => 11,
+             'content' => 'Awal masa kerja/performa yang dinilai (mis. 1 Juli untuk penilaian Q3). Bukan tanggal pengisian; batas pengisian ada di Deadline.'],
+            ['key' => 'evaluasi.tanggal_selesai', 'title' => 'Tanggal Selesai', 'modul' => 'evaluasi', 'urutan' => 12,
+             'content' => 'Akhir masa yang dinilai (mis. 30 September). Harus sama atau setelah Tanggal Mulai.'],
+
             [
                 'key'     => 'roastery_profile.susut_percent',
                 'title'   => 'Susut Rata-rata (%)',

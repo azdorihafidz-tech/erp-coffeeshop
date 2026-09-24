@@ -24,7 +24,7 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Cabang <span class="text-danger">*</span></label>
+                <label class="form-label">Cabang <span class="text-danger">*</span> <x-tooltip key="evaluasi.cabang_periode" placement="top" /></label>
                 <select name="cabang_id" class="form-select @error('cabang_id') is-invalid @enderror" required>
                     <option value="">-- Pilih Cabang --</option>
                     @foreach($cabangs as $c)
@@ -38,13 +38,13 @@
 
             <div class="row g-2">
                 <div class="col-6">
-                    <label class="form-label">Tanggal Mulai <span class="text-danger">*</span></label>
+                    <label class="form-label">Tanggal Mulai <span class="text-danger">*</span> <x-tooltip key="evaluasi.tanggal_mulai" placement="top" /></label>
                     <input type="date" name="tanggal_mulai" class="form-control @error('tanggal_mulai') is-invalid @enderror"
                            value="{{ old('tanggal_mulai') }}" required>
                     @error('tanggal_mulai')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-6">
-                    <label class="form-label">Tanggal Selesai <span class="text-danger">*</span></label>
+                    <label class="form-label">Tanggal Selesai <span class="text-danger">*</span> <x-tooltip key="evaluasi.tanggal_selesai" placement="top" /></label>
                     <input type="date" name="tanggal_selesai" class="form-control @error('tanggal_selesai') is-invalid @enderror"
                            value="{{ old('tanggal_selesai') }}" required>
                     @error('tanggal_selesai')<div class="invalid-feedback">{{ $message }}</div>@enderror

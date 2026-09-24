@@ -30,7 +30,7 @@
 
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <label class="form-label fw-semibold">Item <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Item <span class="text-danger">*</span> <x-tooltip key="pemakaian_perlengkapan.item" placement="top" /></label>
                             <select name="item_id" class="form-select @error('item_id') is-invalid @enderror" required>
                                 <option value="">-- Pilih Item Perlengkapan --</option>
                                 @foreach($items as $item)
@@ -43,7 +43,7 @@
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label fw-semibold">Cabang <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Cabang <span class="text-danger">*</span> <x-tooltip key="pemakaian_perlengkapan.cabang" placement="top" /></label>
                             <select name="cabang_id" class="form-select @error('cabang_id') is-invalid @enderror" required>
                                 <option value="">-- Pilih Cabang --</option>
                                 @foreach($lokasiList as $lokasi)
@@ -56,21 +56,21 @@
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label fw-semibold">Qty Dipakai <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Qty Dipakai <span class="text-danger">*</span> <x-tooltip key="pemakaian_perlengkapan.qty" placement="top" /></label>
                             <input type="number" name="qty" class="form-control @error('qty') is-invalid @enderror"
                                 min="0.001" step="0.001" value="{{ old('qty') }}" required>
                             @error('qty')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label fw-semibold">Tanggal Pemakaian <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Tanggal Pemakaian <span class="text-danger">*</span> <x-tooltip key="pemakaian_perlengkapan.tanggal" placement="top" /></label>
                             <input type="date" name="tanggal_pemakaian" class="form-control @error('tanggal_pemakaian') is-invalid @enderror"
                                 value="{{ old('tanggal_pemakaian', date('Y-m-d')) }}" required>
                             @error('tanggal_pemakaian')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Keterangan</label>
+                            <label class="form-label fw-semibold">Keterangan <x-tooltip key="pemakaian_perlengkapan.keterangan" placement="top" /></label>
                             <textarea name="keterangan" class="form-control @error('keterangan') is-invalid @enderror" rows="2"
                                 placeholder="cth: Dipakai untuk stock opname cabang Tembung">{{ old('keterangan') }}</textarea>
                             @error('keterangan')<div class="invalid-feedback">{{ $message }}</div>@enderror

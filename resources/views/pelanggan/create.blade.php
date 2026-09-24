@@ -16,7 +16,7 @@
             @csrf
             <div class="row g-3">
                 <div class="col-12 col-md-4">
-                    <label class="form-label fw-semibold">Kode Pelanggan <span class="text-danger">*</span></label>
+                    <label class="form-label fw-semibold">Kode Pelanggan <span class="text-danger">*</span> <x-tooltip key="pelanggan.kode_pelanggan" placement="top" /></label>
                     <input type="text" name="kode_pelanggan" class="form-control @error('kode_pelanggan') is-invalid @enderror"
                         value="{{ old('kode_pelanggan', $kodeHint) }}" placeholder="{{ $kodeHint }}">
                     <div class="form-text text-muted">Auto-generate: {{ $kodeHint }}</div>
@@ -31,7 +31,7 @@
                 </div>
 
                 <div class="col-12 col-md-6">
-                    <label class="form-label fw-semibold">Telepon</label>
+                    <label class="form-label fw-semibold">Telepon <x-tooltip key="pelanggan.telepon" placement="top" /></label>
                     <input type="text" name="telepon" class="form-control @error('telepon') is-invalid @enderror"
                         value="{{ old('telepon') }}" placeholder="08xx-xxxx-xxxx">
                     @error('telepon')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -52,7 +52,7 @@
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label fw-semibold">Alamat</label>
+                    <label class="form-label fw-semibold">Alamat <x-tooltip key="pelanggan.alamat" placement="top" /></label>
                     <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror"
                         rows="2" placeholder="Alamat lengkap...">{{ old('alamat') }}</textarea>
                     @error('alamat')<div class="invalid-feedback">{{ $message }}</div>@enderror

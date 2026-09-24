@@ -411,6 +411,13 @@ Inventarisasi otomatis 90 link sidebar (script membaca `layouts/app.blade.php`, 
 - **Bukan gap (info)**: ±20 permission laporan akuntansi/CoA/Loyalty/Bumbu Pusat/Transfer Antar Kas/Dashboard PO Owner-only sesuai komentar seeder. Panduan Loyalty masih membahas "jasa giling" (warisan lama, belum diadaptasi). Panduan/tooltip helper: seeder bersifat updateOrCreate — reseed menimpa edit Owner.
 - **Verifikasi 3.7**: syntax OK, reseed Permission/RolePermission/Panduan/Tooltip, 12 halaman + 7 form/index HTTP 200 tanpa error, log bersih (1 error di log berasal dari typo nama tabel di script audit sendiri, bukan aplikasi). **Belum**: verifikasi visual tooltip di browser.
 
+### 4.24 🟢 Batch Polish (2026-09-24)
+
+- **Panduan Program Loyalty** ditulis ulang untuk Kopi Drip (seeder `programLoyaltyUpdate` + DB). Isinya mengikuti fitur **nyata**: Auto-Track (target Total Belanja Rp / Jumlah Transaksi → hadiah, ditandai manual) dan Event-Based (klaim + bukti, di-approve Owner/Admin Pusat). Draf brief menyebut sistem poin (Rp10.000 = 1 poin, tukar poin di POS, expired 12 bulan) — **fitur itu tidak ada di kode**, sehingga TIDAK ditulis; panduan menyatakan eksplisit "bukan sistem poin". Bila Owner ingin sistem poin sungguhan, itu fitur baru (perlu desain).
+- **Tooltip 13 key** untuk 4 menu (Pelanggan 3, Permintaan Stok 2, Pemakaian Perlengkapan 5, Evaluasi periode 3) — field disesuaikan form nyata: Pelanggan tidak punya `tanggal_lahir`/no_hp unik, Permintaan Stok tidak punya cabang asal/tujuan/urgency (form hanya catatan + daftar item), form evaluasi 360° yang berisi penilaian tidak punya field berlabel (tooltip dipasang di form pembuatan periode). Total tooltip 154 → 167. POS & Riwayat Order tetap di-skip (keputusan Owner).
+- **Temuan**: form Pemakaian Perlengkapan hanya tampil jika ada item berjenis Perlengkapan dengan Lacak Stok — saat ini **0 item**, jadi modul belum bisa dipakai sampai item perlengkapan dibuat di Master Barang.
+- Backlog kemasan disimpan di 12.11.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -747,7 +754,18 @@ Design lengkap: `FASE_E_QR_TABLE_ORDERING.md`. Estimasi total ~2 minggu.
 - [x] Inventarisasi seluruh menu authenticated existing — ✅ 90 link sidebar (2026-09-24)
 - [x] Cek tiap menu: tombol Cara Pakai, konten panduan di DB, tooltip form — ✅
 - [x] Fix gap: 19 permission, 13 panduan, 23 tooltip (6 menu), 12 tombol panduan — ✅ lihat 4.23
-- [ ] Sisa (keputusan Owner): tooltip untuk Pelanggan, Permintaan Stok, Penilaian 360°, Pemakaian Perlengkapan, POS, Riwayat Order (sengaja di-skip); adaptasi panduan Program Loyalty dari "jasa giling" ke Kopi Drip; verifikasi visual di browser
+- [x] Tooltip Pelanggan, Permintaan Stok, Penilaian 360° (periode), Pemakaian Perlengkapan + adaptasi panduan Program Loyalty ke Kopi Drip — ✅ 2026-09-24 (lihat 4.24). POS & Riwayat Order sengaja tanpa tooltip
+- [ ] Sisa: verifikasi visual di browser; buat item Perlengkapan agar modul Pemakaian Perlengkapan bisa dipakai
+
+### 12.11 Backlog Kemasan (Es Batu, Sedotan, Tas Takeaway)
+
+Belum masuk resep karena belum ada menu Iced. **Trigger**: aktif saat Owner menambah menu Iced ke master — tambahkan es batu + sedotan ke resep menu Iced tersebut (es batu = BHN-009, sedotan = KMS-004, tas = KMS-005).
+
+Rekomendasi takaran (belum disetujui, perlu validasi Owner):
+
+- **Es Batu**: Ice Coffee (Americano Ice, Latte Ice, dll) 80–100 g; Es Teh 100–120 g; Iced Chocolate/Matcha 80–100 g; minuman panas 0 g.
+- **Sedotan**: minuman es 1 pcs; minuman panas & manual brew 0; Frappe/Blend 1 pcs (sedotan besar).
+- **Tas Takeaway**: dine-in 0; takeaway 1–2 gelas 1 tas kecil; 3–6 gelas 1 tas sedang; >6 gelas 1 tas besar. **Catatan**: tas tidak per-item — lebih akurat dicatat manual saat opname bulanan.
 
 ---
 
