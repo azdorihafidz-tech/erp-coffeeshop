@@ -76,6 +76,14 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'processing-batch.yield_percent', 'title' => 'Yield', 'modul' => 'roastery', 'urutan' => 8,
              'content' => 'Persentase green bean final terhadap berat cherry awal (green ÷ cherry × 100%). Cherry kehilangan berat besar selama proses (kulit, daging buah, air, parchment) — yield normal cherry→green umumnya sekitar 15-20% (berbeda dari yield roasting green→roasted yang ~80-85%, karena cherry basah jauh lebih berat dari biji keringnya).'],
 
+            // ===== Roastery V2 Minggu 4-5 (2026-09-29): Upgrade Roasting + Grinding =====
+            ['key' => 'roastery_batch.green_bean_source', 'title' => 'Sumber Green Bean', 'modul' => 'roastery', 'urutan' => 9,
+             'content' => 'In-House: green bean hasil Processing Batch sendiri (cherry petani → green). Beli Langsung: green bean dibeli langsung dari supplier lewat Purchase Order, tanpa lewat processing sendiri. Stok Sedia/Manual: sisa stok lama atau input manual tanpa link sumber. Cost roasting tetap dihitung otomatis dari FIFO stok green bean-nya, tidak dipengaruhi pilihan sumber ini — field ini murni untuk pelacakan asal.'],
+            ['key' => 'grinding.grind_size', 'title' => 'Grind Size', 'modul' => 'roastery', 'urutan' => 10,
+             'content' => 'Tingkat kehalusan gilingan biji, dari kasar ke halus: Extra Coarse (cold brew), Coarse (French Press), Medium (drip/manual brew, paling umum), Fine (espresso), Extra Fine (Turkish/tubruk halus). Menentukan item ground mana yang stoknya bertambah.'],
+            ['key' => 'grinding.cost_per_kg', 'title' => 'Cost per kg Ground', 'modul' => 'roastery', 'urutan' => 11,
+             'content' => 'Diwariskan dari cost roasted whole bean yang digiling (FIFO), ditambah proporsional kehilangan berat waste giling. Tidak diinput manual.'],
+
             // ===== Audit retroaktif 3.8 (2026-09-24): 6 menu form kompleks =====
             ['key' => 'supplier.kode_supplier', 'title' => 'Kode Supplier', 'modul' => 'pembelian', 'urutan' => 1,
              'content' => 'Kode singkat unik untuk supplier (mis. SUP-001). Muncul di Purchase Order dan laporan pembelian, jadi buat yang mudah dikenali dan tidak diubah-ubah.'],

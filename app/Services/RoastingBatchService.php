@@ -17,15 +17,33 @@ class RoastingBatchService
 {
     public function __construct(private StokService $stokService) {}
 
+    /**
+     * BUG DITEMUKAN saat integrasi Roastery V2 Minggu 4-5 (2026-09-29):
+     * batch roasting V1 dibuat di GP001, sementara buah/cherry processing V2
+     * (CherryPurchase, ProcessingBatch) semuanya di RST001 (cabang tipe
+     * "roastery" khusus, dibuat Minggu 1-2) — 2 lokasi berbeda, sehingga
+     * green bean hasil in-house processing tidak pernah "ketemu" alur
+     * roasting tanpa transfer manual. FIX: batch BARU dibuat di RST001
+     * (unit roastery yang benar sesuai desain V2 — RST001 = "alat & tempat
+     * siap", Q7). Data historis roasting_batches di GP001 TIDAK diubah
+     * (kolom cabang_id tersimpan per baris, riwayat tetap valid).
+     */
     public static function roasteryCabangId(): int
     {
-        return (int) Cabang::where('kode_cabang', 'GP001')->value('id');
+        return (int) Cabang::where('kode_cabang', 'RST001')->value('id');
     }
 
+    /**
+     * $data['green_bean_source'] = 'in_house' | 'bought' | 'seed' (default 'seed'
+     * — batch lama/manual tanpa link sumber, sama seperti perilaku V1).
+     * 'in_house' -> isi 'processing_batch_id' (harus berstatus selesai).
+     * 'bought'   -> isi 'pembelian_id' (opsional, cuma label/link, tidak divalidasi status).
+     */
     public function createBatch(array $data, int $userId): RoastingBatch
     {
         $green  = (float) $data['green_qty_kg'];
         $roast  = (float) $data['roasted_qty_kg'];
+        $source = $data['green_bean_source'] ?? 'seed';
 
         if ($green <= 0) {
             throw new \Exception('Berat green bean harus lebih dari 0.');
@@ -34,7 +52,17 @@ class RoastingBatchService
             throw new \Exception('Berat roasted tidak boleh negatif atau melebihi berat green bean.');
         }
 
-        return DB::transaction(function () use ($data, $userId, $green, $roast) {
+        if ($source === 'in_house' && ! empty($data['processing_batch_id'])) {
+            $pb = \App\Models\ProcessingBatch::find($data['processing_batch_id']);
+            if (! $pb || $pb->status !== 'selesai') {
+                throw new \Exception('Processing batch yang dipilih belum berstatus selesai.');
+            }
+            if ($pb->green_bean_item_id != $data['green_bean_item_id']) {
+                throw new \Exception('Item green bean tidak cocok dengan hasil processing batch yang dipilih.');
+            }
+        }
+
+        return DB::transaction(function () use ($data, $userId, $green, $roast, $source) {
             return RoastingBatch::create([
                 'nomor_batch'           => $this->nomorBatchBerikutnya(),
                 'tanggal'               => $data['tanggal'],
@@ -42,6 +70,9 @@ class RoastingBatchService
                 'user_id'               => $userId,
                 'profile_id'            => $data['profile_id'],
                 'green_bean_item_id'    => $data['green_bean_item_id'],
+                'green_bean_source'     => $source,
+                'processing_batch_id'   => $source === 'in_house' ? ($data['processing_batch_id'] ?? null) : null,
+                'pembelian_id'          => $source === 'bought' ? ($data['pembelian_id'] ?? null) : null,
                 'green_qty_kg'          => $green,
                 'roasted_curah_item_id' => $data['roasted_curah_item_id'],
                 'roasted_qty_kg'        => $roast,

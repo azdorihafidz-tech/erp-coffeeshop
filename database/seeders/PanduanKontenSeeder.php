@@ -69,6 +69,39 @@ class PanduanKontenSeeder extends Seeder
         $this->beliCherryUpdate();
         // Roastery V2 Minggu 3-4 (2026-09-28)
         $this->processingBatchUpdate();
+        // Roastery V2 Minggu 4-5 (2026-09-29)
+        $this->grindingBatchUpdate();
+    }
+
+    private function grindingBatchUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'grinding-batch'], [
+            'judul'  => 'Grinding Batch',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+
+Menggiling roasted bean (whole bean) jadi bubuk (ground) sesuai tingkat kehalusan (grind size) yang dibutuhkan — untuk dijual sebagai kopi bubuk siap seduh.
+
+## Cara Pakai
+
+1. **Roastery → Grinding Batch → Batch Baru**
+2. Pilih roasted bean (whole) dan qty (kg), pilih grind size
+3. **Simpan Draft** → buka detail → isi **Qty Hasil Giling** aktual → klik **Selesaikan**
+4. Stok roasted whole bean berkurang, stok item ground bertambah otomatis di RST001; cost per kg ground diwariskan dari cost roasted bean + waste giling
+
+## Grind Size yang Tersedia
+
+Saat ini baru **Medium**, **Fine**, dan **Extra Fine** yang punya item ground siap pakai (Extra Coarse & Coarse belum tersedia — perlu ditambah item ground-nya dulu kalau dibutuhkan).
+
+## Peringatan
+
+- Batch **draft** belum menggerakkan stok
+- Qty hasil giling tidak boleh melebihi qty roasted bean masuk — selisih otomatis dicatat sebagai waste
+MARKDOWN,
+            'modul'  => 'roastery',
+            'urutan' => 8,
+            'aktif'  => true,
+        ]);
     }
 
     private function processingBatchUpdate(): void
@@ -3936,21 +3969,28 @@ MARKDOWN,
                 'konten' => <<<'MARKDOWN'
 ## Tentang
 
-Mencatat satu sesi roasting di Gudang Pusat: green bean masuk → roasted bean curah keluar. Stok, yield, waste, dan cost per kg dihitung otomatis.
+Mencatat satu sesi roasting di Gudang Roastery (RST001): green bean masuk → roasted bean curah keluar. Stok, yield, waste, dan cost per kg dihitung otomatis.
+
+## Sumber Green Bean (3 pilihan)
+
+- **In-House**: green bean hasil Processing Batch sendiri (cherry petani → green, lihat panduan Processing Batch) — pilih processing batch mana yang dipakai
+- **Beli Langsung**: green bean dibeli langsung dari supplier lewat Purchase Order (tanpa processing sendiri)
+- **Stok Sedia / Manual**: sisa stok lama atau input tanpa link sumber tertentu
+
+Sumber ini murni untuk **pelacakan asal**, tidak memengaruhi perhitungan cost — cost roasting tetap dihitung otomatis dari harga FIFO stok green bean yang benar-benar dipakai.
 
 ## Cara Pakai
 
 1. **Roastery → Batch Roasting → Batch Baru**
-2. Pilih green bean, berat (kg), profile, dan item hasil (roasted curah)
+2. Pilih sumber green bean, lalu green bean, berat (kg), profile, dan item hasil (roasted curah)
 3. Isi **berat roasted aktual** setelah roasting selesai (bisa beda dari estimasi profile)
 4. **Simpan Draft** → buka detail → klik **Selesaikan**: stok green berkurang, stok roasted curah bertambah
-5. Di detail batch yang sudah selesai, gunakan **Pengemasan** untuk memecah curah jadi RTB pack (250 g / 500 g / 1 kg)
+5. Di detail batch yang sudah selesai, gunakan **Pengemasan** untuk memecah curah jadi RTB pack (250 g / 500 g / 1 kg), atau **Grinding** untuk digiling jadi produk ground
 6. Kirim ke outlet lewat menu **Transfer Stok** biasa
 
 ## Peringatan
 
 - Batch **draft** belum menggerakkan stok; batch **selesai** tidak bisa dibatalkan
-- Cost per kg = harga green bean saja (biaya gas/listrik/tenaga belum dihitung)
 - Berat roasted tidak boleh melebihi berat green
 MARKDOWN,
             ],

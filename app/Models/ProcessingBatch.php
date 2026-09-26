@@ -41,4 +41,5 @@ class ProcessingBatch extends Model
     public function user()       { return $this->belongsTo(User::class); }
     public function cherryItem() { return $this->belongsTo(Item::class, 'cherry_item_id'); }
     public function greenBean()  { return $this->belongsTo(Item::class, 'green_bean_item_id'); }
+    public function roastingBatches() { return $this->hasMany(RoastingBatch::class, 'processing_batch_id'); }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+use App\Models\ProcessingBatch;
+use App\Models\PurchaseOrder;
 use App\Models\RoastingBatch;
 use App\Models\RoastingProfile;
 use App\Services\RoastingBatchService;
@@ -36,10 +38,13 @@ class RoastingBatchController extends Controller
         $gp = RoastingBatchService::roasteryCabangId();
 
         return view('roastery.batch.create', [
-            'profiles'    => RoastingProfile::aktif()->orderBy('avg_susut_percent')->get(),
-            'greenItems'  => $this->greenItems(),
-            'curahItems'  => $this->curahItems(),
-            'stokGreen'   => $this->greenItems()->mapWithKeys(fn ($i) => [$i->id => $i->stokDiLokasi($gp)]),
+            'profiles'          => RoastingProfile::aktif()->orderBy('avg_susut_percent')->get(),
+            'greenItems'        => $this->greenItems(),
+            'curahItems'        => $this->curahItems(),
+            'stokGreen'         => $this->greenItems()->mapWithKeys(fn ($i) => [$i->id => $i->stokDiLokasi($gp)]),
+            'processingBatches' => ProcessingBatch::with('greenBean')->where('status', 'selesai')
+                ->whereDoesntHave('roastingBatches')->orderByDesc('id')->get(),
+            'purchaseOrders'    => PurchaseOrder::where('cabang_id', $gp)->orderByDesc('id')->limit(30)->get(),
         ]);
     }
 
@@ -50,6 +55,9 @@ class RoastingBatchController extends Controller
         $data = $request->validate([
             'tanggal'               => ['required', 'date'],
             'profile_id'            => ['required', Rule::exists('roasting_profiles', 'id')->where('is_active', true)],
+            'green_bean_source'     => ['required', Rule::in(['in_house', 'bought', 'seed'])],
+            'processing_batch_id'   => ['nullable', 'required_if:green_bean_source,in_house', 'exists:processing_batches,id'],
+            'pembelian_id'          => ['nullable', 'exists:purchase_orders,id'],
             'green_bean_item_id'    => ['required', Rule::in($this->greenItems()->pluck('id')->all())],
             'green_qty_kg'          => ['required', 'numeric', 'gt:0', 'max:9999'],
             'roasted_curah_item_id' => ['required', Rule::in($this->curahItems()->pluck('id')->all())],

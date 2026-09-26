@@ -16,6 +16,40 @@
             <label class="form-label small fw-semibold">Tanggal *</label>
             <input type="date" name="tanggal" class="form-control @error('tanggal') is-invalid @enderror" value="{{ old('tanggal', now()->toDateString()) }}" required>
         </div>
+        <div class="col-12">
+            <label class="form-label small fw-semibold">Sumber Green Bean * <x-tooltip key="roastery_batch.green_bean_source" /></label>
+            <div class="d-flex flex-wrap gap-3">
+                @foreach(['in_house' => 'In-House (dari Processing Batch)', 'bought' => 'Beli Langsung (Green Bean dari Supplier)', 'seed' => 'Stok Sedia / Manual'] as $v => $l)
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="green_bean_source" id="src-{{ $v }}" value="{{ $v }}" @checked(old('green_bean_source', 'seed') === $v)>
+                    <label class="form-check-label" for="src-{{ $v }}">{{ $l }}</label>
+                </div>
+                @endforeach
+            </div>
+            @error('green_bean_source')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+        </div>
+        <div class="col-12 col-md-6" id="wrapProcessingBatch" style="display:none">
+            <label class="form-label small fw-semibold">Processing Batch (in-house) *</label>
+            <select name="processing_batch_id" class="form-select @error('processing_batch_id') is-invalid @enderror">
+                <option value="">-- Pilih Processing Batch Selesai --</option>
+                @foreach($processingBatches as $pb)
+                <option value="{{ $pb->id }}" data-green-item="{{ $pb->green_bean_item_id }}" @selected(old('processing_batch_id') == $pb->id)>
+                    {{ $pb->kode_batch }} — {{ $pb->greenBean->nama_item }} ({{ number_format($pb->sortir_qty_kg, 3, ',', '.') }} kg tersedia)
+                </option>
+                @endforeach
+            </select>
+            @error('processing_batch_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            @if($processingBatches->isEmpty())<div class="form-text text-warning">Belum ada Processing Batch selesai yang belum dipakai.</div>@endif
+        </div>
+        <div class="col-12 col-md-6" id="wrapPembelian" style="display:none">
+            <label class="form-label small fw-semibold">Purchase Order Green Bean (opsional, cuma catatan link)</label>
+            <select name="pembelian_id" class="form-select">
+                <option value="">-- Tidak dikaitkan --</option>
+                @foreach($purchaseOrders as $po)
+                <option value="{{ $po->id }}" @selected(old('pembelian_id') == $po->id)>{{ $po->nomor_po }}</option>
+                @endforeach
+            </select>
+        </div>
         <div class="col-12 col-md-4">
             <label class="form-label small fw-semibold">Profile Roasting *</label>
             <select name="profile_id" id="profileId" class="form-select @error('profile_id') is-invalid @enderror" required>
@@ -74,6 +108,15 @@
         roasted = document.getElementById('roastedQty'), greenItem = document.getElementById('greenItem'),
         est = document.getElementById('estimasiText'), out = document.getElementById('ringkasanLive');
     var HARGA = @json($greenItems->mapWithKeys(fn ($g) => [$g->id => (float) $g->harga_beli_terakhir]));
+
+    var wrapPB = document.getElementById('wrapProcessingBatch'), wrapPO = document.getElementById('wrapPembelian');
+    function toggleSource() {
+        var v = document.querySelector('input[name="green_bean_source"]:checked').value;
+        wrapPB.style.display = v === 'in_house' ? '' : 'none';
+        wrapPO.style.display = v === 'bought' ? '' : 'none';
+    }
+    document.querySelectorAll('input[name="green_bean_source"]').forEach(function (el) { el.addEventListener('change', toggleSource); });
+    toggleSource();
 
     function hitung() {
         var g = parseFloat(green.value) || 0, r = parseFloat(roasted.value) || 0;

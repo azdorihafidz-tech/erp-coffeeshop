@@ -668,7 +668,7 @@
         @endcanany
 
         <!-- ROASTERY -->
-        @canany(['roastery.dashboard.view', 'roastery.profile.view', 'roastery.batch.view', 'petani.view', 'beli-cherry.view', 'processing-batch.view'])
+        @canany(['roastery.dashboard.view', 'roastery.profile.view', 'roastery.batch.view', 'petani.view', 'beli-cherry.view', 'processing-batch.view', 'grinding-batch.view'])
         <div class="nav-section-title">Roastery</div>
         @can('roastery.dashboard.view')
         <a href="{{ route('roastery.dashboard') }}"
@@ -710,6 +710,13 @@
            class="nav-link {{ request()->routeIs('processing-batch.*') ? 'active' : '' }}">
             <i class="bi bi-droplet-half"></i>
             <span>Processing Batch</span>
+        </a>
+        @endcan
+        @can('grinding-batch.view')
+        <a href="{{ route('grinding-batch.index') }}"
+           class="nav-link {{ request()->routeIs('grinding-batch.*') ? 'active' : '' }}">
+            <i class="bi bi-gear-wide-connected"></i>
+            <span>Grinding Batch</span>
         </a>
         @endcan
         @endcanany

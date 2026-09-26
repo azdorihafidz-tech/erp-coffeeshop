@@ -188,6 +188,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'processing-batch.selesaikan',  'display_name' => 'Selesaikan Sortir (Stok Masuk)',  'group' => 'roastery'],
             ['name' => 'processing-batch.batalkan',    'display_name' => 'Batalkan Processing Batch',       'group' => 'roastery'],
 
+            // Roastery V2 — Grinding Batch (Minggu 4-5, 2026-09-29)
+            ['name' => 'grinding-batch.view',       'display_name' => 'Lihat Grinding Batch',      'group' => 'roastery'],
+            ['name' => 'grinding-batch.create',     'display_name' => 'Buat Grinding Batch',       'group' => 'roastery'],
+            ['name' => 'grinding-batch.selesaikan', 'display_name' => 'Selesaikan Grinding Batch', 'group' => 'roastery'],
+            ['name' => 'grinding-batch.batalkan',   'display_name' => 'Batalkan Grinding Batch',   'group' => 'roastery'],
+
             // Audit retroaktif 3.8 (2026-09-24) — permission yang dipakai di sidebar/controller
             // sejak warisan Dimsum tapi TIDAK pernah dibuat (RolePermissionSeeder melewatinya diam-diam,
             // jadi hanya Owner via Gate::before yang bisa akses). Mapping default sudah ada di

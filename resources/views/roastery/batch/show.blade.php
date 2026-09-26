@@ -21,6 +21,15 @@
                 <tr><th>Diinput oleh</th><td>{{ $batch->user->name }}</td></tr>
                 <tr><th>Profile</th><td>{{ $batch->profile->nama }} (susut ~{{ (float) $batch->profile->avg_susut_percent }}%)</td></tr>
                 <tr><th>Green bean</th><td>{{ $batch->greenBean->nama_item }} — {{ number_format($batch->green_qty_kg, 3, ',', '.') }} kg</td></tr>
+                <tr><th>Sumber Green Bean</th><td>
+                    @if($batch->green_bean_source === 'in_house')
+                        In-House @if($batch->processingBatch) — <a href="{{ route('processing-batch.show', $batch->processingBatch) }}">{{ $batch->processingBatch->kode_batch }}</a> @endif
+                    @elseif($batch->green_bean_source === 'bought')
+                        Beli Langsung @if($batch->pembelian) — {{ $batch->pembelian->nomor_po }} @endif
+                    @else
+                        Stok Sedia / Manual
+                    @endif
+                </td></tr>
                 <tr><th>Hasil (curah)</th><td>{{ $batch->roastedCurah->nama_item }} — {{ number_format($batch->roasted_qty_kg, 3, ',', '.') }} kg</td></tr>
                 <tr><th>Susut / waste <x-tooltip key="roastery_batch.waste" /></th><td>{{ number_format($batch->waste_qty_kg, 3, ',', '.') }} kg</td></tr>
                 <tr><th>Yield <x-tooltip key="roastery_batch.yield_rate" /></th><td>{{ number_format($batch->yield_rate_percent, 2, ',', '.') }}%</td></tr>

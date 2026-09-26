@@ -8,7 +8,8 @@ class RoastingBatch extends Model
 {
     protected $fillable = [
         'nomor_batch', 'tanggal', 'cabang_id', 'user_id', 'profile_id',
-        'green_bean_item_id', 'green_qty_kg', 'roasted_curah_item_id', 'roasted_qty_kg',
+        'green_bean_item_id', 'green_bean_source', 'processing_batch_id', 'pembelian_id',
+        'green_qty_kg', 'roasted_curah_item_id', 'roasted_qty_kg',
         'waste_qty_kg', 'yield_rate_percent', 'cost_awal', 'cost_per_kg_roasted',
         'catatan', 'status', 'completed_at',
     ];
@@ -33,6 +34,8 @@ class RoastingBatch extends Model
     public function greenBean()   { return $this->belongsTo(Item::class, 'green_bean_item_id'); }
     public function roastedCurah(){ return $this->belongsTo(Item::class, 'roasted_curah_item_id'); }
     public function packs()       { return $this->hasMany(RoastingBatchPack::class, 'batch_id'); }
+    public function processingBatch() { return $this->belongsTo(ProcessingBatch::class, 'processing_batch_id'); }
+    public function pembelian()       { return $this->belongsTo(PurchaseOrder::class, 'pembelian_id'); }
 
     /** Kg roasted curah yang belum dikemas (hanya berarti untuk batch completed). */
     public function getSisaCurahKgAttribute(): float
