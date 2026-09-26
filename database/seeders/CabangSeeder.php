@@ -104,5 +104,22 @@ class CabangSeeder extends Seeder
         foreach ($outletBaru as $data) {
             Cabang::updateOrCreate(['kode_cabang' => $data['kode_cabang']], $data);
         }
+
+        // Roastery V2 Minggu 1-2 (2026-09-26) — unit bisnis roastery terpisah
+        // dari GP001 (yang tetap "gudang_pusat" murni distribusi). RST001 =
+        // lokasi processing/roasting fisik di rumah Owner, akan jadi kanal
+        // jual sendiri (retail walk-in + wholesale) di Modul C nanti.
+        Cabang::updateOrCreate(['kode_cabang' => 'RST001'], [
+            'nama_cabang'        => 'Gudang Roastery Kopi Drip',
+            'kode_cabang'        => 'RST001',
+            'alamat'             => 'TBD (rumah Owner)',
+            'telepon'            => null,
+            'tipe'               => 'roastery',
+            'is_active'          => true,
+            'latitude'           => null,
+            'longitude'          => null,
+            'radius_absen_meter' => 150,
+            'jam_masuk'          => '07:00',
+        ]);
     }
 }

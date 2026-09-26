@@ -108,6 +108,19 @@
         </div>
     </div>
     @endif
+    @if(($stats['roastery'] ?? 0) > 0)
+    <div class="col-6 col-md-3">
+        <div class="stat-mini d-flex align-items-center gap-3">
+            <div style="width:40px;height:40px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <i class="bi bi-fire text-success" style="font-size:1.1rem"></i>
+            </div>
+            <div>
+                <div class="fw-bold fs-5 lh-1">{{ $stats['roastery'] }}</div>
+                <div class="text-muted" style="font-size:0.75rem">Roastery</div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
 {{-- FILTER & SEARCH --}}
@@ -327,6 +340,7 @@
                     $cardBg = match($tipeCard) {
                         \App\Enums\TipeCabang::GudangPusat => ['bg'=>'#fef3c7','color'=>'#92400e','icon'=>'building'],
                         \App\Enums\TipeCabang::HeadOffice  => ['bg'=>'#e0f2fe','color'=>'#0369a1','icon'=>'building-fill-gear'],
+                        \App\Enums\TipeCabang::Roastery    => ['bg'=>'#dcfce7','color'=>'#166534','icon'=>'fire'],
                         default                            => ['bg'=>'#dbeafe','color'=>'#1e40af','icon'=>'shop'],
                     };
                 @endphp

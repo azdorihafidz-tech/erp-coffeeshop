@@ -668,7 +668,7 @@
         @endcanany
 
         <!-- ROASTERY -->
-        @canany(['roastery.dashboard.view', 'roastery.profile.view', 'roastery.batch.view'])
+        @canany(['roastery.dashboard.view', 'roastery.profile.view', 'roastery.batch.view', 'petani.view'])
         <div class="nav-section-title">Roastery</div>
         @can('roastery.dashboard.view')
         <a href="{{ route('roastery.dashboard') }}"
@@ -689,6 +689,13 @@
            class="nav-link {{ request()->routeIs('roastery.profile.*') ? 'active' : '' }}">
             <i class="bi bi-fire"></i>
             <span>Roasting Profile</span>
+        </a>
+        @endcan
+        @can('petani.view')
+        <a href="{{ route('petani.index') }}"
+           class="nav-link {{ request()->routeIs('petani.*') ? 'active' : '' }}">
+            <i class="bi bi-person-workspace"></i>
+            <span>Master Petani</span>
         </a>
         @endcan
         @endcanany

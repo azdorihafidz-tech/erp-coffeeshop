@@ -7,6 +7,7 @@ enum TipeCabang: string
     case Cabang     = 'cabang';
     case GudangPusat = 'gudang_pusat';
     case HeadOffice = 'head_office';
+    case Roastery   = 'roastery';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum TipeCabang: string
             self::Cabang      => 'Cabang',
             self::GudangPusat => 'Gudang Pusat',
             self::HeadOffice  => 'Head Office',
+            self::Roastery    => 'Roastery',
         };
     }
 
@@ -23,6 +25,7 @@ enum TipeCabang: string
             self::Cabang      => '🏢',
             self::GudangPusat => '📦',
             self::HeadOffice  => '🏛️',
+            self::Roastery    => '🔥',
         };
     }
 
@@ -32,6 +35,7 @@ enum TipeCabang: string
             self::Cabang      => 'bg-primary',
             self::GudangPusat => 'bg-warning text-dark',
             self::HeadOffice  => 'bg-info text-dark',
+            self::Roastery    => 'bg-success',
         };
     }
 

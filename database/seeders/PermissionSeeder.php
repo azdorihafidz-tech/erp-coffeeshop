@@ -167,6 +167,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'roastery.batch.cancel',   'display_name' => 'Batalkan Batch Roasting',     'group' => 'roastery'],
             ['name' => 'roastery.batch.pack',     'display_name' => 'Pengemasan Roasted Bean',     'group' => 'roastery'],
 
+            // Roastery V2 — Master Petani (Minggu 1-2, 2026-09-26)
+            ['name' => 'petani.view',   'display_name' => 'Lihat Master Petani',   'group' => 'roastery'],
+            ['name' => 'petani.create', 'display_name' => 'Tambah Master Petani',  'group' => 'roastery'],
+            ['name' => 'petani.edit',   'display_name' => 'Edit Master Petani',    'group' => 'roastery'],
+            ['name' => 'petani.delete', 'display_name' => 'Hapus Master Petani',   'group' => 'roastery'],
+
             // Audit retroaktif 3.8 (2026-09-24) — permission yang dipakai di sidebar/controller
             // sejak warisan Dimsum tapi TIDAK pernah dibuat (RolePermissionSeeder melewatinya diam-diam,
             // jadi hanya Owner via Gate::before yang bisa akses). Mapping default sudah ada di

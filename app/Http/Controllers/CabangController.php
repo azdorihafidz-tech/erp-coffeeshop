@@ -66,6 +66,7 @@ class CabangController extends Controller
             'cabang'       => Cabang::where('tipe', TipeCabang::Cabang)->count(),
             'gudang_pusat' => Cabang::where('tipe', TipeCabang::GudangPusat)->count(),
             'head_office'  => Cabang::where('tipe', TipeCabang::HeadOffice)->count(),
+            'roastery'     => Cabang::where('tipe', TipeCabang::Roastery)->count(),
         ];
 
         return view('cabang.index', compact('cabangs', 'stats'));

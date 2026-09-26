@@ -85,6 +85,8 @@ class RolePermissionSeeder extends Seeder
             // Roastery (2026-09-24, Q2 Owner) — Owner (bypass) + Admin Gudang
             'roastery.dashboard.view', 'roastery.profile.view', 'roastery.profile.create', 'roastery.profile.edit', 'roastery.profile.delete',
             'roastery.batch.view', 'roastery.batch.create', 'roastery.batch.complete', 'roastery.batch.cancel', 'roastery.batch.pack',
+            // Roastery V2 — Master Petani (Minggu 1-2, 2026-09-26)
+            'petani.view', 'petani.create', 'petani.edit', 'petani.delete',
             'karyawan.view',
             'stok.view', 'stok.adjustment', 'stok.transfer',
             'item.view', 'item.create', 'item.edit',

@@ -301,6 +301,11 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
             ->name('supplier.toggle-aktif');
     });
 
+    // ===== ROASTERY V2 — MASTER PETANI (Minggu 1-2, 2026-09-26; owner + admin_gudang) =====
+    Route::resource('petani', \App\Http\Controllers\PetaniController::class);
+    Route::patch('/petani/{petani}/toggle-aktif', [\App\Http\Controllers\PetaniController::class, 'toggleAktif'])
+        ->name('petani.toggle-aktif');
+
     // ===== PEMBELIAN / PURCHASE ORDER (permission-based per aksi) =====
     Route::prefix('pembelian')->name('pembelian.')->group(function () {
         Route::get('/', [PurchaseOrderController::class, 'index'])

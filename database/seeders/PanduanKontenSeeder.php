@@ -63,6 +63,40 @@ class PanduanKontenSeeder extends Seeder
         $this->roasteryUpdate();
         // Audit retroaktif 3.8 (2026-09-24)
         $this->auditRetroaktifUpdate();
+        // Roastery V2 Minggu 1-2 (2026-09-26)
+        $this->petaniUpdate();
+    }
+
+    private function petaniUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'petani'], [
+            'judul'  => 'Master Petani',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+
+Daftar petani/kebun pemasok **buah kopi cherry** untuk roastery Kopi Drip Sidikalang (Fase Roastery V2 — processing sendiri dari buah petani, lihat `FASE_ROASTERY_V2_DESIGN.md`). Data ini jadi dasar pencatatan pembelian buah dan pelacakan asal biji (petani → kebun → metode olah) sampai ke produk jadi.
+
+## Cara Menambah
+
+1. **Roastery → Master Petani → Tambah Petani**
+2. Isi **Kode Petani** (unik, auto-terisi contoh `PTN-001`) dan **Nama Petani** — wajib
+3. Opsional: Telepon, Nama Kebun, Alamat, Koordinat GPS (untuk pemetaan lokasi kebun), Catatan
+
+## Cara Edit / Nonaktifkan
+
+- Klik ikon pensil untuk edit data
+- Toggle status **Aktif/Non-Aktif** — petani nonaktif tidak muncul di pilihan saat mencatat pembelian buah (modul Beli Buah Kopi, menyusul)
+- Hapus hanya untuk data yang salah input dan belum ada transaksi terkait
+
+## Peringatan
+
+- Modul **Beli Buah Kopi** dan pelacakan riwayat pembelian per petani belum dibangun (jadwal Minggu 2-3) — halaman detail petani baru menampilkan data master, riwayat transaksi menyusul
+- Koordinat GPS opsional, isi kalau ingin memetakan lokasi kebun di kemudian hari
+MARKDOWN,
+            'modul'  => 'roastery',
+            'urutan' => 5,
+            'aktif'  => true,
+        ]);
     }
 
     // =========================================================================

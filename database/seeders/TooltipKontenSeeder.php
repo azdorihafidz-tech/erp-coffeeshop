@@ -54,6 +54,12 @@ class TooltipKontenSeeder extends Seeder
                 'modul'   => 'item',
                 'urutan'  => 6,
             ],
+            // ===== Roastery V2 Minggu 1-2 (2026-09-26): Master Petani =====
+            ['key' => 'petani.nama_kebun', 'title' => 'Nama Kebun', 'modul' => 'roastery', 'urutan' => 1,
+             'content' => 'Nama atau lokasi kebun asal buah kopi (mis. "Kebun Sidikalang Atas"). Membantu melacak asal biji sampai ke produk jadi, penting untuk produk specialty seperti Wine/Honey.'],
+            ['key' => 'petani.koordinat', 'title' => 'Koordinat GPS', 'modul' => 'roastery', 'urutan' => 2,
+             'content' => 'Opsional. Lokasi kebun dalam format desimal (Latitude, Longitude), mis. -6.1754, 106.8272. Bisa diambil dari Google Maps (klik kanan lokasi → salin koordinat). Berguna untuk pemetaan sumber kopi di masa depan.'],
+
             // ===== Audit retroaktif 3.8 (2026-09-24): 6 menu form kompleks =====
             ['key' => 'supplier.kode_supplier', 'title' => 'Kode Supplier', 'modul' => 'pembelian', 'urutan' => 1,
              'content' => 'Kode singkat unik untuk supplier (mis. SUP-001). Muncul di Purchase Order dan laporan pembelian, jadi buat yang mudah dikenali dan tidak diubah-ubah.'],
