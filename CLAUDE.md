@@ -4,8 +4,8 @@
 > Isinya: keputusan bisnis, aturan teknis, riwayat pengerjaan, dan filosofi kerja.
 
 **Versi**: 1.0
-**Update terakhir**: 2026-09-26
-**Status**: 🚧 **DALAM PENGEMBANGAN** — Fase A, B, D, Audit 2, E1–E7 (QR Table Ordering), Roastery V1 (R1-R5 + distribusi + resep), Audit Retroaktif 3.8, Git repo + push GitHub SELESAI. Roastery V2 (Farm-to-Cup) design selesai, Minggu 1-2 (Cabang Roastery + Master Petani) selesai — Minggu 2-8 MENYUSUL. Lihat section 4 untuk riwayat lengkap.
+**Update terakhir**: 2026-09-27
+**Status**: 🚧 **DALAM PENGEMBANGAN** — Fase A, B, D, Audit 2, E1–E7 (QR Table Ordering), Roastery V1 (R1-R5 + distribusi + resep), Audit Retroaktif 3.8, Git repo + push GitHub SELESAI. Roastery V2 (Farm-to-Cup): design + Minggu 1-2 (Cabang Roastery + Master Petani) + Minggu 2-3 (Beli Buah Kopi) selesai — Minggu 3-8 MENYUSUL. Lihat section 4 untuk riwayat lengkap.
 
 ---
 
@@ -441,6 +441,22 @@ Sesuai `FASE_ROASTERY_V2_DESIGN.md` section 8 (Minggu 1-2):
 
 **Belum termasuk** (jadwal minggu lain sesuai design doc): Beli Buah Kopi (Minggu 2-3), form Processing fermentasi/drying/hulling (Minggu 3-4), upgrade batch roasting + Grinding (Minggu 4-5), 10 SKU master produk (Minggu 5-6), POS Roastery multi-kanal (Minggu 6-7).
 
+### 4.27 🟢 Roastery V2 Minggu 2-3 Selesai — Beli Buah Kopi dari Petani (2026-09-27)
+
+Modul A tahap pertama: transaksi beli buah kopi cherry dari petani, **flow terpisah** dari Purchase Order Supplier (bukan header+items — 1 baris = 1 transaksi = 1 jenis buah, sesuai spesifikasi field yang diminta).
+
+- Tabel `cherry_purchases` (kode BC-YYYYMM-XXXX, petani_id, cabang_id fix RST001, cherry_item_id, jenis_buah enum arabika/robusta, qty_kg, harga_per_kg, qty_terima_kg nullable, kualitas_grade A/B/C, status draft/disetujui/diterima/dibatalkan, audit disetujui_by/diterima_by).
+- Kategori item baru **BHK** (Buah Kopi Cherry) + 2 item (`BHK-ARABIKA-SDK`, `BHK-ROBUSTA-SDK`, tipe bahan_baku, satuan kg, stok awal 0 di RST001) via `ItemCherrySeeder`.
+- `CherryPurchaseService` (createDraft → setujui → terima → batalkan) — **reuse `StokService::masuk()`** existing untuk stok masuk RST001 saat status "diterima" (FIFO + movements, CLAUDE.md 3.3), 0 logic stok baru. `qty_terima_kg` sengaja terpisah dari `qty_kg` (bisa beda karena susut cherry basah di jalan) — angka yang menambah stok adalah qty terima, bukan qty pesan.
+- `BeliCherryController` (7 route custom di `/roastery/beli-cherry`, bukan `Route::resource` — pola `edit` diganti aksi `setujui`/`terima`/`batalkan` sesuai alur status, bukan form edit bebas).
+- Test E2E manual (Tinker, cleanup setelah): draft → setujui → terima 9,5 kg → stok RST001 Arabika bertambah tepat 9,5 kg → cleanup kembali ke 0. Tidak ada design decision ambigu yang perlu ditanyakan (field flat di spesifikasi sudah menyiratkan 1 transaksi = 1 jenis buah).
+
+Aturan 3.8 lengkap: menu sidebar "Beli Buah Kopi" (grup Roastery), 5 permission `beli-cherry.*` (Owner bypass + Admin Gudang), panduan slug `beli-cherry`, 3 tooltip (`jenis_buah`, `kualitas_grade`, `qty_terima_kg`), 2 transaksi contoh (draft) via `CherryPurchaseSeeder`.
+
+**Verifikasi 3.7**: syntax check 16 file OK, migrate 1/1 DONE, seed Item/CherryPurchase/Permission/Role/Panduan/Tooltip semua sukses, route 7/7 terdaftar, HTTP smoke test index & create 200 (menu "Beli Buah Kopi" tampil), error log bersih. Commit `03d96dc`, push ke `origin/main` sukses.
+
+**Belum termasuk** (jadwal minggu lain): form Processing fermentasi/drying/hulling/sortir jadi green bean (Minggu 3-4).
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -748,7 +764,7 @@ database/
 ### 12.5b Fase Roastery V2 — Farm-to-Cup (design selesai 2026-09-26, lihat `FASE_ROASTERY_V2_DESIGN.md`)
 - [x] Design doc V2 (10 section, 8 keputusan Owner) — ✅ 2026-09-26
 - [x] **Minggu 1-2**: Cabang Roastery (`RST001`, `TipeCabang::Roastery`) + Master Petani (CRUD, 3 petani contoh) — ✅ 2026-09-26 (lihat 4.26)
-- [ ] **Minggu 2-3**: Modul A — Beli Buah Kopi (mirip PO, ke Petani)
+- [x] **Minggu 2-3**: Modul A — Beli Buah Kopi (flow terpisah dari PO) — ✅ 2026-09-27 (lihat 4.27)
 - [ ] **Minggu 3-4**: Modul A — Wet mill/Fermentasi/Drying/Hulling/Sortir
 - [ ] **Minggu 4-5**: Modul B — upgrade Batch Roasting (3 jalur green) + Grinding
 - [ ] **Minggu 5-6**: Modul B — Packing whole/ground + Cost tracking end-to-end + 10 SKU inti
