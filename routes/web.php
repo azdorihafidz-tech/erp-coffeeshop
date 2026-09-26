@@ -306,6 +306,17 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
     Route::patch('/petani/{petani}/toggle-aktif', [\App\Http\Controllers\PetaniController::class, 'toggleAktif'])
         ->name('petani.toggle-aktif');
 
+    // ===== ROASTERY V2 — BELI BUAH KOPI / CHERRY (Minggu 2-3, 2026-09-27; owner + admin_gudang) =====
+    Route::prefix('roastery/beli-cherry')->name('beli-cherry.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\BeliCherryController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\BeliCherryController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\BeliCherryController::class, 'store'])->name('store');
+        Route::get('/{beliCherry}', [\App\Http\Controllers\BeliCherryController::class, 'show'])->name('show');
+        Route::post('/{beliCherry}/setujui', [\App\Http\Controllers\BeliCherryController::class, 'setujui'])->name('setujui');
+        Route::post('/{beliCherry}/terima', [\App\Http\Controllers\BeliCherryController::class, 'terima'])->name('terima');
+        Route::post('/{beliCherry}/batalkan', [\App\Http\Controllers\BeliCherryController::class, 'batalkan'])->name('batalkan');
+    });
+
     // ===== PEMBELIAN / PURCHASE ORDER (permission-based per aksi) =====
     Route::prefix('pembelian')->name('pembelian.')->group(function () {
         Route::get('/', [PurchaseOrderController::class, 'index'])

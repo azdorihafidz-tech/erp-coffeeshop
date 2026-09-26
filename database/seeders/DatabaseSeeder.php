@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             ItemRoastedCurahSeeder::class,   // Roastery R2 — 6 item roasted curah (kg), stok 0 di GP001
             RoastingProfileSeeder::class,    // Roastery R1 — 3 profile default
             PetaniSeeder::class,             // Roastery V2 Minggu 1-2 — 3 petani contoh
+            ItemCherrySeeder::class,         // Roastery V2 Minggu 2-3 — kategori BHK + 2 item cherry
+            CherryPurchaseSeeder::class,      // Roastery V2 Minggu 2-3 — 2 contoh transaksi beli cherry
             ResepBumbuSeeder::class,        // Seed 3 resep bumbu starting point (idempotent, butuh ItemSeeder & JenisOlahanSeeder)
             ResepBumbuKopiSeeder::class,     // Roastery R4 — takaran biji menu kopi (idempotent, tidak menimpa)
             ResepBumbuNonKopiSeeder::class,  // Isu #3 — resep 4 menu non-kopi (idempotent, hanya menambah)

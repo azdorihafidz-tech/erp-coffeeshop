@@ -65,6 +65,40 @@ class PanduanKontenSeeder extends Seeder
         $this->auditRetroaktifUpdate();
         // Roastery V2 Minggu 1-2 (2026-09-26)
         $this->petaniUpdate();
+        // Roastery V2 Minggu 2-3 (2026-09-27)
+        $this->beliCherryUpdate();
+    }
+
+    private function beliCherryUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'beli-cherry'], [
+            'judul'  => 'Beli Buah Kopi',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+
+Mencatat pembelian **buah kopi cherry** (basah, belum diproses) dari petani — langkah pertama Roastery V2 Farm-to-Cup sebelum buah diproses jadi green bean. Flow ini **terpisah** dari Purchase Order Supplier biasa (menu Pembelian) karena beli ke petani, bukan ke supplier, dan itemnya cherry basah (kg), bukan barang katalog.
+
+## Alur: Draft → Disetujui → Diterima
+
+1. **Roastery → Beli Buah Kopi → Buat Transaksi**: pilih Petani, jenis buah (Arabika/Robusta), qty (kg), harga/kg, grade kualitas (opsional) — tersimpan sebagai **Draft**
+2. Klik **Setujui** — transaksi jadi **Disetujui**, siap ditimbang ulang saat buah tiba
+3. Saat buah fisik tiba di Gudang Roastery (RST001), klik **Terima** dan isi **Qty Terima (kg)** — stok cherry di RST001 bertambah otomatis sebesar qty terima
+4. **Batalkan** hanya bisa untuk transaksi Draft/Disetujui (belum ada stok masuk)
+
+## Kenapa Qty Terima Bisa Beda dari Qty Pesan?
+
+Buah kopi basah bisa susut berat selama perjalanan dari kebun ke roastery (penguapan air), atau ada sortir awal di titik pengiriman. Qty Terima adalah **angka aktual yang benar-benar masuk stok** — dipakai untuk hitung stok cherry dan biaya per kg sebenarnya, bukan qty yang dipesan di awal.
+
+## Peringatan
+
+- Lokasi tujuan selalu **RST001 (Gudang Roastery)**, tidak bisa diubah
+- Setelah status **Diterima**, transaksi tidak bisa dibatalkan (stok sudah bergerak) — kalau salah input, sesuaikan lewat Penyesuaian Stok
+- Buah cherry ini nantinya diproses (Modul A — Wet Mill/Fermentasi/Drying/Hulling, jadwal Minggu 3-4) menjadi green bean, sebelum masuk tahap roasting (Modul B)
+MARKDOWN,
+            'modul'  => 'roastery',
+            'urutan' => 6,
+            'aktif'  => true,
+        ]);
     }
 
     private function petaniUpdate(): void

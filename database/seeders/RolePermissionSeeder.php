@@ -87,6 +87,8 @@ class RolePermissionSeeder extends Seeder
             'roastery.batch.view', 'roastery.batch.create', 'roastery.batch.complete', 'roastery.batch.cancel', 'roastery.batch.pack',
             // Roastery V2 — Master Petani (Minggu 1-2, 2026-09-26)
             'petani.view', 'petani.create', 'petani.edit', 'petani.delete',
+            // Roastery V2 — Beli Buah Kopi (Minggu 2-3, 2026-09-27)
+            'beli-cherry.view', 'beli-cherry.create', 'beli-cherry.edit', 'beli-cherry.terima', 'beli-cherry.batalkan',
             'karyawan.view',
             'stok.view', 'stok.adjustment', 'stok.transfer',
             'item.view', 'item.create', 'item.edit',

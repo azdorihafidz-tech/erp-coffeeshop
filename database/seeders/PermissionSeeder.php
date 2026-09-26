@@ -173,6 +173,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'petani.edit',   'display_name' => 'Edit Master Petani',    'group' => 'roastery'],
             ['name' => 'petani.delete', 'display_name' => 'Hapus Master Petani',   'group' => 'roastery'],
 
+            // Roastery V2 — Beli Buah Kopi / Cherry (Minggu 2-3, 2026-09-27)
+            ['name' => 'beli-cherry.view',     'display_name' => 'Lihat Beli Buah Kopi',        'group' => 'roastery'],
+            ['name' => 'beli-cherry.create',   'display_name' => 'Buat Transaksi Beli Buah Kopi', 'group' => 'roastery'],
+            ['name' => 'beli-cherry.edit',     'display_name' => 'Setujui Beli Buah Kopi',      'group' => 'roastery'],
+            ['name' => 'beli-cherry.terima',   'display_name' => 'Terima Buah Kopi (Stok Masuk)', 'group' => 'roastery'],
+            ['name' => 'beli-cherry.batalkan', 'display_name' => 'Batalkan Beli Buah Kopi',     'group' => 'roastery'],
+
             // Audit retroaktif 3.8 (2026-09-24) — permission yang dipakai di sidebar/controller
             // sejak warisan Dimsum tapi TIDAK pernah dibuat (RolePermissionSeeder melewatinya diam-diam,
             // jadi hanya Owner via Gate::before yang bisa akses). Mapping default sudah ada di

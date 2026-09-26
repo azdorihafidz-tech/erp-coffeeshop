@@ -60,6 +60,14 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'petani.koordinat', 'title' => 'Koordinat GPS', 'modul' => 'roastery', 'urutan' => 2,
              'content' => 'Opsional. Lokasi kebun dalam format desimal (Latitude, Longitude), mis. -6.1754, 106.8272. Bisa diambil dari Google Maps (klik kanan lokasi → salin koordinat). Berguna untuk pemetaan sumber kopi di masa depan.'],
 
+            // ===== Roastery V2 Minggu 2-3 (2026-09-27): Beli Buah Kopi =====
+            ['key' => 'beli-cherry.jenis_buah', 'title' => 'Jenis Buah', 'modul' => 'roastery', 'urutan' => 3,
+             'content' => 'Varietas buah kopi yang dibeli — Arabika atau Robusta. Menentukan item cherry mana yang stoknya bertambah saat diterima.'],
+            ['key' => 'beli-cherry.kualitas_grade', 'title' => 'Grade Kualitas', 'modul' => 'roastery', 'urutan' => 4,
+             'content' => 'Opsional. Penilaian kualitas petik dari petani/penyortir lapangan — A (petik merah penuh, terbaik), B (campuran matang-agak muda), C (kualitas standar/campuran). Belum memengaruhi harga otomatis, hanya catatan.'],
+            ['key' => 'beli-cherry.qty_terima_kg', 'title' => 'Qty Terima (kg)', 'modul' => 'roastery', 'urutan' => 5,
+             'content' => 'Berat cherry yang benar-benar diterima & ditimbang ulang saat tiba di roastery — bisa lebih kecil dari qty saat dipesan karena susut air selama perjalanan atau sortir awal. Angka inilah yang menambah stok, bukan qty pesanan.'],
+
             // ===== Audit retroaktif 3.8 (2026-09-24): 6 menu form kompleks =====
             ['key' => 'supplier.kode_supplier', 'title' => 'Kode Supplier', 'modul' => 'pembelian', 'urutan' => 1,
              'content' => 'Kode singkat unik untuk supplier (mis. SUP-001). Muncul di Purchase Order dan laporan pembelian, jadi buat yang mudah dikenali dan tidak diubah-ubah.'],
