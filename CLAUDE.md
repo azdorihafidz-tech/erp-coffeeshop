@@ -4,8 +4,8 @@
 > Isinya: keputusan bisnis, aturan teknis, riwayat pengerjaan, dan filosofi kerja.
 
 **Versi**: 1.0
-**Update terakhir**: 2026-09-24
-**Status**: 🚧 **DALAM PENGEMBANGAN** — Fase A, B, D, Audit 2, E1–E6 (QR Table Ordering: Master Meja, Public Menu, Kasir Approve Queue+Layout Meja, Bill Unification, Kitchen Display, Timer+Notifikasi+Estimasi) SELESAI. Fase C (dokumentasi, file ini) sedang berjalan. E7 (testing interaktif browser) MENUNGGU instruksi Owner. Audit sinkronisasi stok & Audit Retroaktif 3.8 MENYUSUL. Lihat section 4 untuk riwayat lengkap.
+**Update terakhir**: 2026-09-26
+**Status**: 🚧 **DALAM PENGEMBANGAN** — Fase A, B, D, Audit 2, E1–E7 (QR Table Ordering), Roastery V1 (R1-R5 + distribusi + resep), Audit Retroaktif 3.8, Git repo + push GitHub SELESAI. Roastery V2 (Farm-to-Cup) design selesai, Minggu 1-2 (Cabang Roastery + Master Petani) selesai — Minggu 2-8 MENYUSUL. Lihat section 4 untuk riwayat lengkap.
 
 ---
 
@@ -418,12 +418,38 @@ Inventarisasi otomatis 90 link sidebar (script membaca `layouts/app.blade.php`, 
 - **Temuan**: form Pemakaian Perlengkapan hanya tampil jika ada item berjenis Perlengkapan dengan Lacak Stok — saat ini **0 item**, jadi modul belum bisa dipakai sampai item perlengkapan dibuat di Master Barang.
 - Backlog kemasan disimpan di 12.11.
 
+### 4.25 🟢 Git Repo + Bug Fix QR PDF v2 (2026-09-24/25)
+
+**Git**: project di-init sebagai repo git baru (riwayat 20 commit Dimsum dibuang, mulai bersih), remote `origin` → `https://github.com/azdorihafidz-tech/erp-coffeeshop.git` (private), `vendor/` sengaja tetap ikut ter-track (cPanel deploy tanpa SSH/Composer). Commit awal `cc2460e`.
+
+**Bug QR PDF (persist walau sudah "difix" di E1/4.10)**: root cause sebenarnya — dompdf **tidak merender tag `<svg>` inline**, cuma `<img>`. Fix E1 (strip XML declaration) tidak menyentuh akar masalah. Fix v2: `QrCodeService` generate PNG lewat GD (dari matriks `bacon/bacon-qr-code`) jadi data URI, sticker pakai `<img src="data:image/png;base64,...">`. Tidak butuh ekstensi `imagick`. Commit `ebee367`.
+
+**Owner Demo Manual**: scan struktur UI real (menu sidebar/tombol/field/URL persis dari kode) untuk 10 langkah demo, diposting langsung di chat (bukan file) — Owner yang menulis panduannya sendiri.
+
+**Roastery V2 design**: `FASE_ROASTERY_V2_DESIGN.md` dibuat (belum coding) — upgrade dari V1 (cuma batch roasting) jadi full farm-to-cup: Modul A (processing buah petani → green bean), Modul B (upgrade roasting + grinding + packing), Modul C (POS Roastery multi-kanal: retail/wholesale/internal outlet via transaksi POS, bukan transfer gratis). 8 keputusan Owner, 10 SKU inti, rencana 6-8 minggu. Commit `16b7a06`.
+
+### 4.26 🟢 Roastery V2 Minggu 1-2 Selesai (2026-09-26)
+
+Sesuai `FASE_ROASTERY_V2_DESIGN.md` section 8 (Minggu 1-2):
+
+- **`TipeCabang` enum** — case baru `Roastery` (`'roastery'`) + migration `MODIFY COLUMN` enum `cabangs.tipe` (pola sama seperti migration `head_office` sebelumnya, idempotent). Icon 🔥, badge hijau.
+- **Cabang baru `RST001` "Gudang Roastery Kopi Drip"** (tipe `roastery`, alamat "TBD (rumah Owner)") via `CabangSeeder` — **terpisah** dari GP001 (yang tetap `gudang_pusat` murni distribusi); RST001 akan jadi unit bisnis jual sendiri di Modul C nanti.
+- **Master Petani**: tabel `petani` (kode unik, nama, telepon, alamat, nama_kebun, koordinat lat/lng, catatan, is_active, soft delete), model `Petani` (pola sama `Supplier` — global, tidak diikat cabang), `PetaniController` CRUD lengkap + toggle aktif, 5 view, `PetaniSeeder` (3 petani contoh: Pak Budi/Sidikalang, Pak Ali/Merek, Pak Chandra/Kabanjahe). Aturan 3.8 lengkap: menu sidebar "Master Petani" (grup Roastery), 4 permission `petani.*` (Owner bypass + Admin Gudang), panduan slug `petani`, 2 tooltip (`petani.nama_kebun`, `petani.koordinat`).
+- Tidak ada design decision ambigu yang butuh konfirmasi Owner (pola Petani mengikuti Supplier existing, cukup jelas).
+
+**Verifikasi 3.7**: syntax check 21 file OK, migrate 2/2 DONE, seed Cabang/Petani/Permission/Role/Panduan/Tooltip semua sukses, route `petani.*` 8/8 terdaftar, HTTP smoke test `/petani`, `/petani/create`, `/cabang` semua 200 dengan konten benar (menu "Master Petani" tampil, badge "Roastery" tampil di daftar cabang), error log bersih. Commit `0fe9af3`, push ke `origin/main` sukses.
+
+**Belum termasuk** (jadwal minggu lain sesuai design doc): Beli Buah Kopi (Minggu 2-3), form Processing fermentasi/drying/hulling (Minggu 3-4), upgrade batch roasting + Grinding (Minggu 4-5), 10 SKU master produk (Minggu 5-6), POS Roastery multi-kanal (Minggu 6-7).
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
 
-### 5.0 Fase Roastery (R1–R5 selesai 2026-09-24, lihat 4.20; R6 = biaya operasional)
+### 5.0 Fase Roastery V1 (R1–R5 selesai 2026-09-24, lihat 4.20; R6 = biaya operasional)
 Batch roasting di GP001: green bean → roasted curah (yield, waste, cost/kg via FIFO existing) → pengemasan ke RTB → distribusi via Stock Transfer → potong stok via resep. 3 tabel baru (`roasting_profiles`, `roasting_batches`, `roasting_packagings`), 5 sub-fase R1–R5 (~6–7 hari). Detail: `FASE_ROASTERY_DESIGN.md`.
+
+### 5.0b Fase Roastery V2 — Farm-to-Cup (Minggu 1-2 selesai 2026-09-26, lihat 4.26)
+Upgrade V1 jadi rantai penuh: buah petani → processing (Modul A) → roasting+grinding+packing (Modul B, extend V1) → POS Roastery multi-kanal retail/wholesale/internal (Modul C). Minggu 1-2 selesai: cabang `RST001` (tipe `roastery` baru) + Master Petani. Sisa Minggu 2-8 menyusul. Detail: `FASE_ROASTERY_V2_DESIGN.md`.
 
 ### 5.1 Modul yang PERLU DIBANGUN/DIADAPTASI 🔴
 
@@ -718,6 +744,17 @@ database/
 - [x] Resep susu/gula/sirup/kemasan menu kopi, manual brew & non-kopi — ✅ selesai 2026-09-24 (lihat 4.22)
 - [ ] Uji klik UI batch di browser; takaran es batu/sedotan/tas takeaway belum ada
 - [ ] Perlu diskusi dengan Owner: berapa shrinkage rate tipikal, siapa yang input batch (Admin Gudang/Roastery), bagaimana alur stok Green Bean → Roasted Bean tercatat
+
+### 12.5b Fase Roastery V2 — Farm-to-Cup (design selesai 2026-09-26, lihat `FASE_ROASTERY_V2_DESIGN.md`)
+- [x] Design doc V2 (10 section, 8 keputusan Owner) — ✅ 2026-09-26
+- [x] **Minggu 1-2**: Cabang Roastery (`RST001`, `TipeCabang::Roastery`) + Master Petani (CRUD, 3 petani contoh) — ✅ 2026-09-26 (lihat 4.26)
+- [ ] **Minggu 2-3**: Modul A — Beli Buah Kopi (mirip PO, ke Petani)
+- [ ] **Minggu 3-4**: Modul A — Wet mill/Fermentasi/Drying/Hulling/Sortir
+- [ ] **Minggu 4-5**: Modul B — upgrade Batch Roasting (3 jalur green) + Grinding
+- [ ] **Minggu 5-6**: Modul B — Packing whole/ground + Cost tracking end-to-end + 10 SKU inti
+- [ ] **Minggu 6-7**: Modul C — POS Roastery multi-kanal (retail/wholesale/internal outlet)
+- [ ] **Minggu 7-8**: Testing E2E + Laporan Roastery + Polish
+- [ ] 4 pertanyaan terbuka (design doc section 10): detail fermentasi Wine, tracking defect sortir, timing grinding (on-demand vs batch), field wajib Master Petani
 
 ### 12.6 Adaptasi Varian Menu Kopi (belum dikerjakan)
 - [ ] Isi `ItemAttribute`/`ItemAttributeValue`/`ItemVariant` untuk "Kopi Sidikalang" (KPI-008, sudah `punya_varian=true`) dan menu kopi lain yang perlu varian
