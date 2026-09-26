@@ -68,6 +68,14 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'beli-cherry.qty_terima_kg', 'title' => 'Qty Terima (kg)', 'modul' => 'roastery', 'urutan' => 5,
              'content' => 'Berat cherry yang benar-benar diterima & ditimbang ulang saat tiba di roastery — bisa lebih kecil dari qty saat dipesan karena susut air selama perjalanan atau sortir awal. Angka inilah yang menambah stok, bukan qty pesanan.'],
 
+            // ===== Roastery V2 Minggu 3-4 (2026-09-28): Processing Batch =====
+            ['key' => 'processing-batch.processing_method', 'title' => 'Processing Method', 'modul' => 'roastery', 'urutan' => 6,
+             'content' => 'Washed: kulit & daging buah dikupas sebelum fermentasi singkat, rasa bersih. Natural: buah utuh dikeringkan dengan daging buah masih menempel, rasa manis/kompleks. Honey: sebagian daging buah (mucilage) disisakan saat drying. Wine/Anaerobic: fermentasi tertutup tanpa oksigen sebelum drying, proses specialty. Honey & Wine lewat tahap Fermentasi dulu; Washed & Natural langsung ke Drying.'],
+            ['key' => 'processing-batch.fermentasi_suhu', 'title' => 'Suhu Fermentasi', 'modul' => 'roastery', 'urutan' => 7,
+             'content' => 'Rekomendasi umum 18-25°C untuk fermentasi terkontrol (Honey/Wine). Suhu terlalu tinggi berisiko over-fermented (rasa asam/busuk), terlalu rendah memperlambat proses. Sesuaikan dengan kondisi lapangan Anda.'],
+            ['key' => 'processing-batch.yield_percent', 'title' => 'Yield', 'modul' => 'roastery', 'urutan' => 8,
+             'content' => 'Persentase green bean final terhadap berat cherry awal (green ÷ cherry × 100%). Cherry kehilangan berat besar selama proses (kulit, daging buah, air, parchment) — yield normal cherry→green umumnya sekitar 15-20% (berbeda dari yield roasting green→roasted yang ~80-85%, karena cherry basah jauh lebih berat dari biji keringnya).'],
+
             // ===== Audit retroaktif 3.8 (2026-09-24): 6 menu form kompleks =====
             ['key' => 'supplier.kode_supplier', 'title' => 'Kode Supplier', 'modul' => 'pembelian', 'urutan' => 1,
              'content' => 'Kode singkat unik untuk supplier (mis. SUP-001). Muncul di Purchase Order dan laporan pembelian, jadi buat yang mudah dikenali dan tidak diubah-ubah.'],

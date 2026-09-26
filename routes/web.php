@@ -317,6 +317,20 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
         Route::post('/{beliCherry}/batalkan', [\App\Http\Controllers\BeliCherryController::class, 'batalkan'])->name('batalkan');
     });
 
+    // ===== ROASTERY V2 — PROCESSING BATCH (Minggu 3-4, 2026-09-28; owner + admin_gudang) =====
+    Route::prefix('roastery/processing-batch')->name('processing-batch.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ProcessingBatchController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\ProcessingBatchController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\ProcessingBatchController::class, 'store'])->name('store');
+        Route::get('/{processingBatch}', [\App\Http\Controllers\ProcessingBatchController::class, 'show'])->name('show');
+        Route::post('/{processingBatch}/mulai', [\App\Http\Controllers\ProcessingBatchController::class, 'mulai'])->name('mulai');
+        Route::post('/{processingBatch}/selesai-fermentasi', [\App\Http\Controllers\ProcessingBatchController::class, 'selesaiFermentasi'])->name('selesai-fermentasi');
+        Route::post('/{processingBatch}/selesai-drying', [\App\Http\Controllers\ProcessingBatchController::class, 'selesaiDrying'])->name('selesai-drying');
+        Route::post('/{processingBatch}/selesai-hulling', [\App\Http\Controllers\ProcessingBatchController::class, 'selesaiHulling'])->name('selesai-hulling');
+        Route::post('/{processingBatch}/selesai-sortir', [\App\Http\Controllers\ProcessingBatchController::class, 'selesaiSortir'])->name('selesai-sortir');
+        Route::post('/{processingBatch}/batalkan', [\App\Http\Controllers\ProcessingBatchController::class, 'batalkan'])->name('batalkan');
+    });
+
     // ===== PEMBELIAN / PURCHASE ORDER (permission-based per aksi) =====
     Route::prefix('pembelian')->name('pembelian.')->group(function () {
         Route::get('/', [PurchaseOrderController::class, 'index'])

@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             PetaniSeeder::class,             // Roastery V2 Minggu 1-2 — 3 petani contoh
             ItemCherrySeeder::class,         // Roastery V2 Minggu 2-3 — kategori BHK + 2 item cherry
             CherryPurchaseSeeder::class,      // Roastery V2 Minggu 2-3 — 2 contoh transaksi beli cherry
+            ItemGreenBeanSeeder::class,      // Roastery V2 Minggu 3-4 — 4 item Green Bean Arabika
+            ProcessingBatchSeeder::class,     // Roastery V2 Minggu 3-4 — 1 contoh batch selesai
             ResepBumbuSeeder::class,        // Seed 3 resep bumbu starting point (idempotent, butuh ItemSeeder & JenisOlahanSeeder)
             ResepBumbuKopiSeeder::class,     // Roastery R4 — takaran biji menu kopi (idempotent, tidak menimpa)
             ResepBumbuNonKopiSeeder::class,  // Isu #3 — resep 4 menu non-kopi (idempotent, hanya menambah)

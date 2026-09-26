@@ -89,6 +89,9 @@ class RolePermissionSeeder extends Seeder
             'petani.view', 'petani.create', 'petani.edit', 'petani.delete',
             // Roastery V2 — Beli Buah Kopi (Minggu 2-3, 2026-09-27)
             'beli-cherry.view', 'beli-cherry.create', 'beli-cherry.edit', 'beli-cherry.terima', 'beli-cherry.batalkan',
+            // Roastery V2 — Processing Batch (Minggu 3-4, 2026-09-28)
+            'processing-batch.view', 'processing-batch.create', 'processing-batch.mulai',
+            'processing-batch.update-step', 'processing-batch.selesaikan', 'processing-batch.batalkan',
             'karyawan.view',
             'stok.view', 'stok.adjustment', 'stok.transfer',
             'item.view', 'item.create', 'item.edit',
@@ -218,6 +221,8 @@ class RolePermissionSeeder extends Seeder
             'cuti.view',
             'scan_absensi',
             'antrian.lihat',
+            // Roastery V2 — helper (mis. tenaga processing) boleh lihat progres batch
+            'processing-batch.view',
         ],
     ];
 

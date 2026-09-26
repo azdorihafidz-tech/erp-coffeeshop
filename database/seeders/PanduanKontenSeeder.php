@@ -67,6 +67,53 @@ class PanduanKontenSeeder extends Seeder
         $this->petaniUpdate();
         // Roastery V2 Minggu 2-3 (2026-09-27)
         $this->beliCherryUpdate();
+        // Roastery V2 Minggu 3-4 (2026-09-28)
+        $this->processingBatchUpdate();
+    }
+
+    private function processingBatchUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'processing-batch'], [
+            'judul'  => 'Processing Batch',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+
+Mengolah buah kopi cherry (hasil Beli Buah Kopi) jadi **green bean** siap roasting — tahap kedua Roastery V2 Farm-to-Cup. Setiap batch melacak 1 sumber cherry dari awal sampai jadi green bean, termasuk metode olah dan susut di tiap tahap.
+
+## 4 Metode Olah
+
+| Method | Lewat Fermentasi? | Karakteristik |
+|---|---|---|
+| **Washed** | Tidak, langsung Drying | Kulit & daging buah dikupas dulu, rasa bersih |
+| **Natural** | Tidak, langsung Drying | Buah utuh dikeringkan, rasa manis/kompleks |
+| **Honey** | Ya | Sebagian daging buah disisakan saat drying |
+| **Wine / Anaerobic** | Ya | Fermentasi tertutup tanpa oksigen — proses specialty |
+
+## Alur State: Draft → Selesai
+
+1. **Roastery → Processing Batch → Batch Baru**: pilih cherry, qty (kg), metode olah — tersimpan **Draft** (stok belum bergerak)
+2. **Mulai Processing** — stok cherry dipotong dari RST001; kalau metode Honey/Wine masuk **Fermentasi** dulu, kalau Washed/Natural langsung **Drying**
+3. **Fermentasi** (kalau ada): isi suhu & catatan, lalu lanjut ke **Drying**
+4. **Drying**: isi catatan (mis. kadar air target tercapai), lanjut ke **Hulling**
+5. **Hulling**: isi qty hasil setelah kulit tanduk (parchment) dibuang, lanjut ke **Sortir**
+6. **Sortir** (tahap final): isi qty green bean **final** dan qty **defect** (biji cacat dibuang) — stok green bean otomatis masuk RST001, status jadi **Selesai**
+
+## Yield & Cost
+
+- **Yield** = green bean final ÷ cherry awal × 100%. Susut wajar dari proses ini (air, kulit, defect) — lihat tooltip di halaman detail batch untuk kisaran normal
+- **Cost per kg green** dihitung otomatis dari harga cherry aktual (FIFO) dibagi qty final — tidak diinput manual
+
+## Peringatan
+
+- 1 batch = 1 sumber cherry (tidak bisa campur 2 jenis cherry dalam 1 batch); beberapa batch **bisa berjalan bersamaan**
+- Untuk saat ini hanya melayani cherry **Arabika** (4 SKU green bean output baru dibuat untuk Arabika)
+- **Batalkan** bisa di tahap manapun sebelum Selesai — stok cherry yang sudah terpotong akan dikembalikan otomatis
+- Setelah status **Selesai**, tidak bisa dibatalkan (stok green bean sudah bergerak)
+MARKDOWN,
+            'modul'  => 'roastery',
+            'urutan' => 7,
+            'aktif'  => true,
+        ]);
     }
 
     private function beliCherryUpdate(): void
