@@ -4,8 +4,8 @@
 > Isinya: keputusan bisnis, aturan teknis, riwayat pengerjaan, dan filosofi kerja.
 
 **Versi**: 1.0
-**Update terakhir**: 2026-09-27
-**Status**: 🚧 **DALAM PENGEMBANGAN** — Fase A, B, D, Audit 2, E1–E7 (QR Table Ordering), Roastery V1 (R1-R5 + distribusi + resep), Audit Retroaktif 3.8, Git repo + push GitHub SELESAI. Roastery V2 (Farm-to-Cup): design + Minggu 1-2 (Cabang Roastery + Master Petani) + Minggu 2-3 (Beli Buah Kopi) selesai — Minggu 3-8 MENYUSUL. Lihat section 4 untuk riwayat lengkap.
+**Update terakhir**: 2026-09-28
+**Status**: 🚧 **DALAM PENGEMBANGAN** — Fase A, B, D, Audit 2, E1–E7 (QR Table Ordering), Roastery V1 (R1-R5 + distribusi + resep), Audit Retroaktif 3.8, Git repo + push GitHub SELESAI. Roastery V2 (Farm-to-Cup): design + Minggu 1-2 (Cabang Roastery + Master Petani) + Minggu 2-3 (Beli Buah Kopi) + Minggu 3-4 (Processing Cherry→Green Bean) selesai — Minggu 4-8 MENYUSUL. Lihat section 4 untuk riwayat lengkap.
 
 ---
 
@@ -457,6 +457,25 @@ Aturan 3.8 lengkap: menu sidebar "Beli Buah Kopi" (grup Roastery), 5 permission 
 
 **Belum termasuk** (jadwal minggu lain): form Processing fermentasi/drying/hulling/sortir jadi green bean (Minggu 3-4).
 
+### 4.28 🟢 Roastery V2 Minggu 3-4 Selesai — Processing Cherry → Green Bean (2026-09-28)
+
+Modul A tahap kedua: state machine pengolahan buah cherry jadi green bean, 4 metode olah (`ProcessingMethod` enum: Washed/Natural/Honey/Wine-Anaerobic).
+
+- Tabel `processing_batches` (kode PB-YYYYMM-XXXX, cherry_item_id+qty+cost_awal FIFO aktual, timestamp+catatan per tahap fermentasi/drying, hulling_qty_kg, sortir_qty_kg+defect_kg, green_bean_item_id, status draft→fermentasi/drying→hulling→sortir→selesai/dibatalkan, yield_percent & cost_per_kg_green auto-hitung).
+- 4 item baru `GRB-ARB-{WASHED,NATURAL,HONEY,WINE}` (kategori GRB yang **sudah ada** sejak Fase B, cuma ditambah item — bukan bikin kategori baru) via `ItemGreenBeanSeeder`.
+- `ProcessingBatchService`: `startBatch` → `mulaiProcessing` (potong stok cherry via `StokService::keluar()`, cost FIFO aktual — bukan `harga_beli_terakhir` — dicatat sebagai `cherry_cost_awal`; Honey/Wine masuk **fermentasi**, Washed/Natural langsung **drying**) → `selesaiFermentasi`/`selesaiDrying`/`selesaiHulling` (update tahap, tidak ada mutasi stok) → `selesaiSortir` (**final**: stok green bean masuk RST001 via `StokService::masuk()`, `harga_beli_terakhir` item green di-update supaya distribusi ke outlet nanti bawa cost benar) → `batalkan` (kembalikan stok cherry kalau sudah terpotong, di tahap manapun sebelum selesai).
+- 1 batch = 1 sumber cherry (tidak bisa mix beberapa item cherry per batch, konsisten pola `CherryPurchase`/`RoastingBatch` V1); beberapa batch bisa jalan paralel (tidak ada lock antar batch berbeda) — tidak ada design decision ambigu yang perlu ditanyakan, field migration yang diminta sudah menyiratkan single-source per batch.
+- **Koreksi angka dari instruksi**: contoh awal minta "10kg cherry → 8kg green" (yield 80%), tapi itu salah — yield cherry→green (buah basah ke biji kering) realistis **~15-20%**, BUKAN 80-85% (yang berlaku untuk green→roasted, V1). Seeder demo & tooltip `yield_percent` memakai angka benar (10kg→1,8kg, yield 18%) supaya tidak menyesatkan Owner soal ekspektasi hasil processing riil.
+- Scope sengaja dibatasi cherry **Arabika saja** (4 SKU green output yang diminta cuma untuk Arabika) — form Processing Batch hanya menampilkan `BHK-ARABIKA-SDK` sebagai pilihan cherry, robusta belum punya jalur.
+
+Test E2E manual (Tinker, dibersihkan setelah): jalur Washed penuh (draft→mulai→drying→hulling→sortir, cherry −10kg, green +1,8kg, yield 18%, cost/kg Rp66.667) **PASS**; jalur Honey (draft→mulai→fermentasi→drying, verifikasi status fermentasi benar) **PASS**; pembatalan di tengah drying — stok cherry kembali penuh **PASS**; transisi ilegal (hulling saat status dibatalkan) ditolak dengan pesan jelas **PASS**.
+
+Aturan 3.8 lengkap: menu sidebar "Processing Batch" (grup Roastery), 6 permission `processing-batch.*` (Owner bypass + Admin Gudang penuh, Helper cuma `view`), panduan slug `processing-batch` (tabel 4 method + alur state), 3 tooltip (`processing_method`, `fermentasi_suhu` rekomendasi 18-25°C, `yield_percent` dengan angka realistis 15-20%), 1 batch demo selesai (`ProcessingBatchSeeder`, Washed Arabika 10kg→1,8kg).
+
+**Verifikasi 3.7**: syntax check 17 file OK, migrate 1/1 DONE, seed Item/ProcessingBatch/Permission/Role/Panduan/Tooltip semua sukses, route 10/10 terdaftar, HTTP smoke test index/create/show 200 (menu tampil), error log bersih. Commit `a598702`, push ke `origin/main` sukses.
+
+**Belum termasuk** (jadwal minggu lain): upgrade Batch Roasting terima green dari 3 jalur + Grinding (Minggu 4-5).
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -765,7 +784,7 @@ database/
 - [x] Design doc V2 (10 section, 8 keputusan Owner) — ✅ 2026-09-26
 - [x] **Minggu 1-2**: Cabang Roastery (`RST001`, `TipeCabang::Roastery`) + Master Petani (CRUD, 3 petani contoh) — ✅ 2026-09-26 (lihat 4.26)
 - [x] **Minggu 2-3**: Modul A — Beli Buah Kopi (flow terpisah dari PO) — ✅ 2026-09-27 (lihat 4.27)
-- [ ] **Minggu 3-4**: Modul A — Wet mill/Fermentasi/Drying/Hulling/Sortir
+- [x] **Minggu 3-4**: Modul A — Wet mill/Fermentasi/Drying/Hulling/Sortir — ✅ 2026-09-28 (lihat 4.28)
 - [ ] **Minggu 4-5**: Modul B — upgrade Batch Roasting (3 jalur green) + Grinding
 - [ ] **Minggu 5-6**: Modul B — Packing whole/ground + Cost tracking end-to-end + 10 SKU inti
 - [ ] **Minggu 6-7**: Modul C — POS Roastery multi-kanal (retail/wholesale/internal outlet)
