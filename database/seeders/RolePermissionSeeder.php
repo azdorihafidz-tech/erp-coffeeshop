@@ -94,6 +94,8 @@ class RolePermissionSeeder extends Seeder
             'processing-batch.update-step', 'processing-batch.selesaikan', 'processing-batch.batalkan',
             // Roastery V2 — Grinding Batch (Minggu 4-5, 2026-09-29)
             'grinding-batch.view', 'grinding-batch.create', 'grinding-batch.selesaikan', 'grinding-batch.batalkan',
+            // Roastery V2 — Packing Batch (Minggu 5-6, 2026-09-30)
+            'packing-batch.view', 'packing-batch.create', 'packing-batch.selesaikan', 'packing-batch.batalkan',
             'karyawan.view',
             'stok.view', 'stok.adjustment', 'stok.transfer',
             'item.view', 'item.create', 'item.edit',

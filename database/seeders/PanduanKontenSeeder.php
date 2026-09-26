@@ -71,6 +71,39 @@ class PanduanKontenSeeder extends Seeder
         $this->processingBatchUpdate();
         // Roastery V2 Minggu 4-5 (2026-09-29)
         $this->grindingBatchUpdate();
+        // Roastery V2 Minggu 5-6 (2026-09-30)
+        $this->packingBatchUpdate();
+    }
+
+    private function packingBatchUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'packing-batch'], [
+            'judul'  => 'Packing Batch',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+
+Mengemas roasted whole bean (curah) atau kopi ground jadi pack retail siap jual (250 g / 500 g / 1 kg) — tahap terakhir sebelum dijual di POS Roastery.
+
+## Cara Pakai
+
+1. **Roastery → Packing Batch → Batch Baru**
+2. Pilih jenis sumber (Whole Bean atau Ground), item sumber, qty masuk (kg), dan ukuran pack
+3. **Simpan Draft** → buka detail → isi **Qty Pack Hasil** → klik **Selesaikan**
+4. Stok sumber (curah/ground) berkurang, stok pack retail bertambah otomatis di RST001, siap dijual lewat POS
+
+## Perhitungan Cost per Pack
+
+Cost per pack = cost/kg sumber (FIFO aktual) × berat pack + **biaya packaging default Rp2.000** (kemasan + label). Biaya packaging ini nilai default awal — belum ada halaman untuk mengubahnya, sesuaikan lewat Owner/developer kalau biaya riil beda jauh.
+
+## Peringatan
+
+- Batch **draft** belum menggerakkan stok
+- Total berat pack (qty pack × ukuran) tidak boleh melebihi qty sumber masuk — selisih jadi waste
+MARKDOWN,
+            'modul'  => 'roastery',
+            'urutan' => 9,
+            'aktif'  => true,
+        ]);
     }
 
     private function grindingBatchUpdate(): void

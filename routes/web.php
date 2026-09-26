@@ -341,6 +341,16 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
         Route::post('/{grindingBatch}/batalkan', [\App\Http\Controllers\GrindingBatchController::class, 'batalkan'])->name('batalkan');
     });
 
+    // ===== ROASTERY V2 — PACKING BATCH (Minggu 5-6, 2026-09-30; owner + admin_gudang) =====
+    Route::prefix('roastery/packing-batch')->name('packing-batch.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PackingBatchController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\PackingBatchController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\PackingBatchController::class, 'store'])->name('store');
+        Route::get('/{packingBatch}', [\App\Http\Controllers\PackingBatchController::class, 'show'])->name('show');
+        Route::post('/{packingBatch}/complete', [\App\Http\Controllers\PackingBatchController::class, 'complete'])->name('complete');
+        Route::post('/{packingBatch}/batalkan', [\App\Http\Controllers\PackingBatchController::class, 'batalkan'])->name('batalkan');
+    });
+
     // ===== PEMBELIAN / PURCHASE ORDER (permission-based per aksi) =====
     Route::prefix('pembelian')->name('pembelian.')->group(function () {
         Route::get('/', [PurchaseOrderController::class, 'index'])

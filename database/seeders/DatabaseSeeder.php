@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             ItemGreenBeanSeeder::class,      // Roastery V2 Minggu 3-4 — 4 item Green Bean Arabika
             ProcessingBatchSeeder::class,     // Roastery V2 Minggu 3-4 — 1 contoh batch selesai
             ItemGroundSeeder::class,        // Roastery V2 Minggu 4-5 — 3 item Ground Arabika (Medium/Fine/ExtraFine)
+            ItemPackSeeder::class,          // Roastery V2 Minggu 5-6 — 12 item pack retail (4 varian x 3 ukuran)
             ResepBumbuSeeder::class,        // Seed 3 resep bumbu starting point (idempotent, butuh ItemSeeder & JenisOlahanSeeder)
             ResepBumbuKopiSeeder::class,     // Roastery R4 — takaran biji menu kopi (idempotent, tidak menimpa)
             ResepBumbuNonKopiSeeder::class,  // Isu #3 — resep 4 menu non-kopi (idempotent, hanya menambah)

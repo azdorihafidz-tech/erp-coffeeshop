@@ -84,6 +84,12 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'grinding.cost_per_kg', 'title' => 'Cost per kg Ground', 'modul' => 'roastery', 'urutan' => 11,
              'content' => 'Diwariskan dari cost roasted whole bean yang digiling (FIFO), ditambah proporsional kehilangan berat waste giling. Tidak diinput manual.'],
 
+            // ===== Roastery V2 Minggu 5-6 (2026-09-30): Packing Batch =====
+            ['key' => 'packing-batch.target_pack_size', 'title' => 'Ukuran Pack', 'modul' => 'roastery', 'urutan' => 12,
+             'content' => '250 g, 500 g, atau 1 kg — menentukan berat per pack dan item pack retail mana yang stoknya bertambah. Owner bisa menyesuaikan harga jual tiap ukuran di menu Master Barang.'],
+            ['key' => 'packing-batch.cost_per_pack', 'title' => 'Cost per Pack', 'modul' => 'roastery', 'urutan' => 13,
+             'content' => 'Cost/kg sumber (FIFO aktual dari curah/ground yang dipakai) dikali berat pack, ditambah biaya packaging default Rp2.000/pack (kemasan+label). Bandingkan dengan Harga Jual di bawahnya untuk cek margin.'],
+
             // ===== Audit retroaktif 3.8 (2026-09-24): 6 menu form kompleks =====
             ['key' => 'supplier.kode_supplier', 'title' => 'Kode Supplier', 'modul' => 'pembelian', 'urutan' => 1,
              'content' => 'Kode singkat unik untuk supplier (mis. SUP-001). Muncul di Purchase Order dan laporan pembelian, jadi buat yang mudah dikenali dan tidak diubah-ubah.'],
