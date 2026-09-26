@@ -4,8 +4,8 @@
 > Isinya: keputusan bisnis, aturan teknis, riwayat pengerjaan, dan filosofi kerja.
 
 **Versi**: 1.0
-**Update terakhir**: 2026-09-28
-**Status**: 🚧 **DALAM PENGEMBANGAN** — Fase A, B, D, Audit 2, E1–E7 (QR Table Ordering), Roastery V1 (R1-R5 + distribusi + resep), Audit Retroaktif 3.8, Git repo + push GitHub SELESAI. Roastery V2 (Farm-to-Cup): design + Minggu 1-2 (Cabang Roastery + Master Petani) + Minggu 2-3 (Beli Buah Kopi) + Minggu 3-4 (Processing Cherry→Green Bean) selesai — Minggu 4-8 MENYUSUL. Lihat section 4 untuk riwayat lengkap.
+**Update terakhir**: 2026-09-26
+**Status**: 🚧 **DALAM PENGEMBANGAN** — Fase A, B, D, Audit 2, E1–E7 (QR Table Ordering), Roastery V1 (R1-R5 + distribusi + resep), Audit Retroaktif 3.8, Git repo + push GitHub SELESAI. Roastery V2 (Farm-to-Cup): design + Minggu 1-2 (Cabang Roastery + Master Petani) + Minggu 2-3 (Beli Buah Kopi) + Minggu 3-4 (Processing Cherry→Green Bean) + Minggu 4-5 (Upgrade Roasting + Grinding) + Minggu 5-6 (Packing Multi-Size) + Minggu 6-7 (POS Roastery Multi-Kanal) selesai — Minggu 7-8 (Testing E2E + Laporan + Polish) MENYUSUL. Lihat section 4 untuk riwayat lengkap.
 
 ---
 
@@ -476,6 +476,59 @@ Aturan 3.8 lengkap: menu sidebar "Processing Batch" (grup Roastery), 6 permissio
 
 **Belum termasuk** (jadwal minggu lain): upgrade Batch Roasting terima green dari 3 jalur + Grinding (Minggu 4-5).
 
+### 4.29 🟢 Roastery V2 Minggu 4-5 Selesai — Upgrade Roasting + Grinding (2026-09-29)
+
+Modul B tahap pertama: `RoastingBatch` V1 diperluas menerima green bean dari 3 sumber, plus modul baru Grinding.
+
+- **Bug ditemukan & difix (integrasi V1/V2)**: `RoastingBatchService::roasteryCabangId()` mengembalikan `GP001` (lokasi lama V1), padahal seluruh alur cherry/processing V2 terjadi di `RST001`. Sesuai aturan STOP-FIX-LANJUT, langsung diperbaiki inline — diarahkan ke `RST001`, aman karena `StokService::updateStok()` auto-create baris Stock yang belum ada dan data histori GP001 tidak tersentuh (cabang_id per baris).
+- Migration nambah `roasting_batches.green_bean_source` (enum `in_house`/`bought`/`seed`) + `processing_batch_id`/`pembelian_id` nullable FK. `RoastingBatchService::createBatch()` divalidasi sesuai sumber (in_house = ambil dari `processing_batches` selesai, bought = dari PO Supplier green bean existing, seed = manual).
+- Modul **Grinding Batch** baru: enum `GrindSize` (Medium/Fine/Extra Fine), tabel `grinding_batches`, `GrindingBatchService` (potong stok roasted curah via `StokService::keluar()`, hasil ground masuk via `StokService::masuk()`, cost FIFO diteruskan), 3 item `GRD-ARB-MEDIUM-{M,F,XF}` baru.
+
+Test E2E (Tinker, dibersihkan setelah): roasting in-house (green −1,5kg, curah +1,2kg) **PASS**; grinding (curah −1,0kg, ground +0,95kg, cost/kg Rp87.719,31) **PASS**.
+
+Aturan 3.8 lengkap: menu sidebar "Grinding Batch" (grup Roastery), permission `grinding-batch.*`, panduan & tooltip terkait grind size dan sumber green bean.
+
+**Verifikasi 3.7**: syntax check OK, migrate DONE, route terdaftar, error log bersih. Commit `1f55e2b`, push ke `origin/main` sukses.
+
+### 4.30 🟢 Roastery V2 Minggu 5-6 Selesai — Packing Multi-Size (2026-09-30)
+
+Modul B tahap kedua: hasil grinding/roasting dikemas ke ukuran jual (250g/500g/1kg).
+
+- Enum `PackSize` (250g/500g/1kg + helper `kg()`), tabel `packing_batches`, `PackingBatchService` (`TARGET_MAP` per ukuran, `BIAYA_PACKAGING_DEFAULT = Rp2.000`/pack, potong stok ground/whole via `StokService::keluar()`, hasil pack masuk via `StokService::masuk()` dengan cost = cost/kg bahan + biaya kemasan).
+- **Deviasi terdokumentasi**: instruksi minta SKU "Arabika Washed Medium" untuk `ItemPackSeeder`, tapi SKU itu tidak match item riil manapun di sistem (penamaan sistem berbasis roast-level, bukan processing-method, untuk curah/ground) — diganti 4 varian yang genuinely ada (Whole Medium, Ground Medium/Fine/XFine).
+
+Test E2E (Tinker, dibersihkan setelah): rantai grinding→packing, cost/pack Rp28.785,72 terverifikasi rasional vs harga jual Rp45.000 **PASS**.
+
+Aturan 3.8 lengkap: menu sidebar "Packing Batch" (grup Roastery), permission `packing-batch.*`, panduan & tooltip ukuran pack.
+
+**Verifikasi 3.7**: syntax check OK, migrate DONE, route terdaftar, error log bersih. Commit `d04908b`, push ke `origin/main` sukses.
+
+### 4.31 🟢 Roastery V2 Minggu 6-7 Selesai — POS Roastery Multi-Kanal (2026-09-26)
+
+Modul C: RST001 jadi kanal jual sendiri lewat POS existing (reuse penuh, 0 POS baru dibuat) — retail (walk-in), wholesale (partai besar), internal (kirim ke outlet via transaksi POS, bukan transfer gratis, supaya kas & harga tercatat).
+
+- Migration `orders.customer_type` (enum `retail`/`wholesale`/`internal`, default `retail`) + `orders.outlet_tujuan_id` (FK nullable ke `cabangs`, wajib diisi kalau `customer_type=internal`).
+- `OrderRequest`: validasi `customer_type` opsional + `outlet_tujuan_id` `required_if:customer_type,internal`.
+- `PenjualanService::simpanBillInternal()`: field baru diteruskan ke `Order::create()` (default `retail` untuk outlet Kopi Drip biasa — 0 dampak ke alur existing).
+- `PenjualanController::pos()`: kalau cabang aktif tipe `roastery`, kirim `$outletList` (semua cabang tipe `cabang`) ke view untuk dropdown tujuan internal.
+- `pos.blade.php`: block "Jenis Pembeli" (retail/wholesale/internal + dropdown outlet tujuan kondisional) muncul HANYA untuk cabang tipe roastery — outlet Kopi Drip biasa tidak melihat UI ini sama sekali.
+- `CabangSeeder`: RST001 di-set `dine_in_aktif=false`, `takeaway_aktif=true`, `frozen_aktif=false` (fokus takeaway, tidak ada meja/dine-in di unit roastery).
+- **Deviasi terdokumentasi**: instruksi awal minta Kas RST001 cuma Tunai+Transfer, sengaja ditambah QRIS juga (3 metode penuh, sama pola 5 outlet) supaya tidak mengulang blocker E3 (Kas Transfer/QRIS hilang bikin split-payment gagal — lihat 4.12/4.14).
+- 2 tooltip baru: `pos.customer_type`, `pos.outlet_tujuan`.
+
+**Test E2E (Tinker langsung panggil `PenjualanService::buatOrder()` — kode sama dengan yang dipanggil controller — dibersihkan & di-reverse setelah)**:
+1. Retail: 2 pack @Rp75.000 = Rp150.000, tunai → **PASS**, `customer_type=retail`.
+2. Wholesale: 5 pack = Rp375.000, transfer → **PASS**, `customer_type=wholesale`.
+3. Internal ke OUT001: 3 pack = Rp225.000, tunai → **PASS**, `customer_type=internal`, `outlet_tujuan_id` terisi benar.
+
+Ketiganya: stok pack RST001 berkurang tepat (20→10 setelah 3 transaksi total 10 pack), Kas Tunai RST bertambah Rp375.000 (500rb→875rb), Kas Transfer bertambah Rp375.000 (0→375rb), HPP tiap order_item terisi benar (proporsional cost stok). Semua data test (orders/order_items/order_payments/transaksi_keuangans/stock_movements/stock_batches) dihapus & stok/kas direset ke baseline setelah verifikasi.
+
+**Catatan implementasi**: modul ini reuse 100% infrastruktur POS/kasir/permission existing (customer_type cuma kolom tambahan di alur yang sama) — TIDAK ada menu sidebar baru, permission baru, atau panduan baru yang perlu ditambah (aturan 3.8 poin 1-4 N/A untuk fitur ini karena bukan modul/menu baru, cuma extend form existing). Tooltip (poin 5) tetap ditambah karena field baru di form kompleks.
+
+**Verifikasi 3.7**: syntax check 8 file OK, cache clear OK, error log bersih, route `/penjualan/pos` 200, 3/3 skenario test PASS dengan stok/kas/customer_type terverifikasi benar, semua data test dibersihkan. Commit `8b96518`, push ke `origin/main` sukses.
+
+**Belum termasuk** (jadwal minggu lain): Minggu 7-8 — Testing E2E menyeluruh (semua modul V2 digabung: petani→cherry→processing→roasting→grinding→packing→POS) + Laporan Roastery + Polish.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -785,10 +838,10 @@ database/
 - [x] **Minggu 1-2**: Cabang Roastery (`RST001`, `TipeCabang::Roastery`) + Master Petani (CRUD, 3 petani contoh) — ✅ 2026-09-26 (lihat 4.26)
 - [x] **Minggu 2-3**: Modul A — Beli Buah Kopi (flow terpisah dari PO) — ✅ 2026-09-27 (lihat 4.27)
 - [x] **Minggu 3-4**: Modul A — Wet mill/Fermentasi/Drying/Hulling/Sortir — ✅ 2026-09-28 (lihat 4.28)
-- [ ] **Minggu 4-5**: Modul B — upgrade Batch Roasting (3 jalur green) + Grinding
-- [ ] **Minggu 5-6**: Modul B — Packing whole/ground + Cost tracking end-to-end + 10 SKU inti
-- [ ] **Minggu 6-7**: Modul C — POS Roastery multi-kanal (retail/wholesale/internal outlet)
-- [ ] **Minggu 7-8**: Testing E2E + Laporan Roastery + Polish
+- [x] **Minggu 4-5**: Modul B — upgrade Batch Roasting (3 jalur green) + Grinding — ✅ 2026-09-29 (lihat 4.29)
+- [x] **Minggu 5-6**: Modul B — Packing whole/ground + Cost tracking end-to-end — ✅ 2026-09-30 (lihat 4.30)
+- [x] **Minggu 6-7**: Modul C — POS Roastery multi-kanal (retail/wholesale/internal outlet) — ✅ 2026-09-26 (lihat 4.31)
+- [ ] **Minggu 7-8**: Testing E2E gabungan seluruh rantai (petani→cherry→processing→roasting→grinding→packing→POS) + Laporan Roastery + Polish
 - [ ] 4 pertanyaan terbuka (design doc section 10): detail fermentasi Wine, tracking defect sortir, timing grinding (on-demand vs batch), field wajib Master Petani
 
 ### 12.6 Adaptasi Varian Menu Kopi (belum dikerjakan)
