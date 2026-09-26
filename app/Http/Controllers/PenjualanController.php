@@ -115,10 +115,15 @@ class PenjualanController extends Controller
             ->orderByDesc('started_at')
             ->get();
 
+        // Roastery V2 Minggu 6-7 — daftar outlet Kopi Drip utk dropdown "Internal" (dobel-entry Q1)
+        $outletList = $cabangAktif?->tipe?->value === 'roastery'
+            ? Cabang::where('tipe', 'cabang')->orderBy('nama_cabang')->get()
+            : collect();
+
         return view('penjualan.pos', compact(
             'produkJadi', 'itemTambahan', 'categories', 'pelanggans', 'cabangId',
             'cabangAktif', 'kasList', 'tipeTransaksiAktif', 'mejasAktif',
-            'billTersimpanOrder', 'billTersimpanBill'
+            'billTersimpanOrder', 'billTersimpanBill', 'outletList'
         ));
     }
 

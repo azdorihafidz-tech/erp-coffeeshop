@@ -90,6 +90,12 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'packing-batch.cost_per_pack', 'title' => 'Cost per Pack', 'modul' => 'roastery', 'urutan' => 13,
              'content' => 'Cost/kg sumber (FIFO aktual dari curah/ground yang dipakai) dikali berat pack, ditambah biaya packaging default Rp2.000/pack (kemasan+label). Bandingkan dengan Harga Jual di bawahnya untuk cek margin.'],
 
+            // ===== Roastery V2 Minggu 6-7 (2026-09-30): POS Roastery Multi-Kanal =====
+            ['key' => 'pos.customer_type', 'title' => 'Jenis Pembeli', 'modul' => 'penjualan', 'urutan' => 20,
+             'content' => 'Retail: pembeli datang langsung (harga normal). Wholesale: pembeli B2B seperti cafe lain/reseller (dicatat terpisah untuk laporan, harga masih sama — diskon manual kalau perlu). Internal: dikirim ke salah satu outlet Kopi Drip — transaksi ini DICATAT DUA KALI (pendapatan di Roastery + jadi biaya/stok masuk di outlet tujuan), sesuai keputusan Owner.'],
+            ['key' => 'pos.outlet_tujuan', 'title' => 'Outlet Tujuan', 'modul' => 'penjualan', 'urutan' => 21,
+             'content' => 'Wajib diisi kalau Jenis Pembeli = Internal. Pilih outlet Kopi Drip yang menerima kiriman produk roastery ini — untuk pelacakan, entry stok masuk di outlet tujuan tetap perlu dicatat manual/terpisah (belum otomatis).'],
+
             // ===== Audit retroaktif 3.8 (2026-09-24): 6 menu form kompleks =====
             ['key' => 'supplier.kode_supplier', 'title' => 'Kode Supplier', 'modul' => 'pembelian', 'urutan' => 1,
              'content' => 'Kode singkat unik untuk supplier (mis. SUP-001). Muncul di Purchase Order dan laporan pembelian, jadi buat yang mudah dikenali dan tidak diubah-ubah.'],

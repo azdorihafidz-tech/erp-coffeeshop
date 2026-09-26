@@ -37,6 +37,15 @@ class KasSeeder extends Seeder
             return;
         }
 
+        // Roastery V2 Minggu 6-7 (2026-09-30) — RST001 butuh Kas sendiri utk POS Roastery.
+        // Instruksi awal cuma minta Tunai+Transfer, tapi disamakan pola outlet (3 metode
+        // penuh, termasuk QRIS) supaya tidak mengulang blocker E3 (Kas Transfer/QRIS
+        // hilang bikin split-payment/QRIS gagal — lihat CLAUDE.md 4.12 & 4.14).
+        $rst = Cabang::where('kode_cabang', 'RST001')->first();
+        if ($rst) {
+            $outlets->push($rst);
+        }
+
         foreach ($outlets as $cabang) {
             foreach (self::METODE as $defaultUntuk => $cfg) {
                 $existing = Kas::where('cabang_id', $cabang->id)->where('default_untuk', $defaultUntuk)->first();
@@ -66,6 +75,6 @@ class KasSeeder extends Seeder
             }
         }
 
-        $this->command?->info('KasSeeder selesai: 15 Kas (3 metode x 5 outlet) di-seed/verified.');
+        $this->command?->info('KasSeeder selesai: ' . ($outlets->count() * 3) . ' Kas (3 metode x ' . $outlets->count() . ' lokasi) di-seed/verified.');
     }
 }

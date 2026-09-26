@@ -132,6 +132,9 @@ class PenjualanService
             // E4.1/E4.3 — meja_id FK (sumber kebenaran baru), nomor_meja
             // string dipertahankan sbg display cache/backward-compat.
             'meja_id'           => $tipeTransaksi === TipeTransaksi::DineIn ? ($data['meja_id'] ?? null) : null,
+            // Roastery V2 Minggu 6-7 — default 'retail' (outlet Kopi Drip biasa tidak terpengaruh).
+            'customer_type'     => $data['customer_type'] ?? 'retail',
+            'outlet_tujuan_id'  => ($data['customer_type'] ?? 'retail') === 'internal' ? ($data['outlet_tujuan_id'] ?? null) : null,
             'tanggal_expired_frozen' => $tipeTransaksi === TipeTransaksi::Frozen ? ($data['tanggal_expired_frozen'] ?? null) : null,
             'pelanggan_id'      => $data['pelanggan_id'] ?? null,
             'nama_pelanggan'    => $data['nama_pelanggan'] ?? null,

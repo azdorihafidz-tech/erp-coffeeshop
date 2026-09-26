@@ -192,6 +192,27 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
                         <div class="form-text text-warning small">Master Meja belum diisi untuk outlet ini, hubungi admin.</div>
                         @endif
                     </div>
+
+                    {{-- Roastery V2 Minggu 6-7 — Multi-kanal, cuma tampil di cabang tipe Roastery (Q1) --}}
+                    @if($cabangAktif?->tipe?->value === 'roastery')
+                    <div class="mt-2">
+                        <label class="form-label small">Jenis Pembeli <x-tooltip key="pos.customer_type" /></label>
+                        <select name="customer_type" id="selectCustomerType" class="form-select form-select-sm" style="max-width:260px">
+                            <option value="retail" selected>Retail (Walk-in)</option>
+                            <option value="wholesale">Wholesale (B2B)</option>
+                            <option value="internal">Internal — Kirim ke Outlet Kopi Drip</option>
+                        </select>
+                        <div class="d-none mt-2" id="wrapOutletTujuan" style="max-width:260px">
+                            <label class="form-label small">Outlet Tujuan <x-tooltip key="pos.outlet_tujuan" /></label>
+                            <select name="outlet_tujuan_id" id="selectOutletTujuan" class="form-select form-select-sm">
+                                <option value="">-- Pilih Outlet --</option>
+                                @foreach($outletList ?? [] as $outlet)
+                                <option value="{{ $outlet->id }}">{{ $outlet->nama_cabang }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
 
@@ -867,6 +888,21 @@ function pilihTipeTransaksi(tipe) {
     }
     hitungTotal(); // takeaway fee bergantung tipe transaksi
 }
+
+// Roastery V2 Minggu 6-7 — toggle dropdown Outlet Tujuan saat customer_type = internal
+(function () {
+    const selCustType = document.getElementById('selectCustomerType');
+    if (!selCustType) return; // hanya ada di cabang tipe roastery
+    const wrapOutlet = document.getElementById('wrapOutletTujuan');
+    selCustType.addEventListener('change', function () {
+        if (this.value === 'internal') {
+            wrapOutlet.classList.remove('d-none');
+        } else {
+            wrapOutlet.classList.add('d-none');
+            document.getElementById('selectOutletTujuan').value = '';
+        }
+    });
+})();
 
 // Filter Grid Produk — branding-neutral comment
 function filterKategoriGrid(kategoriId, btnEl) {

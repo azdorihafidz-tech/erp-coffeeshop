@@ -22,6 +22,9 @@ class OrderRequest extends FormRequest
             'telepon_pelanggan'  => 'nullable|string|max:20',
             'tipe_transaksi'     => 'required|in:dine_in,takeaway,frozen',
             'nomor_meja'         => 'nullable|string|max:20',
+            // Roastery V2 Minggu 6-7 — multi-kanal (khusus cabang tipe roastery, default 'retail' di outlet biasa)
+            'customer_type'      => 'nullable|in:retail,wholesale,internal',
+            'outlet_tujuan_id'   => 'nullable|required_if:customer_type,internal|exists:cabangs,id',
             'tanggal_expired_frozen' => 'nullable|date',
             // Split Payment — sumber kebenaran, WAJIB minimal 1 baris.
             'payments'              => 'required|array|min:1',

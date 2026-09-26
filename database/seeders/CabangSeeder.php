@@ -120,6 +120,11 @@ class CabangSeeder extends Seeder
             'longitude'          => null,
             'radius_absen_meter' => 150,
             'jam_masuk'          => '07:00',
+            // Roastery V2 Minggu 6-7 — POS Roastery fokus retail/wholesale/internal via
+            // Takeaway (Q2). Dine-in & Frozen tidak relevan (tidak ada dine-in/meja di unit roastery).
+            'dine_in_aktif'      => false,
+            'takeaway_aktif'     => true,
+            'frozen_aktif'       => false,
         ]);
     }
 }

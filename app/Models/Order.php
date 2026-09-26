@@ -27,6 +27,9 @@ class Order extends Model
         'tipe_transaksi',
         'nomor_meja',
         'meja_id',
+        // Roastery V2 Minggu 6-7 — multi-kanal jual (retail/wholesale/internal)
+        'customer_type',
+        'outlet_tujuan_id',
         'tanggal_expired_frozen',
         'pelanggan_id',
         'nama_pelanggan',
@@ -97,6 +100,12 @@ class Order extends Model
     public function meja()
     {
         return $this->belongsTo(Meja::class);
+    }
+
+    /** Roastery V2 Minggu 6-7 — outlet tujuan utk customer_type='internal' (dobel-entry Q1). */
+    public function outletTujuan()
+    {
+        return $this->belongsTo(Cabang::class, 'outlet_tujuan_id');
     }
 
     public function items()
