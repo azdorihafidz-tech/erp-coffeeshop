@@ -529,6 +529,18 @@ Ketiganya: stok pack RST001 berkurang tepat (20→10 setelah 3 transaksi total 1
 
 **Belum termasuk** (jadwal minggu lain): Minggu 7-8 — Testing E2E menyeluruh (semua modul V2 digabung: petani→cherry→processing→roasting→grinding→packing→POS) + Laporan Roastery + Polish.
 
+### 4.32 🟢 Roastery V2 Minggu 7-8 (bagian 1) — Testing E2E Gabungan Full Chain (2026-09-27)
+
+5 skenario full-chain dijalankan lewat satu script (memanggil service yang sama dengan controller, snapshot DB di awal + restore otomatis di akhir): **58 assertion, semua PASS**. S1 Washed penuh (cherry 10kg@15rb → green 1,8kg cost/kg Rp83.333 → roasted 1,2kg → ground → pack → jual Retail & Wholesale; HPP order = cost pack, kas bertambah, movement tercatat tiap tahap), S2 Wine (fermentasi + suhu tercatat, cost/kg green Rp88.889), S3 green dibeli via PO → roasting `bought` → pack 15 → jual Internal ke OUT001, S4 rollback processing (stok cherry balik, batal 2× & transisi ilegal ditolak), S5 FIFO cost (2 batch cherry beda harga → roasting mix memakai FIFO Rp103.500, bukan average Rp105.000).
+
+**Temuan & tindakan**:
+1. **Residu cleanup buatan sendiri (bukan bug aplikasi)**: cleanup Minggu 3-4 & 6-7 meninggalkan (a) 3 `transaksi_keuangans` yatim (Rp750.000 fiktif; cleanup salah filter `referensi_type` — nilai sebenarnya `'order'`, bukan `App\Models\Order`), (b) 3 `stock_movements` penjualan yatim, (c) batch FIFO hantu cherry 5kg@Rp12.000 (`stocks.qty` sudah 0 tapi `stock_batches.qty_sisa` 5 → bikin cost cherry test salah 135.000 bukan 150.000), (d) batch demo green `qty_sisa` 0,3 padahal stok 1,8. Semua dibersihkan; cek konsistensi `stocks` vs `SUM(stock_batches.qty_sisa)` seluruh lokasi = 0 mismatch. Pelajaran: cleanup test harus restore `stock_batches` juga, dan filter `referensi_type` pakai nilai aktual (`'order'`). Script E2E kini pakai snapshot+restore.
+2. **GAP DESAIN (menunggu keputusan Owner)**: penjualan **Internal** ke outlet hanya mencatat sisi roastery (stok RST −, kas RST +, `outlet_tujuan_id` terisi) — **stok pack TIDAK masuk ke OUT001**, padahal `FASE_ROASTERY_V2_DESIGN.md` Q1 minta "dobel entry". Opsi: (a) auto stok masuk di outlet saja (cost = harga jual), (b) plus pengeluaran kas outlet, (c) manual via Transfer Stok. Sampai diputuskan, pakai Transfer Stok untuk kirim ke outlet dan hindari `customer_type=internal` agar tidak dobel/hilang.
+3. Packing: `waste_kg` = sumber − berat pack, tapi stok sumber hanya berkurang sebesar berat pack (sisa tetap di stok curah/ground) — angka "waste" di layar sebenarnya "sisa belum terpakai". Estetika label, bukan selisih stok.
+4. Hasil E2E per pack mengikuti harga jual di master (pack 250g = Rp45.000), bukan angka Rp100–120rb di brief.
+
+**Belum**: Laporan Roastery (yield per tahap, cost breakdown) + polish + verifikasi klik UI di browser oleh Owner.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -841,7 +853,7 @@ database/
 - [x] **Minggu 4-5**: Modul B — upgrade Batch Roasting (3 jalur green) + Grinding — ✅ 2026-09-29 (lihat 4.29)
 - [x] **Minggu 5-6**: Modul B — Packing whole/ground + Cost tracking end-to-end — ✅ 2026-09-30 (lihat 4.30)
 - [x] **Minggu 6-7**: Modul C — POS Roastery multi-kanal (retail/wholesale/internal outlet) — ✅ 2026-09-26 (lihat 4.31)
-- [ ] **Minggu 7-8**: Testing E2E gabungan seluruh rantai (petani→cherry→processing→roasting→grinding→packing→POS) + Laporan Roastery + Polish
+- [~] **Minggu 7-8**: Testing E2E gabungan ✅ 2026-09-27 (58 assertion PASS, lihat 4.32); SISA: Laporan Roastery + polish + keputusan Owner soal penjualan Internal (dobel entry stok outlet)
 - [ ] 4 pertanyaan terbuka (design doc section 10): detail fermentasi Wine, tracking defect sortir, timing grinding (on-demand vs batch), field wajib Master Petani
 
 ### 12.6 Adaptasi Varian Menu Kopi (belum dikerjakan)
