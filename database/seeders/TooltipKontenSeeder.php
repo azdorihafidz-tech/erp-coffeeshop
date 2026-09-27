@@ -94,7 +94,7 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'pos.customer_type', 'title' => 'Jenis Pembeli', 'modul' => 'penjualan', 'urutan' => 20,
              'content' => 'Retail: pembeli datang langsung (harga normal). Wholesale: pembeli B2B seperti cafe lain/reseller (dicatat terpisah untuk laporan, harga masih sama — diskon manual kalau perlu). Internal: dikirim ke salah satu outlet Kopi Drip — transaksi ini DICATAT DUA KALI (pendapatan di Roastery + jadi biaya/stok masuk di outlet tujuan), sesuai keputusan Owner.'],
             ['key' => 'pos.outlet_tujuan', 'title' => 'Outlet Tujuan', 'modul' => 'penjualan', 'urutan' => 21,
-             'content' => 'Wajib diisi kalau Jenis Pembeli = Internal. Pilih outlet Kopi Drip yang menerima kiriman produk roastery ini — untuk pelacakan, entry stok masuk di outlet tujuan tetap perlu dicatat manual/terpisah (belum otomatis).'],
+             'content' => 'Wajib diisi kalau Jenis Pembeli = Internal. Pilih outlet Kopi Drip yang menerima kiriman. Otomatis: stok pack masuk di outlet tujuan (harga beli = harga jual roastery) dan Kas Tunai outlet tujuan berkurang senilai transaksi. Kalau order dibatalkan, semuanya dibalik (dibatalkan ditolak bila stok di outlet sudah terpakai).'],
 
             // ===== Audit retroaktif 3.8 (2026-09-24): 6 menu form kompleks =====
             ['key' => 'supplier.kode_supplier', 'title' => 'Kode Supplier', 'modul' => 'pembelian', 'urutan' => 1,

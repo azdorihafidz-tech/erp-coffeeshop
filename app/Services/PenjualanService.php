@@ -218,6 +218,8 @@ class PenjualanService
             'status'          => StatusOrder::Selesai,
         ]);
 
+        $this->catatPembelianInternalOutlet($order->fresh(['items']));
+
         return $order->fresh(['items', 'payments']);
     }
 
@@ -551,6 +553,8 @@ class PenjualanService
                 TransaksiKeuangan::where('referensi_type', 'order')
                     ->where('referensi_id', $order->id)
                     ->delete();
+
+                $this->batalkanPembelianInternalOutlet($order);
             }
             $order->update(['status' => StatusOrder::Dibatalkan]);
         });
@@ -615,9 +619,119 @@ class PenjualanService
 
             // LANGKAH 4: Update status order
             $order->update(['status' => StatusOrder::Selesai]);
+
+            $this->catatPembelianInternalOutlet($order->fresh(['items']));
         });
     }
 
+    private function isPenjualanInternal(Order $order): bool
+    {
+        return $order->customer_type === 'internal' && ! empty($order->outlet_tujuan_id);
+    }
+
+    /**
+     * Roastery V2 — dobel entry penjualan Internal (keputusan Owner opsi b):
+     * outlet tujuan (i) menerima stok pack, cost per unit = harga beli dari
+     * roastery (harga jual setelah diskon), (ii) kas tunai outlet berkurang
+     * senilai transaksi, sisi (iii) pendapatan roastery sudah dicatat di
+     * prosesPembayaran(). Dipanggil di dalam DB::transaction caller.
+     */
+    private function catatPembelianInternalOutlet(Order $order): void
+    {
+        if (! $this->isPenjualanInternal($order)) {
+            return;
+        }
+
+        $outletId = (int) $order->outlet_tujuan_id;
+        if ($outletId === (int) $order->cabang_id) {
+            throw new \Exception('Outlet tujuan penjualan Internal tidak boleh sama dengan cabang penjual.');
+        }
+
+        $kas = Kas::where('cabang_id', $outletId)
+            ->where('default_untuk', 'tunai')
+            ->where('is_active', true)
+            ->first();
+        if (! $kas) {
+            throw new \Exception('Outlet tujuan belum punya Kas Tunai aktif, hubungi Admin/Owner untuk membuatnya.');
+        }
+
+        $totalHarga = (float) $order->total_harga;
+        $faktor = $totalHarga > 0 ? max(0, $totalHarga - (float) $order->diskon) / $totalHarga : 1.0;
+        $nilai = 0.0;
+
+        foreach ($order->items as $oi) {
+            if (empty($oi->item_id)) continue;
+            $hargaBeli = round((float) $oi->harga_satuan * $faktor, 2);
+            $this->stokService->masuk(
+                $oi->item_id,
+                $outletId,
+                (float) $oi->qty,
+                'Pembelian internal dari Roastery — ' . $order->nomor_order,
+                'internal_purchase_from_roastery',
+                $order->id,
+                $hargaBeli
+            );
+            $nilai += $hargaBeli * (float) $oi->qty;
+        }
+
+        $nilai = round($nilai, 2);
+        if ($nilai <= 0) {
+            return;
+        }
+
+        $kas->decrement('saldo_sekarang', $nilai);
+
+        TransaksiKeuangan::create([
+            'cabang_id'         => $outletId,
+            'kas_id'            => $kas->id,
+            'nomor_transaksi'   => 'TRX-INT-' . $order->nomor_order,
+            'tanggal_transaksi' => today(),
+            'tipe'              => TipeTransaksiKeuangan::Pengeluaran,
+            'kategori'          => KategoriTransaksi::PembelianBahan,
+            'keterangan'        => 'Pembelian internal dari Roastery — ' . $order->nomor_order,
+            'jumlah'            => $nilai,
+            'referensi_type'    => 'order_internal',
+            'referensi_id'      => $order->id,
+            'created_by'        => auth()->id(),
+        ]);
+    }
+
+    private function batalkanPembelianInternalOutlet(Order $order): void
+    {
+        if (! $this->isPenjualanInternal($order)) {
+            return;
+        }
+
+        $masuk = StockMovement::where('referensi_type', 'internal_purchase_from_roastery')
+            ->where('referensi_id', $order->id)
+            ->where('tipe', TipeStockMovement::Masuk->value)
+            ->get();
+
+        foreach ($masuk as $m) {
+            $lokasiId = $m->lokasi_tujuan_id;
+            $stokAda = $this->stokService->getStok($m->item_id, $lokasiId);
+            if ($stokAda < (float) $m->qty) {
+                $nama = Item::find($m->item_id)?->nama_item ?? "item #{$m->item_id}";
+                throw new \Exception("Order Internal tidak bisa dibatalkan: stok '{$nama}' di outlet tujuan sudah terpakai (tersedia {$stokAda}, perlu {$m->qty}).");
+            }
+        }
+
+        foreach ($masuk as $m) {
+            $this->stokService->keluar(
+                $m->item_id, $m->lokasi_tujuan_id, (float) $m->qty,
+                'Pembatalan pembelian internal — ' . $order->nomor_order,
+                'internal_purchase_from_roastery_cancel', $order->id
+            );
+        }
+
+        $trxList = TransaksiKeuangan::where('referensi_type', 'order_internal')->where('referensi_id', $order->id)->get();
+        foreach ($trxList as $trx) {
+            if ($trx->kas_id) {
+                Kas::where('id', $trx->kas_id)->increment('saldo_sekarang', (float) $trx->jumlah);
+            }
+            $trx->forceDelete();
+        }
+    }
     public function generateNomorOrder(Cabang $cabang): string
     {
         $tahun = (int) date('Y');
