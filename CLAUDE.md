@@ -563,6 +563,25 @@ Porting fitur "Unit Beli" (beli bahan dalam pack/karung/dus, otomatis konversi k
 
 **Verifikasi 3.7**: syntax check 19 file OK, migration jalan di DB dev (fix live 500) & DB test, cache clear OK, `UnitFamilyTest` 13/13 PASS. Commit `d51848f`, push ke `origin/main` sukses.
 
+### 4.34 🟢 Sprint Fix — Master Bumbu Pusat pakai Harga Beli + Detail Cost per Cabang (2026-10-02)
+
+Owner temukan Master Bumbu Pusat menghitung modal resep pakai `harga_jual` (harga customer), harusnya `harga_beli_terakhir` (modal produksi) — bug lama, bukan pengaruh sprint sebelumnya.
+
+- **`ResepBumbuItem::getTotalHargaMasterAttribute()`** (`app/Models/ResepBumbuItem.php`): sumber harga diganti `item->harga_jual` → `item->harga_beli_terakhir`.
+- **View `master/resep-bumbu/edit.blade.php`**: kolom "Harga Master" → "Harga Beli (Modal)", data attribute JS `data-harga-jual` → `data-harga-beli`, footer note & tooltip diperbaiki penyebutannya.
+- **Tooltip lama yang juga salah** (ditemukan saat audit, bukan cuma di UI resep-bumbu): `resep_bumbu.mode_harga` sebelumnya bilang "memakai harga jual bahan" — diperbaiki jadi "Harga Beli Terakhir (modal)".
+- **Kalkulator HPP Produk Jual** (`hitungSubtotalBumbuTunggal()`, baris resep manual) **ternyata SUDAH benar** sejak awal (pakai `harga_beli_terakhir`) — cuma tampilan Master Bumbu Pusat yang salah, HPP produk jual sendiri tidak terpengaruh bug ini.
+- **Detail cost per cabang di modal "Import dari Bumbu Pusat"** (fitur baru, Q3 Owner): endpoint baru `GET /master/produk-jual/bumbu-pusat/{bumbu}/detail` (`MasterProdukJualController::detailBumbuPusat()`) — untuk tiap bahan di bumbu, hitung cost per cabang aktif dari **batch FIFO tertua yang masih ada stok** (`stock_batches` urut `tanggal_masuk`), fallback ke `harga_beli_terakhir` global kalau cabang itu belum pernah punya stok bahan tsb (ditandai `*` di UI). Modal `_form.blade.php` sekarang 2-step: pilih bumbu → tabel detail cost per cabang muncul → Owner klik "Import Bumbu Ini" baru baris linked ditambah (sebelumnya klik langsung import tanpa lihat detail).
+- **Arsitektur "recalculate dinamis" (Q2) ternyata SUDAH desain existing** — baris hasil import bukan copy statis, tapi *linked reference* (`resep_bumbu_ref_id`) yang dihitung ulang live tiap kali dipanggil (lewat `kalkulatorResep()`/`previewSubtotalBumbu()`) — tidak perlu logic baru untuk itu, cuma tabel detail-nya yang baru.
+
+**Test**: `tests/Feature/ResepBumbuHargaBeliTest.php` (6 test baru) — **6/6 PASS**: `total_harga_master` pakai harga beli bukan harga jual (harga beli≠harga jual sengaja dibedakan biar test gagal kalau regresi), mode gratis=0, halaman edit tampilkan harga beli, endpoint detail pakai FIFO kalau ada batch, fallback harga_beli_terakhir kalau tidak ada batch, total per cabang terhitung benar (termasuk konversi satuan g→kg). Dijalankan bareng `UnitFamilyTest` (19/19 PASS gabungan) — zero regresi di area terkait.
+
+Aturan 3.8: 2 tooltip baru (`resep_bumbu.harga_beli_modal` di header kolom, `master_produk_jual.import_bumbu_cost_cabang` di footer modal detail), panduan `resep-bumbu` ditambah section "Perbedaan Harga Beli vs Harga Jual", panduan `produk-jual` section "Import dari Bumbu Pusat" diupdate langkahnya (sekarang ada step lihat detail cost sebelum konfirmasi import).
+
+**Verifikasi 3.7**: syntax check 7 file OK, route baru terdaftar, cache clear OK, error log bersih, smoke test manual via Tinker (FIFO path & fallback path keduanya diverifikasi pakai data riil dev DB), 6/6 test baru PASS + 19/19 gabungan dengan UnitFamilyTest. Tidak ada migration (murni fix logic + fitur tampilan). Commit `beb892b`, push ke `origin/main` sukses.
+
+**Belum**: deploy ke staging/production (menunggu instruksi Owner), verifikasi klik UI nyata di browser.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
