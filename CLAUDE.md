@@ -582,6 +582,24 @@ Aturan 3.8: 2 tooltip baru (`resep_bumbu.harga_beli_modal` di header kolom, `mas
 
 **Belum**: deploy ke staging/production (menunggu instruksi Owner), verifikasi klik UI nyata di browser.
 
+### 4.35 🟢 Sprint Analytics Dashboard — 5 Metrik Penjualan + Filter Periode (2026-10-02)
+
+Tambahan section "Analytics Penjualan" di **Dashboard Pusat** (`/dashboard/pusat`, gabungan semua cabang) & **Dashboard Cabang** (`/dashboard/cabang`, hanya cabang aktif user) — 5 kartu metrik agregat + 1 dropdown filter periode global (Keseluruhan/Tahun Berjalan/Bulan Ini/Hari Ini, default Bulan Ini).
+
+- **Service baru** `SalesAnalyticsService` — sengaja nama pakai "Sales" karena `DashboardAnalyticsService` sudah dipakai untuk widget Kesehatan Finansial (Neraca/LabaRugi/BEP), beda scope. 5 method: `getAvgTransactionValue`, `getAvgDailyTransactions`, `getHighestValueDay`, `getHighestQtyDay`, `getAvgDailyRevenue` + fasad `getAllMetrics()` return semuanya dalam 1 array.
+- **Filter periode**: query param `?periode=...`, default `bulan`, invalid value fallback ke default (bukan throw). "Keseluruhan" range = null (query tanpa batas tanggal) tapi `days_effective` untuk rata-rata dihitung dari transaksi pertama sampai hari ini (max 1) — hindari average dibagi angka statik yang menyesatkan.
+- **Query pattern**: `Order::withoutGlobalScopes()` + filter `status != Dibatalkan` + `cabang_id` optional + range `tanggal_order` (konsisten dgn widget existing di `DashboardController::cabang()/pusat()`). Untuk `top_value_day`/`top_qty_day` pakai `GROUP BY DATE(tanggal_order)` + `ORDER BY` sesuai metrik.
+- **View**: partial reusable `resources/views/dashboard/partials/analytics-cards.blade.php` di-include di kedua dashboard dengan `$scope = 'pusat'|'cabang'` (dipakai supaya `<form action>` reload ke route sendiri, tidak mixing). Pattern card ikut `stat-card` existing (Bootstrap 5 col-6/col-lg-4/col-xl, icon + angka + label + tooltip). Dropdown auto-submit `onchange="this.form.submit()"`.
+- **Edge case**: rentang tanpa transaksi → semua kartu tampil `—` gracefully, bukan Rp0 (biar mudah dibedakan dari transaksi bernilai 0). Tanggal top-day di-format `d M Y` bahasa Indonesia via Carbon `translatedFormat`.
+
+Aturan 3.8: 4 tooltip baru (`dashboard_analytics.periode`, `.avg_tx_value`, `.avg_daily_tx`, `.avg_daily_revenue`) di partial, 1 panduan baru slug `dashboard-analytics` (dedicated, dipakai lintas Pusat/Cabang — dokumentasi cara baca 5 kartu, beda Pusat vs Cabang, edge case, troubleshooting).
+
+**Test**: `tests/Feature/SalesAnalyticsTest.php` (10 test) — **10/10 PASS**: keseluruhan/bulan/hari, order dibatalkan tidak dihitung, top_value_day beda dari top_qty_day (5 tx kecil vs 1 tx besar test case), cabang_id isolasi antar cabang, periode invalid fallback ke default, route Pusat & Cabang render partial benar, dropdown selected value dipertahankan setelah reload. Kombinasi dengan `ResepBumbuHargaBeliTest` + `UnitFamilyTest` → **29/29 PASS gabungan**, zero regresi.
+
+**Verifikasi 3.7**: syntax check 7 file OK, cache clear OK, route `/dashboard/pusat` & `/dashboard/cabang` 302 (redirect auth normal), smoke test service via Tinker semua 5 periode + scope cabang berfungsi benar, error log bersih. Tidak ada migration. Commit `df5b223`, push ke `origin/main` sukses.
+
+**Belum**: deploy ke staging/production (menunggu instruksi Owner), verifikasi klik UI nyata di browser.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
