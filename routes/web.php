@@ -185,6 +185,8 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
         // Wajib di atas '/create' & '/{produkJual}/edit' -- static path 'bumbu-pusat'
         // supaya tidak ketangkep route model binding {produkJual}.
         Route::get('/bumbu-pusat/list', [\App\Http\Controllers\MasterProdukJualController::class, 'listBumbuPusat'])->name('bumbu-pusat.list')->middleware('can:master.produk_jual.edit');
+        // Sprint Fix (2026-10-02) — detail cost per cabang sebelum Import (Q3).
+        Route::get('/bumbu-pusat/{bumbu}/detail', [\App\Http\Controllers\MasterProdukJualController::class, 'detailBumbuPusat'])->name('bumbu-pusat.detail')->middleware('can:master.produk_jual.edit');
         // Preview subtotal 1 Bumbu Pusat -- BUKAN bind ke {produkJual} (bug fix
         // 2026-09-19: subtotal 1 bumbu tidak butuh produk tersimpan, lihat
         // CLAUDE.md 4.19), jadi jalan di halaman Create maupun Edit.

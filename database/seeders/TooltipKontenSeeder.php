@@ -137,7 +137,10 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'resep_bumbu.satuan', 'title' => 'Satuan Takaran', 'modul' => 'penjualan', 'urutan' => 3,
              'content' => 'Satuan angka takaran, bukan satuan stok. gram/ml dibagi 1000 (jadi kg/liter), ons dibagi 10, kg dipakai apa adanya. Contoh: susu bersatuan liter, takaran 150 ml = 0,15 liter terpotong.'],
             ['key' => 'resep_bumbu.mode_harga', 'title' => 'Mode Harga', 'modul' => 'penjualan', 'urutan' => 4,
-             'content' => 'Gratis (include) = bahan sudah termasuk harga menu, tidak ditagih terpisah. Harga Master = ditagih terpisah memakai harga jual bahan di Master Barang.'],
+             'content' => 'Gratis (include) = bahan sudah termasuk harga menu, tidak ditagih terpisah. Harga Master = ditagih terpisah memakai Harga Beli Terakhir (modal) bahan di Master Barang — BUKAN harga jual.'],
+            // Sprint Fix (2026-10-02): kolom "Harga Beli (Modal)" Master Bumbu Pusat.
+            ['key' => 'resep_bumbu.harga_beli_modal', 'title' => 'Harga Beli (Modal)', 'modul' => 'penjualan', 'urutan' => 5,
+             'content' => 'Harga Beli Terakhir bahan ini di Master Barang (modal produksi) — BUKAN harga jual ke customer. Dipakai untuk hitung biaya resep, bukan harga di POS.'],
 
             ['key' => 'loyalty.tipe_program', 'title' => 'Tipe Program', 'modul' => 'loyalty', 'urutan' => 1,
              'content' => 'Auto-Track = kemajuan pelanggan dihitung otomatis dari transaksi POS (mis. belanja kumulatif Rp500.000). Event-Based = pelanggan mengklaim manual dengan bukti (mis. posting di media sosial), lalu Owner/Admin Pusat menyetujui; 1x per pelanggan.'],
@@ -959,6 +962,11 @@ class TooltipKontenSeeder extends Seeder
                 'key'     => 'master_produk_jual.import_bumbu',
                 'title'   => 'Import dari Bumbu Pusat',
                 'content' => 'Pakai ini kalau bumbu/campuran bahan sudah didaftarkan di Master Bumbu Pusat (mis. "Bumbu Kecap Manis Standar" dipakai banyak produk) — hemat waktu input, dan HPP-nya otomatis ikut update kalau komposisi bumbu diubah nanti. Untuk bahan yang cuma dipakai produk ini saja, pakai "Tambah Bahan" manual.',
+            ],
+            [
+                'key'     => 'master_produk_jual.import_bumbu_cost_cabang',
+                'title'   => 'Cost per Cabang',
+                'content' => 'Cost aktual FIFO dari stok cabang (batch tertua yang masih tersisa). Kalau kosong/belum ada batch di cabang itu (ditandai *), sistem pakai Harga Beli Terakhir global sebagai gantinya. Tabel ini murni pratinjau untuk membantu Owner memutuskan sebelum Import — tidak disimpan.',
             ],
             [
                 'key'     => 'master_produk_jual.baris_linked',

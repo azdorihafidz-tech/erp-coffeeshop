@@ -12,6 +12,7 @@ use App\Models\ItemCategory;
 use App\Models\ItemVariant;
 use App\Models\ResepBumbu;
 use App\Models\ResepBumbuItem;
+use App\Models\StockBatch;
 use App\Services\CascadeDeleteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -350,6 +351,71 @@ class MasterProdukJualController extends Controller
             'data' => $bumbus->map(fn ($b) => [
                 'id' => $b->id, 'nama' => $b->nama, 'kode' => $b->kode, 'jumlah_bahan' => $b->items_count,
             ]),
+        ]);
+    }
+
+    /**
+     * Sprint Fix (2026-10-02) — detail cost per cabang untuk 1 Bumbu Pusat,
+     * ditampilkan di modal Import SEBELUM Owner klik Import (Q3). Per bahan,
+     * per cabang aktif: cost = harga FIFO batch tertua yang masih ada stok
+     * (`stock_batches.qty_sisa > 0`, urut `tanggal_masuk` — batch yang akan
+     * kepakai duluan), fallback `items.harga_beli_terakhir` (global) kalau
+     * cabang itu belum pernah punya stok bahan ini sama sekali (Q1/Q2).
+     */
+    public function detailBumbuPusat(ResepBumbu $bumbu)
+    {
+        abort_unless(auth()->user()->can('master.produk_jual.edit'), 403);
+
+        $bumbu->load('items.item');
+        $cabangs = Cabang::aktif()->orderBy('nama_cabang')->get(['id', 'nama_cabang', 'kode_cabang']);
+
+        $bahan = $bumbu->items->filter(fn ($i) => $i->item && $i->mode_harga === 'pakai_master')->values();
+        $itemIds = $bahan->pluck('item_id')->all();
+
+        // Batch tertua per item+lokasi (FIFO) dalam 1 query, bukan N+1.
+        $fifoBatches = StockBatch::whereIn('item_id', $itemIds)
+            ->where('qty_sisa', '>', 0)
+            ->orderBy('tanggal_masuk')
+            ->orderBy('id')
+            ->get(['item_id', 'lokasi_id', 'harga_beli_per_unit'])
+            ->groupBy(fn ($b) => $b->item_id . '-' . $b->lokasi_id)
+            ->map(fn ($group) => (float) $group->first()->harga_beli_per_unit);
+
+        $baris = $bahan->map(function ($ri) use ($cabangs, $fifoBatches) {
+            $fallback = (float) ($ri->item->harga_beli_terakhir ?? 0);
+            $costPerCabang = $cabangs->mapWithKeys(function ($c) use ($ri, $fifoBatches, $fallback) {
+                $key = $ri->item_id . '-' . $c->id;
+                $cost = $fifoBatches->get($key);
+                return [$c->id => [
+                    'harga'     => $cost ?? $fallback,
+                    'is_fifo'   => $cost !== null,
+                ]];
+            });
+
+            return [
+                'nama'    => $ri->item->nama_item,
+                'qty'     => round((float) $ri->qty_per_unit, 3),
+                'satuan'  => $ri->satuan,
+                'per_cabang' => $costPerCabang,
+            ];
+        })->values();
+
+        // Total per cabang = SUM(qty_per_unit_dalam_kg x harga cabang itu) semua bahan.
+        $totalPerCabang = $cabangs->mapWithKeys(function ($c) use ($bahan, $fifoBatches) {
+            $total = $bahan->sum(function ($ri) use ($c, $fifoBatches) {
+                $fallback = (float) ($ri->item->harga_beli_terakhir ?? 0);
+                $key = $ri->item_id . '-' . $c->id;
+                $cost = $fifoBatches->get($key) ?? $fallback;
+                return $ri->qty_per_unit_dalam_kg * $cost;
+            });
+            return [$c->id => round($total, 2)];
+        });
+
+        return response()->json([
+            'nama'    => $bumbu->nama,
+            'cabangs' => $cabangs->map(fn ($c) => ['id' => $c->id, 'nama' => $c->nama_cabang, 'kode' => $c->kode_cabang]),
+            'bahan'   => $baris,
+            'total_per_cabang' => $totalPerCabang,
         ]);
     }
 

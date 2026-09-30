@@ -269,19 +269,42 @@
 @endcan
 @endif
 
-{{-- Modal Import dari Bumbu Pusat (2026-09-17) --}}
+{{-- Modal Import dari Bumbu Pusat (2026-09-17, detail per-cabang: Sprint Fix 2026-10-02) --}}
 <div class="modal fade" id="modalImportBumbu" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h6 class="modal-title fw-bold"><i class="bi bi-box-arrow-in-down me-1"></i>Import dari Bumbu Pusat</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="text" class="form-control form-control-sm mb-2" id="searchBumbuPusat"
-                    placeholder="Cari nama bumbu..." oninput="cariBumbuPusat(this.value)">
-                <div id="listBumbuPusat" class="list-group">
-                    <div class="text-center text-muted py-3 small">Ketik untuk cari, atau tunggu daftar dimuat...</div>
+                {{-- Step 1: cari & pilih bumbu --}}
+                <div id="stepPilihBumbu">
+                    <input type="text" class="form-control form-control-sm mb-2" id="searchBumbuPusat"
+                        placeholder="Cari nama bumbu..." oninput="cariBumbuPusat(this.value)">
+                    <div id="listBumbuPusat" class="list-group">
+                        <div class="text-center text-muted py-3 small">Ketik untuk cari, atau tunggu daftar dimuat...</div>
+                    </div>
+                </div>
+
+                {{-- Step 2: detail cost per cabang sebelum konfirmasi import --}}
+                <div id="stepDetailBumbu" class="d-none">
+                    <button type="button" class="btn btn-sm btn-outline-secondary mb-2" onclick="kembaliKeListBumbu()">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </button>
+                    <h6 class="fw-bold mb-1" id="detailBumbuNama"></h6>
+                    <div id="detailBumbuBody">
+                        <div class="text-center text-muted py-3 small">Memuat detail cost per cabang...</div>
+                    </div>
+                    <div class="alert alert-info small py-2 mt-2 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Harga per cabang diambil dari <strong>batch stok FIFO</strong> tertua yang masih tersisa di cabang itu (bukan harga master global).
+                        Cabang yang belum pernah punya stok bahan ini pakai <strong>Harga Beli Terakhir</strong> global (ditandai <span class="text-muted">*</span>).
+                        <x-tooltip key="master_produk_jual.import_bumbu_cost_cabang" placement="top" />
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm w-100 mt-2" id="btnKonfirmasiImport" onclick="konfirmasiImportBumbu()">
+                        <i class="bi bi-check-circle me-1"></i>Import Bumbu Ini
+                    </button>
                 </div>
             </div>
         </div>
@@ -484,9 +507,19 @@ function hitungSubtotalLinkedBaris(tr) {
     }, 400);
 }
 
+const BUMBU_PUSAT_DETAIL_URL_BASE = @json(route('master.produk-jual.bumbu-pusat.detail', ['bumbu' => '__ID__']));
+let bumbuTerpilih = null; // {id, nama} -- dipakai konfirmasiImportBumbu()
+
 function bukaModalImportBumbu() {
     new bootstrap.Modal(document.getElementById('modalImportBumbu')).show();
+    kembaliKeListBumbu();
     cariBumbuPusat('');
+}
+
+function kembaliKeListBumbu() {
+    document.getElementById('stepDetailBumbu').classList.add('d-none');
+    document.getElementById('stepPilihBumbu').classList.remove('d-none');
+    bumbuTerpilih = null;
 }
 
 let bumbuSearchTimeout = null;
@@ -514,8 +547,60 @@ function cariBumbuPusat(search) {
     }, 250);
 }
 
+// Sprint Fix (2026-10-02): klik bumbu TIDAK langsung import lagi -- tampilkan
+// detail cost per cabang dulu (Q3), baru Owner konfirmasi via tombol Import.
 function pilihBumbuPusat(id, nama) {
-    tambahBarisResepLinked(id, nama, { qty_per_unit: 1 });
+    bumbuTerpilih = { id, nama };
+    document.getElementById('stepPilihBumbu').classList.add('d-none');
+    document.getElementById('stepDetailBumbu').classList.remove('d-none');
+    document.getElementById('detailBumbuNama').textContent = nama;
+    document.getElementById('detailBumbuBody').innerHTML = '<div class="text-center text-muted py-3 small">Memuat detail cost per cabang...</div>';
+
+    fetch(BUMBU_PUSAT_DETAIL_URL_BASE.replace('__ID__', id))
+        .then(r => r.json())
+        .then(data => renderDetailBumbu(data))
+        .catch(() => {
+            document.getElementById('detailBumbuBody').innerHTML = '<div class="text-center text-danger py-3 small">Gagal memuat detail. Coba lagi.</div>';
+        });
+}
+
+function renderDetailBumbu(data) {
+    const cabangs = data.cabangs || [];
+    const bahan = data.bahan || [];
+    const totalPerCabang = data.total_per_cabang || {};
+
+    if (!bahan.length) {
+        document.getElementById('detailBumbuBody').innerHTML = '<div class="text-center text-muted py-3 small">Bumbu ini belum punya bahan dengan mode harga "Harga Master".</div>';
+        return;
+    }
+
+    let thead = '<th class="small">Bahan</th><th class="text-end small">Qty</th>' + cabangs.map(c => `<th class="text-end small">${c.kode}</th>`).join('');
+    let rows = bahan.map(b => {
+        const cols = cabangs.map(c => {
+            const info = b.per_cabang[c.id] || { harga: 0, is_fifo: false };
+            const mark = info.is_fifo ? '' : '<span class="text-muted">*</span>';
+            return `<td class="text-end small">Rp ${Math.round(info.harga).toLocaleString('id-ID')}${mark}</td>`;
+        }).join('');
+        return `<tr><td class="small">${b.nama}</td><td class="text-end small">${b.qty} ${b.satuan}</td>${cols}</tr>`;
+    }).join('');
+
+    let totalRow = '<tr class="table-light fw-bold"><td class="small">Total per Cabang</td><td></td>'
+        + cabangs.map(c => `<td class="text-end small">Rp ${Math.round(totalPerCabang[c.id] || 0).toLocaleString('id-ID')}</td>`).join('')
+        + '</tr>';
+
+    document.getElementById('detailBumbuBody').innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light"><tr>${thead}</tr></thead>
+                <tbody>${rows}${totalRow}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+function konfirmasiImportBumbu() {
+    if (!bumbuTerpilih) return;
+    tambahBarisResepLinked(bumbuTerpilih.id, bumbuTerpilih.nama, { qty_per_unit: 1 });
     bootstrap.Modal.getInstance(document.getElementById('modalImportBumbu')).hide();
 }
 

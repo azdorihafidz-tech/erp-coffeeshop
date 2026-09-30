@@ -99,12 +99,16 @@ class ResepBumbuItem extends Model
     /**
      * Preview harga (display-only, TIDAK disimpan ke DB) — total biaya bahan
      * ini per 1 unit produksi kalau mode_harga = pakai_master. Gratis = 0.
+     * Sprint Fix (2026-10-02): sumber harga = harga_beli_terakhir (MODAL),
+     * bukan harga_jual — Master Bumbu Pusat itung biaya produksi, bukan
+     * harga jual ke customer. Lihat CLAUDE.md riwayat "Sprint Fix Harga
+     * Master Bumbu Pusat".
      */
     public function getTotalHargaMasterAttribute(): float
     {
         if ($this->mode_harga !== 'pakai_master') {
             return 0.0;
         }
-        return round($this->qty_per_unit_dalam_kg * (float) ($this->item?->harga_jual ?? 0), 2);
+        return round($this->qty_per_unit_dalam_kg * (float) ($this->item?->harga_beli_terakhir ?? 0), 2);
     }
 }

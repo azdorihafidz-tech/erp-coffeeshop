@@ -1854,7 +1854,14 @@ Menyimpan resep/komposisi bahan baku per produk (mis. Kopi Susu butuh Roasted Be
 
 - **Cara utama kelola resep SEKARANG lewat form Master → Produk Jual** (section "Komposisi/Resep"), bukan lewat halaman ini. Resep yang sudah terhubung ke sebuah produk otomatis ter-apply di POS begitu kasir klik produknya di grid — **tidak ada tombol pilih resep manual di POS**.
 - **Halaman Master Bumbu Pusat ini fungsinya sebagai REFERENSI/OVERVIEW** — lihat semua resep sekaligus (kolom "Produk Terhubung" menunjukkan resep itu dipakai produk yang mana), tanpa harus buka form Produk Jual satu-satu. Klik **Edit** pada resep yang sudah terhubung produk akan otomatis diarahkan ke form Produk Jual.
-- **Harga bahan TIDAK disimpan di sini** — selalu diambil otomatis dari Master Barang (`harga_jual`/`harga_beli_terakhir`). Update harga di Master Barang, semua resep yang memakai bahan itu otomatis ikut harga baru.
+- **Harga bahan TIDAK disimpan di sini** — selalu diambil otomatis dari **Harga Beli Terakhir** (modal) di Master Barang. Update harga beli di Master Barang, semua resep yang memakai bahan itu otomatis ikut harga baru.
+
+## Perbedaan Harga Beli vs Harga Jual (PENTING)
+
+- **Harga Beli Terakhir** = modal/cost bahan mentah — INI yang dipakai Master Bumbu Pusat & kalkulasi HPP resep. Diisi lewat form Master Barang, field "Harga Beli Terakhir", atau otomatis ter-update tiap kali Purchase Order diterima.
+- **Harga Jual** = harga yang dilihat customer di POS — HANYA relevan untuk item bertipe Produk Jual (menu yang dijual langsung), TIDAK dipakai untuk bahan baku/kemasan sama sekali.
+- Bahan baku/kemasan (tipe `bahan_baku`/`kemasan`) TIDAK PERLU diisi Harga Jual — biarkan kosong, hanya Harga Beli Terakhir yang perlu diisi.
+- Kalau kolom "Harga Beli (Modal)" di halaman ini tampil "Belum diset", artinya item bahan itu belum punya Harga Beli Terakhir di Master Barang — resep akan menghitung HPP Rp0 untuk bahan itu sampai diisi.
 
 ## ⚠️ Jangan Bikin Resep Baru Lewat Tombol "Tambah Resep" di Halaman Ini
 
@@ -3412,8 +3419,9 @@ Kalau sebuah bumbu/campuran bahan dipakai di **banyak produk** (mis. "Sirup Vani
 
 1. Di section Komposisi/Resep, klik tombol **"Import dari Bumbu Pusat"** (sebelah "Tambah Bahan")
 2. Cari & pilih bumbu dari daftar (cuma menampilkan Bumbu Pusat yang berstatus Aktif)
-3. Baris baru muncul dengan badge **🧂 Bumbu Pusat** — isi **Qty** = berapa **porsi bumbu** dipakai per 1 unit produk ini (biasanya 1)
-4. Simpan seperti biasa
+3. **Sebelum import**, muncul tabel detail cost per cabang (Sprint 2026-10-02) — cek dulu harga tiap bahan di tiap cabang (diambil dari stok FIFO cabang itu, atau Harga Beli Terakhir global kalau cabang belum pernah punya stok) sebelum klik **"Import Bumbu Ini"**
+4. Baris baru muncul dengan badge **🧂 Bumbu Pusat** — isi **Qty** = berapa **porsi bumbu** dipakai per 1 unit produk ini (biasanya 1)
+5. Simpan seperti biasa
 
 **Contoh use case**: 3 menu kopi semua pakai "Sirup Vanilla Standar" (isi: sirup vanilla 15ml + gula 3g per porsi). Import bumbu ini ke ketiga produk dengan qty masing-masing sesuai kebutuhan (mis. 1 porsi untuk Vanilla Latte, 1.5 porsi untuk Cappuccino yang porsinya lebih besar). Kalau nanti resep sirup diubah (mis. takaran ditambah jadi 18ml) di Master Bumbu Pusat, **HPP ketiga produk otomatis ikut berubah** tanpa perlu edit satu-satu.
 
