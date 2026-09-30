@@ -79,6 +79,8 @@
             </div>
         </div>
 
+        <x-unit-beli-section />
+
         <div class="card mb-3">
             <div class="card-header fw-semibold">Stok Awal per Outlet (opsional) <x-tooltip key="master_bahan_baku.stok_awal" /></div>
             <div class="card-body">

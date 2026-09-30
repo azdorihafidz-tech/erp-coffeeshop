@@ -79,6 +79,8 @@
                 <div class="form-text mt-2">Stok per outlet dikelola lewat menu <a href="{{ route('stok.index') }}">Stok &amp; Inventori</a> / Adjustment Stok.</div>
             </div>
         </div>
+
+        <x-unit-beli-section :unitBeli="$item->unit_beli" :isiPerUnitBeli="$item->isi_per_unit_beli" />
     </div>
 
     <div class="col-12 col-lg-4">

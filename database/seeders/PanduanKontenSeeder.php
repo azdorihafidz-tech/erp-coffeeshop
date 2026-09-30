@@ -3346,18 +3346,34 @@ Mengelola data bahan baku (green bean, susu, sirup), kemasan (cup, tutup, sedota
    - **Kategori** (opsional, bisa tambah kategori baru langsung dari form)
    - **Harga Beli / HPP** dan **Qty Minimum** (untuk notifikasi stok menipis)
 4. *(Opsional)* Isi **Stok Awal per Outlet** — angka langsung tersimpan sebagai stok mula-mula di outlet yang diisi, kosongkan outlet yang belum ada stoknya
-5. Klik **Simpan**
+5. *(Opsional)* Isi **Unit Beli** — lihat section "Cara Isi Unit Beli" di bawah
+6. Klik **Simpan**
+
+## Cara Isi Unit Beli
+
+Fitur ini untuk bahan yang kamu **beli dalam pack/karung/dus** tapi **pakainya per pcs/kg satuan kecil** — contoh: cup dibeli per pack isi 100, tapi dipakai 1 pcs per gelas.
+
+1. Isi **Satuan** dengan satuan PAKAI (contoh: `pcs`) — ini yang dipakai di resep/stok seperti biasa
+2. Di section **Unit Beli (Opsional)**, isi:
+   - **Unit Beli** — nama unit belinya (contoh: `pack`, `karung`, `dus`) — ada saran umum, atau ketik bebas
+   - **Isi per Unit Beli** — berapa satuan pakai dalam 1 unit beli (contoh: `100` kalau 1 pack = 100 pcs)
+3. Preview otomatis muncul: "1 pack = 100 pcs"
+4. Kosongkan kedua field kalau bahan ini selalu dibeli & dipakai dalam satuan yang sama (mis. gula per kg beli per kg juga) — TIDAK wajib diisi
+
+Setelah diisi, form **Pembelian (PO)** dan **Adjustment Stok** untuk item ini otomatis menawarkan pilihan input dalam Unit Beli — kamu tinggal masukkan jumlah pack & harga per pack, sistem otomatis hitung ke pcs/harga per pcs di belakang layar. Data yang tersimpan di sistem (stok, resep, laporan) TETAP dalam satuan pakai — Unit Beli murni mempermudah INPUT saja.
 
 ## Catatan Penting
 
 - Menu ini TIDAK punya field foto/resep/varian — kalau kamu butuh itu, produk yang kamu maksud kemungkinan seharusnya masuk menu **Produk Jual**, bukan di sini
 - Stok Awal cuma bisa diisi saat **Tambah** item baru. Untuk menambah/mengurangi stok item yang sudah ada, gunakan menu **Stok → Adjustment Stok**, bukan edit ulang item ini
 - Tipe **Tambahan Gratis** otomatis muncul di POS section "Item Tambahan" — pastikan kategorinya di-set ke kategori khusus item tambahan (kode kategori `TMB`) supaya tampil di tempat yang benar
+- **Unit Beli & Isi per Unit Beli harus diisi BERSAMAAN** — kalau cuma salah satu diisi, form menolak simpan
 
 ## Troubleshooting
 
 - **Item tidak muncul di form Resep (Produk Jual)?** Cuma item bertipe Bahan Baku/Kemasan/Tambahan Gratis yang bisa dipilih sebagai bahan resep — cek tipe-nya benar
 - **Kode Item ditolak "sudah dipakai"?** Kode harus unik lintas SEMUA tipe item (termasuk Produk Jual), cek dulu di kedua menu
+- **Dropdown Unit di form Pembelian/Adjustment tidak muncul pilihan pack?** Cek Unit Beli & Isi per Unit Beli item ini sudah terisi keduanya, lalu simpan ulang
 MARKDOWN
             ,
             'modul'  => 'master',

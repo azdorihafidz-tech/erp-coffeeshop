@@ -251,6 +251,10 @@
                 </div>
             </div>
 
+            {{-- Sprint Unit Family (2026-10-02) --}}
+            <div class="section-title mt-4"><i class="bi bi-boxes me-1"></i>Unit Beli</div>
+            <x-unit-beli-section />
+
             {{-- Deskripsi --}}
             <div class="section-title mt-4"><i class="bi bi-card-text me-1"></i>Deskripsi</div>
             <div class="mb-0">

@@ -54,6 +54,21 @@ class TooltipKontenSeeder extends Seeder
                 'modul'   => 'item',
                 'urutan'  => 6,
             ],
+            // ── Sprint Unit Family (2026-10-02): unit_beli/isi_per_unit_beli ──
+            [
+                'key'     => 'item.unit_beli',
+                'title'   => 'Unit Beli',
+                'content' => 'Opsional. Isi kalau kamu beli item ini dalam pack/karung/dus, bukan satuan pakai langsung (contoh: cup dibeli per pack). Nanti di form Pembelian & Adjustment Stok, kamu bisa input jumlah dalam unit ini dan sistem otomatis hitung ke satuan pakai. Kosongkan kalau selalu beli & pakai dalam satuan yang sama.',
+                'modul'   => 'item',
+                'urutan'  => 7,
+            ],
+            [
+                'key'     => 'item.isi_per_unit_beli',
+                'title'   => 'Isi per Unit Beli',
+                'content' => 'Berapa satuan pakai dalam 1 Unit Beli (contoh: 1 pack = 100 pcs, isi 100). Wajib diisi bersamaan dengan Unit Beli — kalau salah satu diisi, satunya wajib diisi juga.',
+                'modul'   => 'item',
+                'urutan'  => 8,
+            ],
             // ===== Roastery V2 Minggu 1-2 (2026-09-26): Master Petani =====
             ['key' => 'petani.nama_kebun', 'title' => 'Nama Kebun', 'modul' => 'roastery', 'urutan' => 1,
              'content' => 'Nama atau lokasi kebun asal buah kopi (mis. "Kebun Sidikalang Atas"). Membantu melacak asal biji sampai ke produk jadi, penting untuk produk specialty seperti Wine/Honey.'],
@@ -272,6 +287,13 @@ class TooltipKontenSeeder extends Seeder
                 'content' => 'Harga beli per unit dari vendor. Nilai ini direkam sebagai batch FIFO baru saat PO diterima. HPP (Harga Pokok Penjualan) produk dihitung dari urutan batch FIFO tertua → termuda.',
                 'modul'   => 'pembelian',
                 'urutan'  => 5,
+            ],
+            [
+                'key'     => 'pembelian.unit_input',
+                'title'   => 'Unit',
+                'content' => 'Kalau item punya Unit Beli (mis. pack), dropdown ini menawarkan pilihan beli dalam unit itu — Qty & Harga yang kamu input dianggap per-unit-beli, sistem otomatis convert ke satuan pakai saat disimpan. Pilih satuan pakai biasa kalau mau input langsung tanpa konversi.',
+                'modul'   => 'pembelian',
+                'urutan'  => 6,
             ],
 
             // ── STOK REQUEST ──────────────────────────────────────────────────
@@ -971,6 +993,16 @@ class TooltipKontenSeeder extends Seeder
             'title'   => 'Stok Awal per Outlet',
             'content' => 'Cuma dipakai sekali saat item baru dibuat, sebagai stok mula-mula. Untuk menambah/mengurangi stok item yang sudah ada, gunakan menu Adjustment Stok, bukan edit item ini.',
             'modul'   => 'master_bahan_baku',
+            'urutan'  => 1,
+            'aktif'   => true,
+        ]);
+
+        // Sprint Unit Family (2026-10-02, porting dari erp-dimsum).
+        Tooltip::updateOrCreate(['key' => 'adjustment.unit_input'], [
+            'key'     => 'adjustment.unit_input',
+            'title'   => 'Unit',
+            'content' => 'Kalau item punya Unit Beli (mis. pack), dropdown ini menawarkan pilihan hitung stok fisik dalam unit itu — Qty Stok Fisik yang kamu input dianggap per-unit-beli, sistem otomatis convert ke satuan pakai saat disimpan. Audit trail input asli tercatat di catatan.',
+            'modul'   => 'adjustment',
             'urutan'  => 1,
             'aktif'   => true,
         ]);

@@ -26,6 +26,8 @@ class AdjustmentStokRequest extends FormRequest
             'batch_id_target'  => 'required_if:mode_distribusi,batch_existing|nullable|integer|exists:stock_batches,id',
             'harga_custom'     => 'nullable|numeric|min:0',
             'catat_sebagai_biaya' => 'nullable|boolean',
+            // Sprint Unit Family (2026-10-02).
+            'unit_input'       => 'nullable|string|max:20',
         ];
     }
 
