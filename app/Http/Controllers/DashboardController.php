@@ -20,6 +20,7 @@ use App\Services\LoyaltyKlaimService;
 use App\Services\LoyaltyService;
 use App\Services\NeracaService;
 use App\Services\PoDashboardService;
+use App\Services\SalesAnalyticsService;
 use App\Models\Kas;
 use App\Models\Setoran;
 use Carbon\Carbon;
@@ -35,6 +36,7 @@ class DashboardController extends Controller
         private JamRamaiService $jamRamaiService,
         private LoyaltyService $loyaltyService,
         private LoyaltyKlaimService $loyaltyKlaimService,
+        private SalesAnalyticsService $salesAnalyticsService,
     ) {
     }
 
@@ -183,6 +185,10 @@ class DashboardController extends Controller
             ? $this->loyaltyKlaimService->getWidgetData()
             : null;
 
+        // Sprint Analytics Dashboard (2026-10-02) — 5 metrik penjualan dgn filter periode.
+        $salesAnalyticsPeriode = $request->input('periode', SalesAnalyticsService::PERIODE_DEFAULT);
+        $salesAnalytics = $this->salesAnalyticsService->getAllMetrics($cabangId, $salesAnalyticsPeriode);
+
         return view('dashboard.cabang', compact(
             'cabang',
             'omzetHariIni',
@@ -200,7 +206,9 @@ class DashboardController extends Controller
             'analyticsSnapshot',
             'jamRamaiSnapshot',
             'loyaltyWidget',
-            'loyaltyKlaimWidget'
+            'loyaltyKlaimWidget',
+            'salesAnalytics',
+            'salesAnalyticsPeriode'
         ));
     }
 
@@ -425,6 +433,10 @@ class DashboardController extends Controller
             ? $this->loyaltyKlaimService->getWidgetData()
             : null;
 
+        // Sprint Analytics Dashboard (2026-10-02) — 5 metrik semua cabang.
+        $salesAnalyticsPeriode = $request->input('periode', SalesAnalyticsService::PERIODE_DEFAULT);
+        $salesAnalytics = $this->salesAnalyticsService->getAllMetrics(null, $salesAnalyticsPeriode);
+
         return view('dashboard.pusat', compact(
             'dashboardOwner',
             'totalOmzetBulanIni',
@@ -444,7 +456,9 @@ class DashboardController extends Controller
             'analyticsSnapshot',
             'jamRamaiSnapshot',
             'loyaltyWidget',
-            'loyaltyKlaimWidget'
+            'loyaltyKlaimWidget',
+            'salesAnalytics',
+            'salesAnalyticsPeriode'
         ));
     }
 }

@@ -3533,6 +3533,70 @@ MARKDOWN
             'urutan' => 21,
             'aktif'  => true,
         ]);
+
+        // Sprint Analytics Dashboard (2026-10-02).
+        Panduan::updateOrCreate(['slug' => 'dashboard-analytics'], [
+            'judul'  => 'Dashboard — 5 Metrik Analytics Penjualan',
+            'konten' => <<<'MARKDOWN'
+## Tujuan
+Section "Analytics Penjualan" di Dashboard Pusat maupun Dashboard Cabang menampilkan 5 kartu analisa penjualan agregat, dengan **1 dropdown filter periode** di kanan atas yang berlaku untuk kelima kartu sekaligus.
+
+## Filter Periode
+
+Ada 4 pilihan di dropdown:
+
+- **Keseluruhan** — semua data historis (dari transaksi pertama sampai hari ini)
+- **Tahun Berjalan** — 1 Januari tahun ini sampai hari ini
+- **Bulan Ini** — tanggal 1 bulan berjalan sampai hari ini *(default)*
+- **Hari Ini** — hanya transaksi yang tanggal_order-nya hari ini
+
+Pilih dropdown, halaman auto-reload. Filter otomatis ter-ingat via query string di URL (`?periode=...`).
+
+## Penjelasan 5 Kartu
+
+1. **Rata-rata Nilai per Transaksi**
+   - Total omzet ÷ jumlah transaksi
+   - Menunjukkan **rata-rata belanja pelanggan per kunjungan**
+   - Turun berarti pelanggan cenderung beli lebih sedikit; naik berarti sebaliknya (mis. sukses upsell)
+
+2. **Rata-rata Jumlah Transaksi/Hari**
+   - Jumlah transaksi ÷ jumlah hari dalam rentang
+   - Menunjukkan **seberapa ramai** rata-rata harian
+   - Kalau bulan ini rata-rata 120 tx/hari, ekspektasi 1 bulan ≈ 3.600 tx
+
+3. **Hari Omzet Tertinggi**
+   - Tanggal dengan **total omzet** paling besar dalam rentang
+   - Berguna untuk cari pola: tanggal gajian, event khusus, promo, dsb
+
+4. **Hari Transaksi Terbanyak**
+   - Tanggal dengan **jumlah transaksi** paling banyak dalam rentang
+   - Bisa beda dari #3 — hari yang ramai kunjungan belum tentu omzetnya paling besar (misal banyak pesanan kecil vs sedikit pesanan besar)
+
+5. **Rata-rata Omzet Harian**
+   - Total omzet ÷ jumlah hari
+   - Berguna untuk **perencanaan cash flow** — kalau rata-rata Rp5jt/hari, ekspektasi 30 hari ≈ Rp150jt
+
+## Cara Baca — Perbedaan Pusat vs Cabang
+
+- **Dashboard Pusat** (Owner/Admin Pusat): angka **gabungan semua cabang**
+- **Dashboard Cabang** (Manajer/Kasir): angka **hanya cabang aktif** user
+
+## Catatan Penting
+
+- **Order dibatalkan tidak dihitung** — angka di sini murni transaksi aktif (Pending/Proses/Selesai)
+- Basis tanggal = `tanggal_order` (bukan `created_at`) supaya konsisten dgn widget "Omzet Hari Ini" existing
+- Untuk periode Keseluruhan, "rata-rata harian" dihitung dari **transaksi pertama sampai hari ini** (bukan tahun kalender penuh), supaya angka tidak menyesatkan kalau sistem baru live beberapa hari
+
+## Troubleshooting
+
+- **Semua kartu tampil "—"?** Berarti tidak ada transaksi aktif di rentang terpilih — coba ganti dropdown ke "Keseluruhan" untuk cek apakah memang belum ada data sama sekali
+- **Angka di Pusat ≠ jumlah Cabang?** Wajar — Pusat konsolidasi semua cabang termasuk yang tidak dilihat manajer cabang (Roastery/Gudang Pusat kalau ada transaksi). Cabang hanya angka miliknya sendiri
+MARKDOWN
+            ,
+            'modul'  => 'keuangan',
+            'urutan' => 22,
+            'aktif'  => true,
+        ]);
     }
 
     private function laporanSetoranKasirUpdate(): void

@@ -1120,5 +1120,24 @@ class TooltipKontenSeeder extends Seeder
         foreach ($data as $d) {
             Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'dashboard_owner', 'urutan' => 1, 'aktif' => true]));
         }
+
+        // Sprint Analytics Dashboard (2026-10-02) — 5 metrik penjualan.
+        $analytics = [
+            ['key' => 'dashboard_analytics.periode',
+             'title' => 'Rentang Waktu',
+             'content' => 'Pilih rentang waktu untuk menganalisa 5 metrik di bawah. Keseluruhan = semua data historis. Tahun Berjalan = 1 Januari sampai hari ini. Bulan Ini = tanggal 1 bulan berjalan sampai hari ini. Hari Ini = hanya transaksi hari ini.'],
+            ['key' => 'dashboard_analytics.avg_tx_value',
+             'title' => 'Rata-rata Nilai per Transaksi',
+             'content' => 'Total omzet dibagi jumlah transaksi di rentang waktu terpilih. Menunjukkan nilai belanja rata-rata pelanggan — turun berarti pelanggan cenderung beli lebih sedikit per kunjungan, naik berarti sebaliknya. Order dibatalkan tidak dihitung.'],
+            ['key' => 'dashboard_analytics.avg_daily_tx',
+             'title' => 'Rata-rata Jumlah Transaksi/Hari',
+             'content' => 'Total jumlah transaksi dibagi jumlah hari dalam rentang. Menunjukkan seberapa ramai penjualan harian rata-rata. Untuk Keseluruhan, dihitung dari transaksi pertama sampai hari ini (bukan tahun kalender penuh).'],
+            ['key' => 'dashboard_analytics.avg_daily_revenue',
+             'title' => 'Rata-rata Omzet Harian',
+             'content' => 'Total omzet dibagi jumlah hari dalam rentang. Berguna untuk perencanaan cash flow — kalau bulan ini omzet harian rata-rata Rp5jt, ekspektasi omzet 30 hari sekitar Rp150jt.'],
+        ];
+        foreach ($analytics as $d) {
+            Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'dashboard_analytics', 'urutan' => 1, 'aktif' => true]));
+        }
     }
 }

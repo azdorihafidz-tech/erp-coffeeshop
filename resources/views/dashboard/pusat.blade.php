@@ -43,6 +43,9 @@
 </div>
 @endif
 
+{{-- Sprint Analytics Dashboard (2026-10-02) — 5 metrik penjualan + filter periode --}}
+@include('dashboard.partials.analytics-cards', ['scope' => 'pusat'])
+
 {{-- ===== Tahap 6 D'mentai — Widget Dashboard Owner (Setoran + Kas HO) ===== --}}
 @if($dashboardOwner)
 <div class="d-flex justify-content-between align-items-center mb-2">

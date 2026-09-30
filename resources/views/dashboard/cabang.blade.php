@@ -145,6 +145,9 @@
     </div>
 </div>
 
+{{-- Sprint Analytics Dashboard (2026-10-02) — 5 metrik penjualan + filter periode --}}
+@include('dashboard.partials.analytics-cards', ['scope' => 'cabang'])
+
 @can('po_dashboard.view')
 <x-po-status-widget :ringkasan="$poRingkasan" />
 @endcan
