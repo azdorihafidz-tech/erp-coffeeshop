@@ -541,6 +541,28 @@ Ketiganya: stok pack RST001 berkurang tepat (20→10 setelah 3 transaksi total 1
 
 **Belum**: Laporan Roastery (yield per tahap, cost breakdown) + polish + verifikasi klik UI di browser oleh Owner.
 
+### 4.33 🟢 Sprint Unit Family — Porting dari erp-dimsum (2026-09-30)
+
+Porting fitur "Unit Beli" (beli bahan dalam pack/karung/dus, otomatis konversi ke satuan pakai) dari `erp-dimsum` (READ-ONLY selama porting, tidak pernah ditulis) ke Coffee Shop. Struktur controller/request/view di kedua project identik (fork lama), jadi porting 1:1 tanpa adaptasi berarti.
+
+- **Migration non-breaking**: `items.unit_beli`/`isi_per_unit_beli` (nullable), `purchase_order_items.unit_input`/`qty_input` (nullable, audit trail).
+- **Model `Item`**: `hasUnitBeli()`, `convertToUnitPakai(qty, unit)` (case-insensitive, fail-safe kalau unit tak dikenal).
+- **Component reusable** `<x-unit-beli-section>` (datalist 7 saran unit, preview live JS) — dipasang di Master Bahan Baku & Master Barang Lengkap (`/item`) SAJA, mengikuti keputusan D'mentai bahwa unit_beli murni konsep pembelian bahan, bukan penjualan (Produk Jual sengaja di luar scope, konsisten dgn precedent).
+- **Purchase Order**: dropdown Unit per-item di form, konversi qty & harga dilakukan di controller (`PurchaseOrderController::store()`) SEBELUM simpan — bukan cuma di JS — supaya `qty_pesan`/`harga_satuan` tetap dalam satuan pakai (backward compat penuh), `unit_input`/`qty_input` asli disimpan sbg audit trail.
+- **Adjustment Stok**: dropdown Unit sama pola, audit trail masuk ke `catatan` movement (`[Input: 5 pack]`).
+- **Laporan Stok**: kolom baru "Setara Pack" (dihitung inline, item tanpa unit_beli tampil `—`).
+- **Roastery items** (BHK/GRB/GRD, semua `tipe=bahan_baku`) otomatis dapat UI unit_beli lewat Master Bahan Baku — TIDAK perlu controller/view Roastery baru. RTB-PACK (`tipe=produk_jual`) di luar scope. **Cherry Purchase** (`/roastery/beli-cherry`) SENGAJA di-skip (flow beli cherry pakai service sendiri, bukan lewat PurchaseOrderController) — dijadikan TODO terpisah kalau nanti dibutuhkan.
+
+**Bug ditemukan & difix (bukan dari porting, infra lama)**: `.env.testing` masih `DB_DATABASE=erp_dimsum_test` (warisan fork, tidak pernah diperbaiki) — dibuat DB baru `erp_coffeeshop_test` (kosong) + `.env.testing` diperbaiki, sesuai CLAUDE.md 9.2. File `.env.testing` di-gitignore, jadi fix ini cuma lokal.
+
+**Bug operasional ditemukan & difix**: setelah migration Sprint Unit Family dibuat, migration itu SEMPAT belum dijalankan ke database dev `erp_coffeeshop` (cuma ke `erp_coffeeshop_test`) — Owner sempat kena 500 di `/master/bahan-baku/{id}` (edit) karena kolom `unit_beli` belum ada di DB dev. Fix: `php artisan migrate` dijalankan ke DB dev, error hilang.
+
+**Testing**: `tests/Feature/UnitFamilyTest.php` (13 test, porting dari `Tahap7/UnitFamilyTest.php` D'mentai) — **13/13 PASS saat dijalankan sendiri** (model konversi, validasi form, PO convert+backward-compat, adjustment convert+audit trail, laporan stok, migration non-breaking). 2 test awal gagal karena test-nya sendiri kurang lengkap (bukan bug fitur): `item.store` butuh `harga_jual`/`harga_beli_terakhir` eksplisit (quirk lama `ItemRequest::prepareForValidation()`, bukan diperkenalkan Sprint ini), dan test Laporan Stok kena pagination (DB test berisi 264+ baris stok dari `StokTestingSeeder`) — difix dengan filter kategori khusus test.
+
+**Temuan infra pre-existing (di luar scope, TIDAK diperbaiki)**: full test suite (`php artisan test` tanpa filter) tidak reliable dijalankan gabungan — Auth/Profile test bawaan Laravel (pakai `RefreshDatabase`) sempat membuat proses tampak macet lama (ternyata migrate:fresh internal yang lambat, bukan hang sungguhan, tapi sempat salah didiagnosis & di-kill paksa di tengah jalan sampai 2×, merusak skema `erp_coffeeshop_test` — dipulihkan dgn `migrate:fresh --seed` ulang). Selain itu, `tests/Feature/Tahap25/SchemaAndKlasifikasiTest.php` gagal banyak (22/39) karena mengetes kode item dummy era D'mentai (`PJ-DIM-001` dst) yang sudah diganti `ItemSeeder` Fase B — bukan bug, test lama yang belum di-update pasca fork. Direkomendasikan jadi item audit test-suite terpisah, di luar Sprint ini.
+
+**Verifikasi 3.7**: syntax check 19 file OK, migration jalan di DB dev (fix live 500) & DB test, cache clear OK, `UnitFamilyTest` 13/13 PASS. Commit `d51848f`, push ke `origin/main` sukses.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
