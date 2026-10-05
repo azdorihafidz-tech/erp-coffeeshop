@@ -113,10 +113,9 @@
                 <label class="form-label form-label-sm mb-1">Tipe</label>
                 <select name="tipe" class="form-select form-select-sm">
                     <option value="">Semua Tipe</option>
-                    <option value="bahan_baku" {{ request('tipe') === 'bahan_baku' ? 'selected' : '' }}>Bahan Baku</option>
-                    <option value="produk_jadi" {{ request('tipe') === 'produk_jadi' ? 'selected' : '' }}>Produk Jadi</option>
-                    <option value="kemasan" {{ request('tipe') === 'kemasan' ? 'selected' : '' }}>Kemasan</option>
-                    <option value="lainnya" {{ request('tipe') === 'lainnya' ? 'selected' : '' }}>Lainnya</option>
+                    @foreach($tipes as $tipeKey => $tipeNama)
+                    <option value="{{ $tipeKey }}" {{ request('tipe') === $tipeKey ? 'selected' : '' }}>{{ $tipeNama }}</option>
+                    @endforeach
                 </select>
             </div>
             <div class="col-6 col-sm-3 col-md-2">
@@ -206,16 +205,22 @@
                     <td>
                         @php
                             $tipeBadge = match($item->tipe) {
-                                'bahan_baku'  => 'bg-warning-subtle text-warning',
-                                'produk_jadi' => 'bg-success-subtle text-success',
-                                'kemasan'     => 'bg-info-subtle text-info',
-                                default       => 'bg-secondary-subtle text-secondary',
+                                'bahan_baku'       => 'bg-warning-subtle text-warning',
+                                'kemasan'          => 'bg-info-subtle text-info',
+                                'produk_jual'      => 'bg-success-subtle text-success',
+                                'produk_tambahan'  => 'bg-primary-subtle text-primary',
+                                'tambahan_gratis'  => 'bg-success-subtle text-success',
+                                'produk_jadi'      => 'bg-success-subtle text-success',
+                                default            => 'bg-secondary-subtle text-secondary',
                             };
                             $tipeLabel = match($item->tipe) {
-                                'bahan_baku'  => 'Bahan Baku',
-                                'produk_jadi' => 'Produk Jadi',
-                                'kemasan'     => 'Kemasan',
-                                default       => 'Lainnya',
+                                'bahan_baku'       => 'Bahan Baku',
+                                'kemasan'          => 'Kemasan',
+                                'produk_jual'      => 'Produk Jual',
+                                'produk_tambahan'  => 'Produk Tambahan',
+                                'tambahan_gratis'  => 'Tambahan Gratis',
+                                'produk_jadi'      => 'Produk Jadi',
+                                default            => 'Lainnya',
                             };
                         @endphp
                         <span class="badge {{ $tipeBadge }}" style="font-size:0.72rem">{{ $tipeLabel }}</span>
@@ -330,16 +335,22 @@
                     <span class="fw-semibold" style="color:#1e293b">{{ $item->nama_item }}</span>
                     @php
                         $tipeBadge = match($item->tipe) {
-                            'bahan_baku'  => 'bg-warning-subtle text-warning',
-                            'produk_jadi' => 'bg-success-subtle text-success',
-                            'kemasan'     => 'bg-info-subtle text-info',
-                            default       => 'bg-secondary-subtle text-secondary',
+                            'bahan_baku'       => 'bg-warning-subtle text-warning',
+                            'kemasan'          => 'bg-info-subtle text-info',
+                            'produk_jual'      => 'bg-success-subtle text-success',
+                            'produk_tambahan'  => 'bg-primary-subtle text-primary',
+                            'tambahan_gratis'  => 'bg-success-subtle text-success',
+                            'produk_jadi'      => 'bg-success-subtle text-success',
+                            default            => 'bg-secondary-subtle text-secondary',
                         };
                         $tipeLabel = match($item->tipe) {
-                            'bahan_baku'  => 'Bahan Baku',
-                            'produk_jadi' => 'Produk Jadi',
-                            'kemasan'     => 'Kemasan',
-                            default       => 'Lainnya',
+                            'bahan_baku'       => 'Bahan Baku',
+                            'kemasan'          => 'Kemasan',
+                            'produk_jual'      => 'Produk Jual',
+                            'produk_tambahan'  => 'Produk Tambahan',
+                            'tambahan_gratis'  => 'Tambahan Gratis',
+                            'produk_jadi'      => 'Produk Jadi',
+                            default            => 'Lainnya',
                         };
                     @endphp
                     <span class="badge {{ $tipeBadge }}" style="font-size:0.7rem">{{ $tipeLabel }}</span>
