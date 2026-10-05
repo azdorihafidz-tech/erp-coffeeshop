@@ -279,4 +279,61 @@ class UnitFamilyTest extends TestCase
         $this->assertEquals('YES', $poCols['unit_input']->Null);
         $this->assertEquals('YES', $poCols['qty_input']->Null);
     }
+
+    // ===== Sprint Fix UX Error Message (2026-10-05) =====
+
+    public function test_validation_shows_clear_error_when_only_unit_beli_filled(): void
+    {
+        $admin = $this->buatUser('admin_pusat');
+        $response = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
+            'kode_item' => 'BB-UX-ONLY-UNIT', 'nama_item' => 'X',
+            'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'unit_beli' => 'pack',
+            // isi_per_unit_beli sengaja kosong
+        ]);
+        $response->assertSessionHasErrors(['isi_per_unit_beli']);
+        $errors = session('errors');
+        $this->assertStringContainsString('Isi per Unit Beli WAJIB', $errors->first('isi_per_unit_beli'));
+        $this->assertStringContainsString('100', $errors->first('isi_per_unit_beli'), 'pesan error harus include contoh angka 100');
+    }
+
+    public function test_validation_shows_clear_error_when_only_isi_filled(): void
+    {
+        $admin = $this->buatUser('admin_pusat');
+        $response = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
+            'kode_item' => 'BB-UX-ONLY-ISI', 'nama_item' => 'X',
+            'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'isi_per_unit_beli' => 100,
+            // unit_beli sengaja kosong
+        ]);
+        $response->assertSessionHasErrors(['unit_beli']);
+        $this->assertStringContainsString('Unit Beli WAJIB', session('errors')->first('unit_beli'));
+    }
+
+    public function test_validation_shows_clear_error_when_isi_is_zero(): void
+    {
+        $admin = $this->buatUser('admin_pusat');
+        $response = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
+            'kode_item' => 'BB-UX-ZERO', 'nama_item' => 'X',
+            'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'unit_beli' => 'pack', 'isi_per_unit_beli' => 0,
+        ]);
+        $response->assertSessionHasErrors(['isi_per_unit_beli']);
+        $this->assertStringContainsString('LEBIH DARI 0', session('errors')->first('isi_per_unit_beli'));
+    }
+
+    public function test_form_bahan_baku_tampilkan_alert_banner_saat_error_unit_beli(): void
+    {
+        $admin = $this->buatUser('admin_pusat');
+        // Submit invalid, lalu follow redirect ke create form -- alert banner harus muncul
+        $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
+            'kode_item' => 'BB-UX-BANNER', 'nama_item' => 'X',
+            'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'unit_beli' => 'pack',
+        ])->assertSessionHasErrors(['isi_per_unit_beli']);
+
+        $response = $this->actingAs($admin)->get(route('master.bahan-baku.create'));
+        $response->assertOk();
+        $response->assertSee('Unit Beli TIDAK TERSIMPAN', false);
+    }
 }

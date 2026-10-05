@@ -47,9 +47,9 @@ class BahanBakuRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'unit_beli.required_with'         => 'Unit Beli wajib diisi kalau Isi per Unit Beli di-isi.',
-            'isi_per_unit_beli.required_with' => 'Isi per Unit Beli wajib diisi kalau Unit Beli di-isi.',
-            'isi_per_unit_beli.gt'            => 'Isi per Unit Beli harus lebih dari 0.',
+            'unit_beli.required_with'         => 'Unit Beli WAJIB diisi kalau Anda isi "Isi per Unit Beli". Contoh: pack, karton, dus.',
+            'isi_per_unit_beli.required_with' => 'Isi per Unit Beli WAJIB diisi kalau Anda isi "Unit Beli". Contoh: 1 pack = 100 pcs → isi 100.',
+            'isi_per_unit_beli.gt'            => 'Isi per Unit Beli harus LEBIH DARI 0 (misal 100, bukan 0 atau kosong).',
         ];
     }
 
