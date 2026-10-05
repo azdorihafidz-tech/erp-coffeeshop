@@ -85,6 +85,9 @@
     </div>
 </div>
 
+{{-- Sprint Analytics Laporan Penjualan (2026-10-05) --}}
+@include('laporan.penjualan._analytics-cards')
+
 <!-- Grafik -->
 <div class="row g-3 mb-4">
     <div class="col-12 col-lg-8">

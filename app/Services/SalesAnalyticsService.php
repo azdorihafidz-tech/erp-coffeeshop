@@ -62,6 +62,36 @@ class SalesAnalyticsService
         ];
     }
 
+    /**
+     * Varian untuk Laporan Penjualan (2026-10-05) — pakai date range eksplisit
+     * (dari filter form, bukan preset periode). Jumlah hari dihitung inklusif
+     * dari diffInDays+1 supaya "1 Sep s/d 30 Sep" = 30 hari, bukan 29.
+     * Shape return value sengaja sama dengan getAllMetrics() biar view bisa
+     * pakai partial yg sama.
+     */
+    public function getAllMetricsByDateRange(?int $cabangId, Carbon $start, Carbon $end): array
+    {
+        $startBound = $start->copy()->startOfDay();
+        $endBound = $end->copy()->endOfDay();
+        // startOfDay vs endOfDay = 23:59:59 diff → 0.999..., tambah 1 jadi
+        // 1.999... yang round-down ke 1 (benar untuk hari sama). Pakai intval
+        // + 1 untuk inklusif supaya 1 Sep s/d 30 Sep = 30 hari, bukan 31.
+        $days = max(1, (int) floor($startBound->diffInDays($endBound)) + 1);
+
+        return [
+            'periode'      => 'custom',
+            'periode_label' => $startBound->translatedFormat('d M Y') . ' - ' . $endBound->translatedFormat('d M Y'),
+            'start'        => $startBound,
+            'end'          => $endBound,
+            'days'         => $days,
+            'avg_tx_value' => $this->getAvgTransactionValue($cabangId, $startBound, $endBound),
+            'avg_daily_tx' => $this->getAvgDailyTransactions($cabangId, $startBound, $endBound, $days),
+            'top_value_day' => $this->getHighestValueDay($cabangId, $startBound, $endBound),
+            'top_qty_day'  => $this->getHighestQtyDay($cabangId, $startBound, $endBound),
+            'avg_daily_revenue' => $this->getAvgDailyRevenue($cabangId, $startBound, $endBound, $days),
+        ];
+    }
+
     public function getAvgTransactionValue(?int $cabangId, ?Carbon $start, ?Carbon $end): ?float
     {
         $agg = $this->baseQuery($cabangId, $start, $end)

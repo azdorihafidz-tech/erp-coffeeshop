@@ -1139,5 +1139,15 @@ class TooltipKontenSeeder extends Seeder
         foreach ($analytics as $d) {
             Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'dashboard_analytics', 'urutan' => 1, 'aktif' => true]));
         }
+
+        // Sprint Analytics Laporan Penjualan (2026-10-05).
+        Tooltip::updateOrCreate(['key' => 'laporan_penjualan.analytics_section'], [
+            'key' => 'laporan_penjualan.analytics_section',
+            'title' => 'Analytics Penjualan',
+            'content' => 'Ringkasan 5 metrik agregat (rata-rata nilai & jumlah transaksi, hari tertinggi, rata-rata omzet harian) — mengikuti filter tanggal & cabang di form di atas. Juga ikut ke Export PDF & Excel. Metrik yang sama ditampilkan di Dashboard Pusat/Cabang.',
+            'modul' => 'laporan_penjualan',
+            'urutan' => 1,
+            'aktif' => true,
+        ]);
     }
 }

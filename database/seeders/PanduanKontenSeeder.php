@@ -1486,10 +1486,29 @@ Melihat laporan penjualan dalam periode tertentu — ringkasan omzet, jumlah ord
 - Filter tanggal default: **Bulan Ini** — disimpan di session, tidak reset saat pindah halaman
 - Section **Ranking Kasir** cuma tampil untuk user yang punya izin `laporan.ranking_kasir.view` — minta Owner mencentang izin ini di **Pengaturan → Role & Hak Akses** kalau belum muncul
 
+## 5 Metrik Analytics (Sprint 2026-10-05)
+
+Di atas tabel detail transaksi muncul **5 kartu Analytics Penjualan** yang menghitung ulang mengikuti filter tanggal & cabang yang Anda pilih:
+
+1. **Rata-rata Nilai per Transaksi** — total omzet dibagi jumlah transaksi di rentang. Turun artinya rata-rata belanja pelanggan menurun, naik artinya nilai beli per transaksi membesar (misal berhasil upsell).
+2. **Rata-rata Jumlah Transaksi** — jumlah transaksi dibagi jumlah hari dalam rentang. Indikator keramaian harian rata-rata.
+3. **Hari Omzet Tertinggi** — tanggal dengan total omzet paling besar di rentang. Berguna untuk melihat pola: tanggal gajian, event, promo, dsb.
+4. **Hari Transaksi Terbanyak** — tanggal dengan jumlah transaksi paling banyak. Bisa beda dari #3 (banyak transaksi kecil ≠ omzet besar).
+5. **Rata-rata Omzet Harian** — total omzet dibagi jumlah hari. Berguna untuk proyeksi cash flow.
+
+Angka-angka ini sama persis dengan yang ada di Dashboard Pusat/Cabang, tapi di sini **mengikuti filter form** (Dari-Sampai + Cabang) alih-alih dropdown periode preset.
+
+## Export PDF / Excel
+
+Tombol **Export PDF** menghasilkan file 1 halaman: section "Ringkasan Analytics" (tabel 2 kolom 5 metrik) di atas, lalu tabel detail transaksi di bawahnya.
+
+Tombol **Export Excel** menghasilkan file dengan **2 sheet**: Sheet 1 "Ringkasan Analytics" (5 metrik + info periode), Sheet 2 "Detail Transaksi" (format tabel lama, tidak berubah). Kedua sheet mengikuti filter yang sedang aktif.
+
 ## Troubleshooting
 
 - **Data kosong?** Tidak ada order selesai di periode yang dipilih; coba perluas rentang tanggal
 - **Jumlah tidak cocok dengan Kas & Transaksi?** Laporan penjualan hanya hitung order selesai; Kas & Transaksi hitung semua transaksi termasuk pengeluaran
+- **Kartu Analytics tampil "—"?** Berarti tidak ada transaksi aktif di rentang filter — coba perluas rentang Dari-Sampai
 MARKDOWN]);
 
         Panduan::where('slug', 'laporan-stok')->update(['konten' => <<<'MARKDOWN'

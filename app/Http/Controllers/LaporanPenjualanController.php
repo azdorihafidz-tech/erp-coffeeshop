@@ -7,6 +7,7 @@ use App\Exports\LaporanPenjualanExport;
 use App\Models\Cabang;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\SalesAnalyticsService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,6 +15,10 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class LaporanPenjualanController extends Controller
 {
+    public function __construct(private SalesAnalyticsService $salesAnalyticsService)
+    {
+    }
+
     public function index(Request $request)
     {
         abort_unless(auth()->user()->can('laporan.view'), 403);
@@ -63,12 +68,24 @@ class LaporanPenjualanController extends Controller
         $totalTransaksi = (clone $query)->count();
         $rataRata = $totalTransaksi > 0 ? $totalOmzet / $totalTransaksi : 0;
 
+        // Sprint Analytics Laporan (2026-10-05) — 5 metrik dengan date range
+        // persis dari filter form (bukan preset periode). Cabang scope ikut
+        // logic $query di atas: explicit $cabangId kalau user filter cabang,
+        // active cabang kalau non-owner tanpa filter, null kalau owner lihat
+        // semua cabang.
+        $analyticsCabangId = $cabangId
+            ?: (!$user->canAccessAllBranches() ? (session('active_cabang_id') ?? $user->defaultCabangId()) : null);
+        $salesAnalytics = $this->salesAnalyticsService->getAllMetricsByDateRange($analyticsCabangId, $dari, $sampai);
+
         // Export Excel
         if ($request->export === 'excel') {
             $orders = $query->orderByDesc('tanggal_order')->get();
             $filename = 'Laporan-Penjualan-' . now()->format('Y-m-d') . '.xlsx';
 
-            return Excel::download(new LaporanPenjualanExport($orders, $user->name), $filename);
+            return Excel::download(
+                new LaporanPenjualanExport($orders, $user->name, $salesAnalytics, $dari, $sampai),
+                $filename
+            );
         }
 
         // Export PDF
@@ -80,6 +97,7 @@ class LaporanPenjualanController extends Controller
             $pdf = Pdf::loadView('laporan.penjualan.pdf', [
                 'orders' => $orders,
                 'totalOmzet' => $totalOmzet,
+                'salesAnalytics' => $salesAnalytics,
                 'judulLaporan' => 'Laporan Penjualan',
                 'filterInfo' => [
                     'Periode' => $dari->format('d/m/Y') . ' — ' . $sampai->format('d/m/Y'),
@@ -186,7 +204,8 @@ class LaporanPenjualanController extends Controller
             'cabangs',
             'dari',
             'sampai',
-            'cabangId'
+            'cabangId',
+            'salesAnalytics'
         ));
     }
 
