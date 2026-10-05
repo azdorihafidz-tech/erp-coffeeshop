@@ -619,6 +619,27 @@ Aturan 3.8: tidak ada permission/panduan/tooltip baru (murni UX improvement form
 
 **Belum**: deploy ke staging/production (snippet `clear-cache.php` include auto-set item #31 juga di prod).
 
+### 4.37 🟢 Sprint Analytics Laporan Penjualan — 5 Metrik + Export PDF/Excel (2026-10-05)
+
+Lanjutan dari 4.35 Sprint Analytics Dashboard. Owner minta 5 metrik yang sama juga tampil di menu **Laporan → Laporan Penjualan** (`/laporan/penjualan`), termasuk ikut ke file export PDF & Excel. Filter: **reuse** form `dari`-`sampai` + `cabang_id` yang sudah ada, bukan dropdown periode baru (desainnya memang beda — Dashboard = preset periode, Laporan = date range custom).
+
+- **Service**: `SalesAnalyticsService::getAllMetricsByDateRange(?int $cabangId, Carbon $start, Carbon $end)` baru — reuse 5 getter internal yang sudah ada. Jumlah hari inklusif (`1 Sep s/d 30 Sep = 30 hari`, pakai `floor(diffInDays)+1` untuk hindari float 30.999... akibat `startOfDay`-vs-`endOfDay` precision).
+- **Controller**: `LaporanPenjualanController` DI `__construct` inject `SalesAnalyticsService`. `index()` panggil `getAllMetricsByDateRange()` dengan `$dari`/`$sampai`/`$cabangId` dari form (`$analyticsCabangId` ikut logic auto-scope existing: non-owner tanpa filter → activeCabang; owner null → semua cabang; explicit filter → cabang itu). `$salesAnalytics` dipass ke view, PDF, dan Export class.
+- **View** `index.blade.php`: partial baru `laporan/penjualan/_analytics-cards.blade.php` (compact, 5 kartu kecil tanpa dropdown — beda dari partial dashboard yang punya dropdown). Dipasang di antara 3-card stat lama (Omzet/Transaksi/Rata-rata) dan grafik Tren Penjualan.
+- **PDF** `pdf.blade.php`: tabel ringkasan 2-kolom "Ringkasan Analytics" (5 baris metrik) ditambah di atas tabel detail transaksi, pakai kelas CSS `.data`/`.num` yang sudah ada di PDF layout — konsisten styling.
+- **Excel**: `LaporanPenjualanExport` di-refactor dari single-sheet (`FromCollection`) jadi `WithMultipleSheets` — Sheet 1 "Ringkasan Analytics" (6 baris label-value termasuk Periode Laporan), Sheet 2 "Detail Transaksi" (format lama tidak diubah 1 kolom pun). Konstruktor parameter `$analytics`/`$dari`/`$sampai` nullable → **backward compat** untuk caller lama yang mungkin pass 2 argumen posisional (test khusus `test_excel_export_backward_compat_tanpa_analytics` yang jaga ini).
+- **Deviasi dari brief**: brief sebut `DashboardAnalyticsService` (nama yang di brief), service yang existing & dipakai bernama `SalesAnalyticsService` (konteks lihat 4.35 — nama lain sudah terpakai untuk Kesehatan Finansial). Tidak ada perubahan nama service.
+
+Aturan 3.8: 1 tooltip baru `laporan_penjualan.analytics_section` (badge "i" di header section Analytics di view), panduan existing `laporan-penjualan` ditambah 2 section baru: "5 Metrik Analytics (Sprint 2026-10-05)" & "Export PDF / Excel".
+
+**Test**: `tests/Feature/LaporanPenjualanAnalyticsTest.php` (7 test) — **7/7 PASS** termasuk: service date range inklusif (30 hari), service hormati cabang+range (order di luar range tidak ikut), view tampil section Analytics, filter tanggal memengaruhi angka Analytics, PDF export valid dgn magic bytes `%PDF-`, Excel export punya 2 sheet, backward compat caller lama tanpa analytics. Kombinasi dengan 3 sprint sebelumnya → **40/40 PASS gabungan** (`LaporanPenjualanAnalyticsTest` + `SalesAnalyticsTest` + `UnitFamilyTest` + `ResepBumbuHargaBeliTest`), zero regresi.
+
+**Fix saat test**: 3 test awal gagal karena bug di test-nya sendiri, bukan di fitur: (1) `days_count` 30.999... (fixed di service dgn `floor()+1`), (2) `$response->streamedContent()` throw karena PDF = BinaryFileResponse (fixed pakai `getContent()`), (3) `Excel::assertDownloaded($closure)` signature butuh string filename (fixed pakai filename eksplisit).
+
+**Verifikasi 3.7**: syntax check 9 file OK, cache clear OK, error log bersih, tooltip & panduan reseed sukses, 7/7 test baru PASS, 40/40 gabungan. Tidak ada migration. Commit `e8e99da`, push ke `origin/main` sukses.
+
+**Belum**: deploy ke staging/production (menunggu instruksi Owner), verifikasi klik export PDF/Excel di browser.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
