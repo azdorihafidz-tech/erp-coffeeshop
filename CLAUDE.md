@@ -600,6 +600,25 @@ Aturan 3.8: 4 tooltip baru (`dashboard_analytics.periode`, `.avg_tx_value`, `.av
 
 **Belum**: deploy ke staging/production (menunggu instruksi Owner), verifikasi klik UI nyata di browser.
 
+### 4.36 🟢 Sprint Fix UX — Error Message Unit Family + Sample Data Item #31 (2026-10-05)
+
+Owner lapor edit unit_beli di item #31 Susu UHT tidak tersimpan. Diagnosis via Tinker (bm6f1hfda): `unit_beli=null` DAN `updated_at` sama persis `created_at` — form submit tertolak validasi `required_with` tapi error-nya tidak kelihatan jelas di UI (0 item punya unit_beli di seluruh dev DB — fitur Unit Family 4.33 belum pernah ter-test real usage).
+
+- **Pesan validasi diperbaiki** di `BahanBakuRequest::messages()` & `ItemRequest::messages()`: "WAJIB diisi kalau Anda isi X. Contoh: 1 pack = 100 pcs → isi 100." (sebelumnya cuma "wajib diisi kalau Isi per Unit Beli di-isi."), plus pesan `gt:0` eksplisit "harus LEBIH DARI 0 (misal 100, bukan 0 atau kosong)".
+- **Alert banner merah** di component `unit-beli-section.blade.php` muncul saat `$errors->has('unit_beli')` atau `$errors->has('isi_per_unit_beli')` — di bagian atas section, bukan hanya inline `invalid-feedback` yang kecil & gampang dilewatkan.
+- **Live warning kuning JS** saat partial fill: isi salah satu field saja → langsung muncul banner "Form tidak akan tersimpan — [action]" tanpa perlu klik Simpan dulu. Pesan beda untuk partial unit vs partial isi.
+- **Info banner existing** diperjelas: tambah kalimat "kedua field harus diisi bersamaan — atau kosongkan keduanya kalau tidak pakai Unit Beli".
+- **Datalist tambahan**: `karton` dimasukkan ke saran dropdown (sebelumnya tidak ada, padahal common untuk coffee shop — susu/sirup biasa dibeli per karton).
+- **Sample data item #31 Susu UHT**: diset `unit_beli='karton'`, `isi_per_unit_beli=12` (karton 12×1L, standar susu UHT) sebagai contoh satu-satunya item yang terisi di dev DB sampai Owner mulai pakai fitur secara nyata.
+
+Aturan 3.8: tidak ada permission/panduan/tooltip baru (murni UX improvement form yang sudah ada).
+
+**Test**: `UnitFamilyTest` ditambah 4 test (`test_validation_shows_clear_error_when_only_unit_beli_filled`, `test_validation_shows_clear_error_when_only_isi_filled`, `test_validation_shows_clear_error_when_isi_is_zero`, `test_form_bahan_baku_tampilkan_alert_banner_saat_error_unit_beli`) — pesan error assert mengandung "WAJIB" + contoh "100" + "LEBIH DARI 0", banner "Unit Beli TIDAK TERSIMPAN" assert muncul di form create setelah redirect dari submit yang gagal. **17/17 PASS isolated**, **33/33 PASS gabungan** dengan `ResepBumbuHargaBeliTest` + `SalesAnalyticsTest` — zero regresi.
+
+**Verifikasi 3.7**: syntax check 4 file OK, cache clear OK, error log bersih, item #31 verified di DB (karton = 12 liter), 17/17 test PASS. Tidak ada migration. Commit `76c4eb1`, push ke `origin/main` sukses.
+
+**Belum**: deploy ke staging/production (snippet `clear-cache.php` include auto-set item #31 juga di prod).
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
