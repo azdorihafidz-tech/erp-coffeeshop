@@ -115,8 +115,11 @@ class PurchaseOrderController extends Controller
         $authUser    = auth()->user();
         $cabangAktif = session('active_cabang_id') ?? $authUser->defaultCabangId();
 
-        // Ambil semua item beserta stok di semua lokasi
+        // Ambil item yang bisa di-PO ke supplier — produk_jual/produk_tambahan
+        // sengaja dikecualikan (itu hasil produksi/menu, bukan dibeli dari
+        // supplier — Sprint Filter PO 2026-10-11 request Owner).
         $items = Item::where('is_active', true)
+            ->whereNotIn('tipe', ['produk_jual', 'produk_tambahan'])
             ->with(['stocks.lokasi'])
             ->orderBy('nama_item')
             ->get()
@@ -150,6 +153,18 @@ class PurchaseOrderController extends Controller
         // dgn PO lama). qty_input + unit_input disimpan sbg audit trail.
         $itemIds = collect($data['items'])->pluck('item_id')->unique()->all();
         $itemMap = Item::whereIn('id', $itemIds)->get()->keyBy('id');
+
+        // Server-side guard — tolak kalau ada baris yang item_id-nya produk_jual/
+        // produk_tambahan (bypass dropdown via payload manipulation). Dropdown di
+        // view sudah filter, ini defense-in-depth.
+        foreach ($data['items'] as $row) {
+            $item = $itemMap[$row['item_id']] ?? null;
+            if ($item && in_array($item->tipe, ['produk_jual', 'produk_tambahan'], true)) {
+                return back()
+                    ->withInput()
+                    ->with('error', "Item '{$item->nama_item}' bertipe {$item->tipe} tidak boleh dibeli lewat PO Supplier — hanya Bahan Baku/Kemasan yang bisa.");
+            }
+        }
 
         $data['items'] = array_map(function ($row) use ($itemMap) {
             $item = $itemMap[$row['item_id']] ?? null;
