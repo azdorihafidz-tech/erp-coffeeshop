@@ -28,7 +28,10 @@ class LaporanStokController extends Controller
             $lokasiId = session('active_cabang_id') ?? $user->defaultCabangId();
         }
 
-        $query = Stock::with(['item', 'item.category', 'lokasi']);
+        $query = Stock::with(['item', 'item.category', 'lokasi'])
+            // Sprint Fix Produk Jual (2026-10-11): produk_jual/produk_tambahan
+            // tidak punya stok fisik — stoknya dipotong lewat resep saat jual.
+            ->whereHas('item', fn($q) => $q->whereNotIn('tipe', ['produk_jual', 'produk_tambahan']));
         if ($lokasiId) {
             $query->where('lokasi_id', $lokasiId);
         }
@@ -152,6 +155,7 @@ class LaporanStokController extends Controller
 
         $baseQuery = Stock::with(['item', 'item.category', 'lokasi'])
             ->whereColumn('qty', '<=', 'qty_minimum')
+            ->whereHas('item', fn($q) => $q->whereNotIn('tipe', ['produk_jual', 'produk_tambahan']))
             ->when($lokasiId, fn($q) => $q->where('lokasi_id', $lokasiId))
             ->orderByRaw('qty / NULLIF(qty_minimum, 0) ASC');
 

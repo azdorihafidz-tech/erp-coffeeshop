@@ -54,11 +54,12 @@ class ItemController extends Controller
 
     public function create()
     {
-        abort_unless(auth()->user()->can('item.create'), 403);
-
-        $categories = ItemCategory::orderBy('nama_kategori')->get();
-        $tipes      = ['bahan_baku' => 'Bahan Baku', 'kemasan' => 'Kemasan', 'tambahan_gratis' => 'Tambahan Gratis', 'produk_jual' => 'Produk Jual', 'produk_tambahan' => 'Produk Tambahan'];
-        return view('item.create', compact('categories', 'tipes'));
+        // Sprint Fix Master Barang Lengkap (2026-10-11): `/item` sekarang
+        // view-only. Create diarahkan ke master khusus — tombol Tambah di
+        // view index juga sudah dihapus, ini sekedar guard kalau user
+        // ketik URL manual atau punya bookmark lama.
+        return redirect()->route('item.index')
+            ->with('info', 'Untuk menambah bahan baku/kemasan: menu Master → Bahan Baku & Kemasan. Untuk menambah produk jual (menu POS): menu Master → Produk Jual.');
     }
 
     public function store(ItemRequest $request)
@@ -96,11 +97,21 @@ class ItemController extends Controller
     {
         abort_unless(auth()->user()->can('item.edit'), 403);
 
+        // Sprint Fix Master Barang Lengkap (2026-10-11): `/item` sekarang
+        // view-only. Edit di-redirect ke master khusus sesuai tipe item biar
+        // Owner tidak bingung — bahan_baku/kemasan/tambahan_gratis → Master
+        // Bahan Baku; produk_jual/produk_tambahan → Master Produk Jual.
+        if (in_array($item->tipe, ['produk_jual', 'produk_tambahan'], true)
+            && auth()->user()->can('master.produk_jual.edit')) {
+            return redirect()->route('master.produk-jual.edit', $item);
+        }
+        if (in_array($item->tipe, ['bahan_baku', 'kemasan', 'tambahan_gratis'], true)
+            && auth()->user()->can('master.bahan_baku.edit')) {
+            return redirect()->route('master.bahan-baku.edit', $item);
+        }
+
         $categories = ItemCategory::orderBy('nama_kategori')->get();
         $tipes      = ['bahan_baku' => 'Bahan Baku', 'kemasan' => 'Kemasan', 'tambahan_gratis' => 'Tambahan Gratis', 'produk_jual' => 'Produk Jual', 'produk_tambahan' => 'Produk Tambahan'];
-        // Bug pre-existing ditemukan saat testing Tahap 2.5 (bukan disebabkan
-        // restructure ini): view butuh $authUser (danger zone) tapi tidak
-        // pernah di-compact -> selalu 500 di halaman ini. Fix minimal.
         $authUser = auth()->user();
         return view('item.edit', compact('item', 'categories', 'tipes', 'authUser'));
     }
@@ -122,6 +133,12 @@ class ItemController extends Controller
     public function destroy(Item $item, CascadeDeleteService $cascadeService)
     {
         abort_unless(auth()->user()->can('item.delete'), 403);
+
+        // Sprint Fix Master Barang Lengkap (2026-10-11): `/item` sekarang
+        // view-only. Hapus hanya boleh dilakukan dari master khusus (Bahan
+        // Baku atau Produk Jual) sesuai tipe item, biar ada 1 titik otoritas.
+        return redirect()->route('item.index')
+            ->with('info', 'Hapus item dilakukan dari master khusus-nya: bahan baku/kemasan di menu Master → Bahan Baku, produk jual di menu Master → Produk Jual.');
 
         try {
             $nama    = $item->nama_item;

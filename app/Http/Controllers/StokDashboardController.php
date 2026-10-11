@@ -90,7 +90,10 @@ class StokDashboardController extends Controller
                 }
             })
             ->where('items.is_active', true)
-            ->whereIn('items.tipe', ['bahan_baku', 'kemasan', 'produk_jual'])
+            // Sprint Fix Produk Jual (2026-10-11): produk_jual TIDAK pernah
+            // punya stok fisik (dipotong lewat resep saat jual) — jangan tampil
+            // di dashboard stok, bingungkan Owner.
+            ->whereIn('items.tipe', ['bahan_baku', 'kemasan', 'tambahan_gratis'])
             ->when($tipe, fn($q) => $q->where('items.tipe', $tipe))
             ->whereNull('items.deleted_at')
             ->select(

@@ -76,7 +76,7 @@ class UnitFamilyTest extends TestCase
         $admin = $this->buatUser('admin_pusat');
         $response = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
             'kode_item' => 'BB-TES-1', 'nama_item' => 'Test Cup',
-            'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'pcs',
             'harga_beli_terakhir' => '50', 'qty_minimum' => 100,
             'unit_beli' => 'pack', 'isi_per_unit_beli' => 100,
         ]);
@@ -89,7 +89,7 @@ class UnitFamilyTest extends TestCase
         $admin = $this->buatUser('admin_pusat');
         $response = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
             'kode_item' => 'BB-TES-2', 'nama_item' => 'Test Legacy',
-            'tipe' => 'bahan_baku', 'satuan' => 'kg', 'harga_beli_terakhir' => '20000',
+            'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'kg', 'harga_beli_terakhir' => '20000',
         ]);
         $response->assertRedirect();
         $this->assertDatabaseHas('items', ['kode_item' => 'BB-TES-2', 'unit_beli' => null, 'isi_per_unit_beli' => null]);
@@ -99,19 +99,19 @@ class UnitFamilyTest extends TestCase
     {
         $admin = $this->buatUser('admin_pusat');
         $r1 = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
-            'kode_item' => 'BB-TES-3A', 'nama_item' => 'X', 'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'kode_item' => 'BB-TES-3A', 'nama_item' => 'X', 'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'pcs',
             'unit_beli' => 'pack',
         ]);
         $r1->assertSessionHasErrors('isi_per_unit_beli');
 
         $r2 = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
-            'kode_item' => 'BB-TES-3B', 'nama_item' => 'X', 'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'kode_item' => 'BB-TES-3B', 'nama_item' => 'X', 'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'pcs',
             'isi_per_unit_beli' => 50,
         ]);
         $r2->assertSessionHasErrors('unit_beli');
 
         $r3 = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
-            'kode_item' => 'BB-TES-3C', 'nama_item' => 'X', 'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'kode_item' => 'BB-TES-3C', 'nama_item' => 'X', 'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'pcs',
             'unit_beli' => 'pack', 'isi_per_unit_beli' => 0,
         ]);
         $r3->assertSessionHasErrors('isi_per_unit_beli');
@@ -287,7 +287,7 @@ class UnitFamilyTest extends TestCase
         $admin = $this->buatUser('admin_pusat');
         $response = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
             'kode_item' => 'BB-UX-ONLY-UNIT', 'nama_item' => 'X',
-            'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'pcs',
             'unit_beli' => 'pack',
             // isi_per_unit_beli sengaja kosong
         ]);
@@ -302,7 +302,7 @@ class UnitFamilyTest extends TestCase
         $admin = $this->buatUser('admin_pusat');
         $response = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
             'kode_item' => 'BB-UX-ONLY-ISI', 'nama_item' => 'X',
-            'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'pcs',
             'isi_per_unit_beli' => 100,
             // unit_beli sengaja kosong
         ]);
@@ -315,11 +315,51 @@ class UnitFamilyTest extends TestCase
         $admin = $this->buatUser('admin_pusat');
         $response = $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
             'kode_item' => 'BB-UX-ZERO', 'nama_item' => 'X',
-            'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'pcs',
             'unit_beli' => 'pack', 'isi_per_unit_beli' => 0,
         ]);
         $response->assertSessionHasErrors(['isi_per_unit_beli']);
         $this->assertStringContainsString('LEBIH DARI 0', session('errors')->first('isi_per_unit_beli'));
+    }
+
+    // ===== Sprint Fix Master Barang Lengkap (2026-10-11) =====
+
+    public function test_item_edit_redirect_ke_master_bahan_baku_untuk_item_bahan_baku(): void
+    {
+        $owner = $this->buatUser('owner');
+        $item = $this->itemPack(); // tipe=bahan_baku
+        $response = $this->actingAs($owner)->get(route('item.edit', $item));
+        $response->assertRedirect(route('master.bahan-baku.edit', $item));
+    }
+
+    public function test_item_edit_redirect_ke_master_produk_jual_untuk_produk_jual(): void
+    {
+        $owner = $this->buatUser('owner');
+        $item = Item::create([
+            'kode_item' => 'PJ-REDIR-' . uniqid(), 'nama_item' => 'Kopi Test',
+            'tipe' => 'produk_jual', 'jenis' => 'bahan_baku', 'satuan' => 'pcs',
+            'harga_jual' => 25000, 'is_active' => true,
+        ]);
+        $response = $this->actingAs($owner)->get(route('item.edit', $item));
+        $response->assertRedirect(route('master.produk-jual.edit', $item));
+    }
+
+    public function test_item_create_route_redirect_ke_index_dengan_info(): void
+    {
+        $owner = $this->buatUser('owner');
+        $response = $this->actingAs($owner)->get(route('item.create'));
+        $response->assertRedirect(route('item.index'));
+        $response->assertSessionHas('info');
+    }
+
+    public function test_item_destroy_route_tidak_hapus_item(): void
+    {
+        $owner = $this->buatUser('owner');
+        $item = $this->itemPack();
+        $id = $item->id;
+        $this->actingAs($owner)->delete(route('item.destroy', $item))
+            ->assertRedirect(route('item.index'));
+        $this->assertNotNull(Item::find($id), 'item harus tetap ada — destroy di-disable');
     }
 
     public function test_form_bahan_baku_tampilkan_alert_banner_saat_error_unit_beli(): void
@@ -328,7 +368,7 @@ class UnitFamilyTest extends TestCase
         // Submit invalid, lalu follow redirect ke create form -- alert banner harus muncul
         $this->actingAs($admin)->post(route('master.bahan-baku.store'), [
             'kode_item' => 'BB-UX-BANNER', 'nama_item' => 'X',
-            'tipe' => 'bahan_baku', 'satuan' => 'pcs',
+            'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'pcs',
             'unit_beli' => 'pack',
         ])->assertSessionHasErrors(['isi_per_unit_beli']);
 

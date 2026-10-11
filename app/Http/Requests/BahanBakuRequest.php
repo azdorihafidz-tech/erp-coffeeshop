@@ -41,6 +41,9 @@ class BahanBakuRequest extends FormRequest
             // Sprint Unit Family (2026-10-02) — pasangan wajib atau keduanya kosong.
             'unit_beli'           => ['nullable', 'required_with:isi_per_unit_beli', 'string', 'max:20'],
             'isi_per_unit_beli'   => ['nullable', 'required_with:unit_beli', 'numeric', 'gt:0'],
+            // Sprint Fix Master Barang Lengkap (2026-10-11) — pindahan dari ItemRequest (`/item`).
+            'jenis'               => ['required', Rule::in(['bahan_baku', 'perlengkapan'])],
+            'track_stok'          => ['nullable', 'boolean'],
         ];
     }
 

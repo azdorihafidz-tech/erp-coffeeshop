@@ -73,6 +73,7 @@ class MasterBahanBakuController extends Controller
         $data = $request->safe()->except('stok_awal');
         $data['kode_item'] = strtoupper($data['kode_item']);
         $data['is_active'] = $request->boolean('is_active', true);
+        $data['track_stok'] = $request->boolean('track_stok', true);
 
         $item = Item::create($data);
 
@@ -108,6 +109,7 @@ class MasterBahanBakuController extends Controller
         $data = $request->safe()->except('stok_awal');
         $data['kode_item'] = strtoupper($data['kode_item']);
         $data['is_active'] = $request->boolean('is_active', true);
+        $data['track_stok'] = $request->boolean('track_stok', true);
 
         $bahanBaku->update($data);
 

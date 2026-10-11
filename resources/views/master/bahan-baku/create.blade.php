@@ -79,6 +79,30 @@
             </div>
         </div>
 
+        {{-- Sprint Fix Master Barang Lengkap (2026-10-11): pindahan dari /item/create --}}
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Jenis &amp; Pelacakan Stok</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-semibold">Jenis <span class="text-danger">*</span></label>
+                        <select name="jenis" class="form-select @error('jenis') is-invalid @enderror" required>
+                            <option value="bahan_baku" {{ old('jenis', 'bahan_baku') === 'bahan_baku' ? 'selected' : '' }}>Bahan Baku (konsumsi berulang)</option>
+                            <option value="perlengkapan" {{ old('jenis') === 'perlengkapan' ? 'selected' : '' }}>Perlengkapan (asset pakai, mis. gelas)</option>
+                        </select>
+                        @error('jenis')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-end">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" name="track_stok" value="1" id="track_stok" {{ old('track_stok', true) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold" for="track_stok">Lacak Stok</label>
+                            <div class="form-text small">Matikan hanya untuk item yang tidak perlu dipantau stoknya (mis. tisu lepasan).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <x-unit-beli-section />
 
         <div class="card mb-3">

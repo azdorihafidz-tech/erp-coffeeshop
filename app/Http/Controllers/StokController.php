@@ -40,7 +40,11 @@ class StokController extends Controller
         $lokasiIds = $lokasiList->pluck('id');
 
         $query = Stock::with(['item.category', 'lokasi'])
-            ->whereIn('lokasi_id', $lokasiIds);
+            ->whereIn('lokasi_id', $lokasiIds)
+            // Sprint Fix Produk Jual (2026-10-11): sembunyikan produk_jual/
+            // produk_tambahan — stoknya tidak fisik (dipotong via resep saat
+            // jual), angkanya 0 terus & bikin bingung.
+            ->whereHas('item', fn($q) => $q->whereNotIn('tipe', ['produk_jual', 'produk_tambahan']));
 
         if ($request->filled('search')) {
             $query->whereHas('item', fn($q) => $q->where('nama_item','like','%'.$request->search.'%')
@@ -49,7 +53,7 @@ class StokController extends Controller
         if ($request->filled('kategori')) {
             $query->whereHas('item', fn($q) => $q->where('item_category_id', $request->kategori));
         }
-        if ($request->filled('tipe')) {
+        if ($request->filled('tipe') && !in_array($request->tipe, ['produk_jual', 'produk_tambahan'], true)) {
             $query->whereHas('item', fn($q) => $q->where('tipe', $request->tipe));
         }
         if ($request->filled('lokasi') && $user->canAccessAllBranches()) {
@@ -61,7 +65,7 @@ class StokController extends Controller
 
         $stocks     = $query->orderBy('lokasi_id')->orderByDesc('qty')->paginate(25)->withQueryString();
         $categories = ItemCategory::orderBy('nama_kategori')->get();
-        $tipes      = ['bahan_baku'=>'Bahan Baku','produk_jual'=>'Produk Jual','kemasan'=>'Kemasan'];
+        $tipes      = ['bahan_baku'=>'Bahan Baku','kemasan'=>'Kemasan','tambahan_gratis'=>'Tambahan Gratis'];
 
         $statBelowMin = Stock::whereIn('lokasi_id',$lokasiIds)->whereColumn('qty','<=','qty_minimum')->where('qty_minimum','>',0)->count();
         $statTotal    = Stock::whereIn('lokasi_id',$lokasiIds)->count();

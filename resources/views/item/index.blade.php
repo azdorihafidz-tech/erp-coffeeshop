@@ -38,13 +38,21 @@
         </nav>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
-        @can('item.create')
-        <a href="{{ route('item.create') }}" class="btn btn-primary d-flex align-items-center gap-2">
-            <i class="bi bi-plus-lg"></i>
-            <span>Tambah Item</span>
-        </a>
-        @endcan
         <x-panduan-button slug="master-barang" />
+    </div>
+</div>
+
+{{-- Sprint Fix Master Barang Lengkap (2026-10-11): /item sekarang view-only.
+     Tambah & Hapus dilakukan dari master khusus (Bahan Baku atau Produk Jual). --}}
+<div class="alert alert-info d-flex align-items-start gap-2 py-2 small mb-3">
+    <i class="bi bi-info-circle-fill mt-1"></i>
+    <div>
+        Halaman ini menampilkan <strong>SEMUA item</strong> dari semua tipe sebagai referensi gabungan. Untuk <strong>menambah/mengedit/menghapus</strong>:
+        <ul class="mb-0 mt-1">
+            <li>Bahan Baku, Kemasan, Tambahan Gratis → menu <strong>Master → Bahan Baku &amp; Kemasan</strong></li>
+            <li>Produk Jual &amp; Produk Tambahan (menu POS) → menu <strong>Master → Produk Jual</strong></li>
+        </ul>
+        Klik tombol <strong>Edit</strong> di tabel akan otomatis mengarahkan ke master yang tepat sesuai tipe item.
     </div>
 </div>
 
@@ -274,18 +282,11 @@
                             @can('item.edit')
                             <a href="{{ route('item.edit', $item) }}"
                                 class="btn btn-sm btn-outline-primary px-2 py-1"
-                                title="Edit" style="min-width:32px;min-height:32px">
+                                title="Edit (otomatis diarahkan ke master khusus)" style="min-width:32px;min-height:32px">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             @endcan
-                            @can('item.delete')
-                            <button type="button"
-                                class="btn btn-sm btn-outline-danger px-2 py-1"
-                                title="Hapus" style="min-width:32px;min-height:32px"
-                                onclick="confirmHapus('item', {{ $item->id }}, '{{ addslashes($item->nama_item) }}')">
-                                <i class="bi bi-trash3"></i>
-                            </button>
-                            @endcan
+                            {{-- Sprint Fix 2026-10-11: tombol Hapus dihapus — delete hanya dari master khusus (Bahan Baku / Produk Jual). --}}
                         </div>
                     </td>
                 </tr>
@@ -297,12 +298,6 @@
                             <p class="mt-2 mb-0">Tidak ada item ditemukan.</p>
                             @if(request()->hasAny(['search','tipe','jenis','kategori','status']))
                                 <a href="{{ route('item.index') }}" class="btn btn-sm btn-outline-primary mt-2">Reset Filter</a>
-                            @else
-                                @can('item.create')
-                                <a href="{{ route('item.create') }}" class="btn btn-sm btn-primary mt-2">
-                                    <i class="bi bi-plus-lg me-1"></i>Tambah Item
-                                </a>
-                                @endcan
                             @endif
                         </div>
                     </td>
@@ -400,11 +395,6 @@
     <div class="text-center py-5 text-muted">
         <i class="bi bi-inbox" style="font-size:2.5rem;opacity:0.3"></i>
         <p class="mt-2">Tidak ada item ditemukan.</p>
-        @can('item.create')
-        <a href="{{ route('item.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Tambah Item
-        </a>
-        @endcan
     </div>
     @endforelse
 

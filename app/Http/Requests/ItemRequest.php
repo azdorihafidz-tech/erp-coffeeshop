@@ -30,9 +30,13 @@ class ItemRequest extends FormRequest
             'item_category_id'  => ['nullable','exists:item_categories,id'],
             // Tahap 2.5 D'mentai — extend enum: pisah bahan_baku/kemasan
             // (Master Bahan Baku) dari produk_jual/produk_tambahan (Master
-            // Produk Jual) + tambahan_gratis. 'produk_jadi'/'lainnya' TETAP
-            // diterima (enum DB masih punya nilainya, backward compat).
-            'tipe'              => ['required', Rule::in(['bahan_baku','produk_jadi','kemasan','lainnya','tambahan_gratis','produk_jual','produk_tambahan'])],
+            // Produk Jual) + tambahan_gratis.
+            // Sprint Fix Master Barang Lengkap (2026-10-11): produk_jual/
+            // produk_tambahan DIHAPUS dari pilihan di /item (karena /item
+            // sekarang view-only, create/edit diarahkan ke master khusus).
+            // Produk jual dikelola di MasterProdukJualController yang punya
+            // validasi sendiri (ProdukJualRequest).
+            'tipe'              => ['required', Rule::in(['bahan_baku','produk_jadi','kemasan','lainnya','tambahan_gratis'])],
             'satuan'            => ['required','string','max:20'],
             'harga_jual'        => ['nullable','numeric','min:0'],
             'harga_beli_terakhir'=> ['nullable','numeric','min:0'],
