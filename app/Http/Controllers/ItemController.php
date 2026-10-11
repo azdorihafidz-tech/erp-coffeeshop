@@ -158,7 +158,15 @@ class ItemController extends Controller
 
     public function storeKategori(Request $request)
     {
-        abort_unless(auth()->user()->can('item.create'), 403);
+        // Sprint Fix Master Barang Lengkap (2026-10-11): modal "Tambah
+        // Kategori" sekarang juga dipakai dari form Bahan Baku (bukan cuma
+        // /item yang sudah view-only). Produk Jual TIDAK pakai — kategorinya
+        // sudah fix (KPI/MBW/NKP/SNK/MKN) & jarang nambah, keputusan Owner.
+        $user = auth()->user();
+        abort_unless(
+            $user->can('item.create') || $user->can('master.bahan_baku.create'),
+            403
+        );
 
         $request->validate([
             'kode_kategori' => 'required|string|max:20|unique:item_categories,kode_kategori',

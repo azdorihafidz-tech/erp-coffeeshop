@@ -640,6 +640,40 @@ Aturan 3.8: 1 tooltip baru `laporan_penjualan.analytics_section` (badge "i" di h
 
 **Belum**: deploy ke staging/production (menunggu instruksi Owner), verifikasi klik export PDF/Excel di browser.
 
+### 4.38 🟢 Sprint Master Barang Lengkap View-Only + Sinkronisasi Produk Jual (2026-10-11)
+
+Owner lapor 3 problem beruntun: (1) PO Supplier menampilkan item produk_jual di dropdown Pilih Barang, (2) Dashboard Stok tetap campur produk_jual dengan bahan baku, (3) kebingungan konseptual — produk_jual harusnya tidak punya stok fisik (stok virtual via resep saat jual di POS). Keputusan Owner: `/item` (Master Barang Lengkap) dijadikan **view-only** (lihat semua tipe item tapi hanya untuk audit), tipe `produk_jual` dihapus dari dropdown tambah/edit, field `jenis`/`track_stok` dipindah ke form Bahan Baku (karena memang milik Bahan Baku, bukan /item generik).
+
+**Perubahan terintegrasi 3 commit sebelumnya (`148e299` PO filter, `59d06e0` view-only + stok filter, `c4313c6` label tipe) + commit saat ini (panduan + sinkronisasi + Tambah Kategori inline)**:
+
+- **PO Supplier filter** (`PurchaseOrderController::create()`+`store()`): dropdown item filter `whereNotIn('tipe', ['produk_jual', 'produk_tambahan'])` + guard server-side defense-in-depth menolak submit kalau user akali lewat devtools.
+- **Stock views filter produk_jual**:
+  - `StokDashboardController` line 96 `whereIn(['bahan_baku','kemasan','tambahan_gratis'])` ganti dari `['bahan_baku','kemasan','produk_jual']` (produk_jual tidak lagi tipe yang punya stok fisik). Validator filter tipe line 35 ikut diganti supaya `?tipe=produk_jual` tidak dianggap valid.
+  - `StokController` + `LaporanStokController`: tambah `whereHas('item', fn($q) => $q->whereNotIn('tipe', ['produk_jual', 'produk_tambahan']))`, dan array `$tipes` berisi `['bahan_baku','kemasan','tambahan_gratis']` saja.
+  - View `stok/dashboard.blade.php` + `stok/index.blade.php`: dropdown filter tipe diganti dari option legacy `produk_jadi` (nama lama warisan Dimsum pre-rename ke `produk_jual`, effectively no-op di DB tapi membingungkan UI) → `tambahan_gratis`.
+- **`/item` jadi view-only**:
+  - `ItemController::create()` redirect ke index + flash info arahkan ke master khusus.
+  - `ItemController::edit()` redirect berdasarkan tipe: `bahan_baku`/`kemasan`/`tambahan_gratis` → `master.bahan-baku.edit`; `produk_jual`/`produk_tambahan` → `master.produk-jual.edit`.
+  - `ItemController::destroy()` early return redirect, hapus dilakukan dari master khusus.
+  - View `item/index.blade.php`: tombol Tambah (header, empty state, mobile) + tombol Hapus per baris dihapus; banner info ditambah di atas tabel.
+- **`ItemRequest`**: enum tipe hapus `produk_jual`/`produk_tambahan` (tidak bisa lagi submit via `/item/store`, tetap bisa via `master.produk-jual.store`).
+- **Field `jenis`+`track_stok` pindah ke Bahan Baku**:
+  - `master/bahan-baku/create.blade.php` + `edit.blade.php` tambah card section "Jenis & Pelacakan Stok" (dropdown bahan_baku/perlengkapan + switch Lacak Stok).
+  - `BahanBakuRequest`: tambah validation `jenis` required Rule::in + `track_stok` nullable boolean.
+  - `MasterBahanBakuController::store()`+`update()`: `$data['track_stok'] = $request->boolean('track_stok', true)`.
+- **Tambah Kategori inline direfaktor jadi reusable component**: file baru `components/kategori-item-modal.blade.php` dipakai dari form Bahan Baku (tombol `+` di sebelah dropdown Kategori → modal → simpan → reload halaman dengan kategori baru terdaftar). Owner **spesifik meminta Produk Jual TIDAK pakai modal ini** — kategorinya sudah fix (KPI/MBW/NKP/SNK/MKN) & jarang nambah. `ItemController::storeKategori()` permission check dinarrowkan ke `item.create || master.bahan_baku.create` (tidak include `master.produk_jual.create`).
+- **5 panduan diupdate** sesuai sprint ini:
+  - `master-barang`: ditulis ulang untuk describe view-only + edit auto-redirect + cross-menu relations
+  - `bahan-baku`: tambah step "Jenis & Lacak Stok" + section baru "Tambah Kategori Baru Langsung dari Form (2026-10-11)"
+  - `pembelian`: tambah section "Kenapa Produk Jual tidak muncul di dropdown Pilih Barang" + troubleshooting entry
+  - `dashboard-stok`, `stok-barang`, `laporan-stok`: tambah catatan "Produk Jual tidak muncul — stok virtual via resep saat jual di POS, bukan stok fisik"
+
+**Verifikasi 3.7**: syntax check 9 file OK, cache clear OK, reseed PanduanKontenSeeder OK, error log bersih (entry lama Sept 30 dari pre-existing Tahap25 test known broken per 4.33, tidak ada entry baru dari sprint ini), `UnitFamilyTest` ditambah 4 test baru (`item_edit_redirect_bahan_baku`, `item_edit_redirect_produk_jual`, `item_create_redirect_ke_index`, `item_destroy_tidak_hapus`) — 21/21 PASS isolated. Gabungan dengan 3 sprint sebelumnya (ResepBumbuHargaBeli + SalesAnalytics + LaporanPenjualanAnalytics) → **44/44 PASS**, zero regresi.
+
+**Cross-menu audit (konfirmasi sinkronisasi)**: 4 sumber filter tipe cross-checked konsisten — PO (`whereNotIn produk_jual,produk_tambahan`), Stok Index (`whereNotIn` + array `['bahan_baku,kemasan,tambahan_gratis']`), Laporan Stok (`whereNotIn` di 2 query terpisah: posisi + mutasi), Stock Dashboard (`whereIn ['bahan_baku,kemasan,tambahan_gratis']` + validator sama). Tidak ada quer stok lagi yang masih memasukkan produk_jual.
+
+**Belum**: deploy ke staging/production (menunggu instruksi Owner), verifikasi klik UI nyata di browser (form Bahan Baku pakai + Tambah Kategori, dropdown filter stok, PO dropdown).
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN

@@ -125,9 +125,8 @@
                 <select name="tipe" class="form-select form-select-sm">
                     <option value="">Semua Tipe</option>
                     <option value="bahan_baku" {{ request('tipe') === 'bahan_baku' ? 'selected' : '' }}>Bahan Baku</option>
-                    <option value="produk_jadi" {{ request('tipe') === 'produk_jadi' ? 'selected' : '' }}>Produk Jadi</option>
                     <option value="kemasan" {{ request('tipe') === 'kemasan' ? 'selected' : '' }}>Kemasan</option>
-                    <option value="lainnya" {{ request('tipe') === 'lainnya' ? 'selected' : '' }}>Lainnya</option>
+                    <option value="tambahan_gratis" {{ request('tipe') === 'tambahan_gratis' ? 'selected' : '' }}>Tambahan Gratis</option>
                 </select>
             </div>
             @if($authUser->canAccessAllBranches())

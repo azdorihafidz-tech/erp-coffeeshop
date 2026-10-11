@@ -29,10 +29,12 @@ class StokDashboardController extends Controller
             ? Cabang::aktif()->orderBy('nama_cabang')->get()
             : collect();
 
-        // Filter tipe item (Semua/Bahan Baku/Kemasan/Produk Jual) — default
-        // null = semua tipe, perilaku persis seperti sebelum filter ini ada.
-        // Tahap 2.5 D'mentai: 'produk_jadi' -> 'produk_jual'.
-        $tipe = in_array($request->input('tipe'), ['bahan_baku', 'kemasan', 'produk_jual'], true)
+        // Filter tipe item (Semua/Bahan Baku/Kemasan/Tambahan Gratis) — default
+        // null = semua tipe. Sprint Fix Master Barang Lengkap (2026-10-11):
+        // produk_jual/produk_tambahan DI-EXCLUDE dari validator sesuai keputusan
+        // Owner (stok produk jual virtual via resep, tidak dipantau di dashboard
+        // stok). Konsisten dengan StokController & LaporanStokController.
+        $tipe = in_array($request->input('tipe'), ['bahan_baku', 'kemasan', 'tambahan_gratis'], true)
             ? $request->input('tipe')
             : null;
 

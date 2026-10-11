@@ -432,11 +432,13 @@ Memantau kondisi stok seluruh item secara menyeluruh — alert kritis, nilai sto
 - Status warna: **Merah** = Habis (qty=0), **Kuning** = Kritis (≤ qty_minimum), **Biru** = Menipis, **Hijau** = Aman
 - Nilai stok FIFO dihitung dari harga beli masing-masing batch yang masih ada
 - Dashboard ini read-only — untuk ubah stok gunakan menu Adjustment atau Transfer
+- **Produk Jual (kopi/snack/menu) tidak muncul di sini** (sprint 2026-10-11) — karena stok produk jual itu "virtual": terbentuk otomatis dari resep yang memotong bahan baku saat jual di POS. Yang muncul di Dashboard Stok hanya bahan baku, kemasan, dan tambahan gratis — yaitu barang yang beneran disimpan di gudang/outlet.
 
 ## Troubleshooting
 
 - **Nilai stok 0 padahal ada barang?** Kemungkinan harga beli batch belum terisi; cek saat PO diterima
 - **Widget "Stok Tidak Bergerak" penuh item?** Normal jika ada item bahan baku yang jarang terpakai; review berkala
+- **Mencari stok menu kopi/snack?** Buka menu Master → Produk Jual untuk lihat produk jual + resep bahan bakunya (stok produk jual tidak ada secara fisik).
 MARKDOWN]);
 
         Panduan::where('slug', 'stok-barang')->update(['konten' => <<<'MARKDOWN'
@@ -488,11 +490,13 @@ Dipakai untuk **reset total ke 0**, bukan koreksi sebagian. Cocok untuk:
 - Stok baru di lokasi manapun otomatis mewarisi qty minimum dari master Item saat pertama kali dibuat — kalau perlu beda untuk lokasi tertentu, pakai **Set Minimum**
 - Notifikasi otomatis (bell icon) dikirim ke Manajer/Admin Gudang saat stok di lokasi tersebut mencapai atau di bawah minimum
 - Stok di halaman ini adalah **stok fisik saat ini** — angka real-time, bukan proyeksi
+- **Produk Jual (kopi/snack/menu) tidak muncul di sini** (sprint 2026-10-11) — stok produk jual terbentuk otomatis dari resep yang memotong bahan baku saat jual di POS, jadi tidak ada stok fisiknya. Yang tampil hanya bahan baku, kemasan, dan tambahan gratis.
 
 ## Troubleshooting
 
 - **Item tidak muncul?** Mungkin tipe/kategori berbeda dari filter yang dipilih — klik Reset
 - **Qty 0 tapi item masih ada?** Stok mungkin sudah dipindah ke lokasi lain; cek filter Lokasi
+- **Mencari produk jual (kopi/menu)?** Buka Master → Produk Jual untuk lihat produk + resep bahan bakunya.
 MARKDOWN]);
 
         Panduan::where('slug', 'stok-adjustment')->update(['konten' => <<<'MARKDOWN'
@@ -616,38 +620,37 @@ MARKDOWN]);
 
         Panduan::where('slug', 'master-barang')->update(['konten' => <<<'MARKDOWN'
 ## Tujuan
-Mengelola data master item/barang yang digunakan di seluruh modul — stok, pembelian, penjualan, dan produksi.
+**Master Barang Lengkap** = daftar GABUNGAN semua item di sistem (bahan baku, kemasan, produk jual, dll). Halaman ini **VIEW-ONLY** sejak update 2026-10-11 — dipakai untuk melihat semua item dari semua tipe sekaligus sebagai referensi, misalnya saat mencari "item ini sebenarnya ada di menu master mana?".
 
-## Langkah-langkah
+## ⚠️ Tambah/Edit/Hapus DILAKUKAN DI MASTER KHUSUS, Bukan di Sini
 
-1. Buka menu **Master Data → Barang / Item** dari sidebar
-2. Lihat 4 kartu ringkasan: **Total Item**, **Bahan Baku** (count), **Produk Jadi** (count), **Nonaktif** (count)
-3. Gunakan filter untuk mencari item:
-   - **Cari** — ketik nama atau kode item
-   - **Tipe** — Bahan Baku / Produk Jadi / Kemasan / Lainnya
-   - **Kategori** — pilih kategori item
-   - **Status** — Aktif / Nonaktif
-   - Klik **Filter** untuk terapkan, **Reset** untuk hapus
-4. Klik **Tambah Item** untuk menambah item baru:
-   - Isi: Kode Item, Nama Item, Kategori, Tipe, Satuan, Harga Beli, Harga Jual, Stok Minimum
-   - Centang **Aktif** agar item bisa digunakan
-5. Di tabel, tersedia aksi per item:
-   - **Ikon mata** (Lihat Detail) — lihat detail item + stok per lokasi + riwayat pergerakan
-   - **Ikon pensil** (Edit) — ubah data item
-   - **Ikon tempat sampah** (Hapus) — hapus item *(akan menghapus stok semua lokasi, detail order, dan detail PO terkait)*
+Sejak update 2026-10-11, tombol **Tambah** dan **Hapus** sudah dihapus dari halaman ini supaya tidak membingungkan. Tombol **Edit** (ikon pensil) sekarang otomatis mengarahkan ke menu master yang tepat sesuai tipe item:
 
-## Catatan Penting
+- Item tipe **Bahan Baku / Kemasan / Tambahan Gratis** → klik Edit, otomatis diarahkan ke **Master → Bahan Baku & Kemasan**
+- Item tipe **Produk Jual / Produk Tambahan** → klik Edit, otomatis diarahkan ke **Master → Produk Jual**
 
-- **Hapus item bersifat cascade** — stok semua lokasi, baris di order, dan baris di PO ikut terhapus
-- Item yang **Nonaktif** tidak muncul di POS dan dropdown produksi — jangan hapus, cukup nonaktifkan
-- **Harga Beli Terakhir** di tabel di-update otomatis setiap kali ada PO diterima
-- Butuh permission `item.create`, `item.edit`, `item.delete` — Kasir dan Operator tidak bisa kelola item
+Untuk **menambah** item baru:
+- Bahan baku, kemasan, tambahan gratis → menu **Master → Bahan Baku & Kemasan** (ada tombol Tambah di sana)
+- Produk jual (menu yang dijual di POS) → menu **Master → Produk Jual** (ada tombol Tambah di sana)
+
+Untuk **menghapus** item: dilakukan dari master khusus-nya masing-masing (sama seperti edit).
+
+## Fitur yang Masih Ada di Halaman Ini
+
+1. **Lihat semua item lintas tipe** — tabel menampilkan semua item dengan kolom Nama, Kode, Tipe, Kategori, Satuan, Harga, Status
+2. **Filter**: Cari (nama/kode), Tipe, Kategori, Status Aktif/Nonaktif
+3. **Lihat Detail** (ikon mata) — detail item + stok per lokasi + riwayat pergerakan stok
+4. **Edit** (ikon pensil) — tombol tetap ada, tapi otomatis membawa Anda ke master khusus sesuai tipe item
+
+## Kaitan dengan Menu Lain
+
+- **Dashboard Stok, Laporan Stok, menu Stok & Inventori** → hanya menampilkan item tipe `bahan_baku`/`kemasan`/`tambahan_gratis`. **Produk Jual tidak tampil** karena stoknya bukan fisik — dipotong lewat resep saat jual (lihat panduan Dashboard Stok)
+- **Purchase Order (Pembelian)** → dropdown "Pilih Barang" juga hanya menampilkan item yang bisa dibeli dari supplier (produk jual tidak muncul)
 
 ## Troubleshooting
 
-- **Item tidak muncul di POS?** Pastikan item berstatus Aktif dan tipenya Produk Jadi
-- **Tidak bisa hapus item?** Mungkin masih ada stok di salah satu lokasi atau ada order aktif; nonaktifkan saja
-- **Kode item sudah ada?** Kode item harus unik — ubah kode atau cek apakah ada item duplikat
+- **Klik Edit menuju halaman yang salah?** Cek tipe item di kolom "Tipe" — tombol Edit mengikuti tipe. Kalau tipe salah, ubah tipe dulu dari master khusus-nya
+- **Mau menambah item baru tapi tombol Tambah tidak ada?** Benar, memang sengaja — buka menu **Master → Bahan Baku & Kemasan** atau **Master → Produk Jual** sesuai jenis item yang mau dibuat
 MARKDOWN]);
     }
 
@@ -689,11 +692,24 @@ Membuat dan memantau Purchase Order (PO) pembelian bahan baku — baik melalui j
 - Stok bertambah saat PO berstatus **Diterima** — bukan saat Disetujui
 - Harga beli item di master barang otomatis diperbarui (harga beli terakhir) saat PO diterima
 
+## Kenapa Produk Jual tidak muncul di dropdown Pilih Barang? (2026-10-11)
+
+Mulai sprint 2026-10-11, dropdown item di form Buat PO **otomatis menyaring** item tipe `produk_jual` dan `produk_tambahan` — jadi hanya **bahan baku, kemasan, dan tambahan gratis** yang bisa dipilih di PO.
+
+Alasan: PO Supplier itu untuk **beli bahan mentah dari pihak luar**. Produk jual (kopi, snack, roasted bean kemasan, dll) adalah hasil racikan/produksi internal — stoknya terbentuk dari **resep yang memotong bahan baku saat jual di POS**, bukan dari pembelian langsung.
+
+Kalau Anda butuh menambah "stok produk jual":
+- Untuk **roasted bean kemasan**: lewat modul Roastery (batch roasting + packing)
+- Untuk **menu minuman/makanan**: resep di master Produk Jual yang menentukan bahan apa dipotong saat jual — pastikan stok bahan bakunya cukup
+
+Guard ini juga aktif di sisi server (double-check) — walau user mengakali lewat developer tools browser, submit PO dengan item produk jual tetap ditolak dengan pesan jelas.
+
 ## Troubleshooting
 
 - **Supplier tidak ada di dropdown?** Tambahkan dulu di menu Pembelian → Supplier
 - **Stok tidak bertambah?** Pastikan PO sudah diubah statusnya ke Diterima di halaman Detail
 - **PO tidak bisa dihapus?** PO mungkin sudah melewati status Draft; hubungi Owner
+- **Item kopi/snack/menu tidak muncul di dropdown?** Memang disengaja — lihat section "Kenapa Produk Jual tidak muncul" di atas.
 MARKDOWN]);
 
         Panduan::where('slug', 'supplier')->update(['konten' => <<<'MARKDOWN'
@@ -1531,11 +1547,13 @@ Melihat laporan pergerakan stok (masuk-keluar) dan posisi stok per item per loka
 
 - Pergerakan stok yang tampil mencakup: penjualan POS, penerimaan PO, transfer, dan adjustment
 - Laporan ini berguna untuk **audit stok** dan memverifikasi selisih fisik vs sistem
+- **Produk Jual (kopi/snack/menu) tidak muncul di laporan ini** (sprint 2026-10-11) — stok produk jual terbentuk otomatis dari resep yang memotong bahan baku saat jual di POS. Yang muncul hanya pergerakan **bahan baku, kemasan, dan tambahan gratis** — barang yang beneran disimpan dan dipantau fisiknya.
 
 ## Troubleshooting
 
 - **Tidak ada pergerakan?** Item belum pernah ada transaksi di periode tersebut; coba perluas tanggal
 - **Saldo stok berbeda dengan halaman Stok Barang?** Kemungkinan ada pergerakan setelah tanggal filter; samakan periode ke "Hari Ini"
+- **Mencari pergerakan menu kopi/snack?** Lihat Laporan Penjualan — di sana muncul qty & nilai per produk jual terjual.
 MARKDOWN]);
 
         Panduan::where('slug', 'laporan-keuangan')->update(['konten' => <<<'MARKDOWN'
@@ -3372,8 +3390,19 @@ Mengelola data bahan baku (green bean, susu, sirup), kemasan (cup, tutup, sedota
    - **Kategori** (opsional, bisa tambah kategori baru langsung dari form)
    - **Harga Beli / HPP** dan **Qty Minimum** (untuk notifikasi stok menipis)
 4. *(Opsional)* Isi **Stok Awal per Outlet** — angka langsung tersimpan sebagai stok mula-mula di outlet yang diisi, kosongkan outlet yang belum ada stoknya
-5. *(Opsional)* Isi **Unit Beli** — lihat section "Cara Isi Unit Beli" di bawah
-6. Klik **Simpan**
+5. **Jenis & Lacak Stok** (section baru 2026-10-11, pindahan dari Master Barang Lengkap):
+   - **Jenis**: pilih **Bahan Baku** (konsumsi berulang — susu, biji kopi, sirup) atau **Perlengkapan** (asset pakai yang tidak dikonsumsi — gelas, piring, sendok)
+   - **Lacak Stok**: default aktif. Matikan hanya untuk item yang tidak perlu dipantau stoknya (mis. tisu lepasan yang tidak pernah dihitung)
+6. *(Opsional)* Isi **Unit Beli** — lihat section "Cara Isi Unit Beli" di bawah
+7. Klik **Simpan**
+
+## Tambah Kategori Baru Langsung dari Form (2026-10-11)
+
+Kalau kategori yang Anda butuhkan belum ada di dropdown, **tidak perlu pindah menu**:
+1. Di sebelah dropdown Kategori ada tombol **+** (plus kecil, warna abu-abu)
+2. Klik → muncul modal "Tambah Kategori Baru"
+3. Isi **Nama Kategori** (mis. "Sirup Perasa") dan **Kode Kategori** (otomatis huruf besar, mis. "SRP")
+4. Klik Simpan → kategori baru langsung muncul di dropdown form, form tetap terbuka dengan data yang Anda sudah ketik.
 
 ## Cara Isi Unit Beli
 

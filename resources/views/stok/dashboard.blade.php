@@ -60,7 +60,7 @@
                 <option value="">Semua Tipe</option>
                 <option value="bahan_baku" {{ $tipe === 'bahan_baku' ? 'selected' : '' }}>Bahan Baku</option>
                 <option value="kemasan" {{ $tipe === 'kemasan' ? 'selected' : '' }}>Kemasan</option>
-                <option value="produk_jadi" {{ $tipe === 'produk_jadi' ? 'selected' : '' }}>Produk Jadi</option>
+                <option value="tambahan_gratis" {{ $tipe === 'tambahan_gratis' ? 'selected' : '' }}>Tambahan Gratis</option>
             </select>
             @if($cabangId || $tipe)
             <a href="{{ route('stok.dashboard') }}" class="btn btn-outline-secondary btn-sm">

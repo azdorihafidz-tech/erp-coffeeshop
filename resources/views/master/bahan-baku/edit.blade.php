@@ -52,12 +52,18 @@
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-label small fw-semibold">Kategori</label>
-                        <select name="item_category_id" class="form-select">
-                            <option value="">— Pilih —</option>
-                            @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}" @selected(old('item_category_id',$item->item_category_id)==$cat->id)>{{ $cat->nama_kategori }}</option>
-                            @endforeach
-                        </select>
+                        <div class="input-group">
+                            <select name="item_category_id" class="form-select">
+                                <option value="">— Pilih —</option>
+                                @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}" @selected(old('item_category_id',$item->item_category_id)==$cat->id)>{{ $cat->nama_kategori }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalKategori" title="Tambah kategori baru">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                        <div class="form-text" style="font-size:0.72rem">Klik <i class="bi bi-plus-lg"></i> untuk tambah kategori baru.</div>
                     </div>
                 </div>
             </div>
@@ -147,5 +153,8 @@
     @csrf @method('DELETE')
 </form>
 @endcan
+
+{{-- Sprint Fix Master Barang Lengkap (2026-10-11): modal Tambah Kategori inline. --}}
+<x-kategori-item-modal />
 
 @endsection
