@@ -48,12 +48,33 @@ $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 // Token WAJIB dari .env — bukan hardcode. Kalau env kosong, semua request ditolak.
-$secretToken = env('GOLIVE_RESET_TOKEN', '');
+// Catatan: kalau Laravel sudah pakai config:cache, env() return null untuk variabel
+// yang tidak masuk file config/. Fallback: baca .env mentah sebagai text.
+$secretToken = env('GOLIVE_RESET_TOKEN', '')
+    ?: ($_ENV['GOLIVE_RESET_TOKEN'] ?? getenv('GOLIVE_RESET_TOKEN') ?: '');
+
+if ($secretToken === '') {
+    // Fallback terakhir: parse file .env langsung (bypass Laravel config cache)
+    $envPath = __DIR__ . '/../.env';
+    if (is_readable($envPath)) {
+        foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            $line = trim($line);
+            if ($line === '' || str_starts_with($line, '#')) continue;
+            if (preg_match('/^GOLIVE_RESET_TOKEN\s*=\s*(.+)$/', $line, $m)) {
+                // Strip optional surrounding quotes
+                $secretToken = trim($m[1], " \t\"'");
+                break;
+            }
+        }
+    }
+}
+
 $token = $_REQUEST['token'] ?? '';
 if ($secretToken === '' || !hash_equals($secretToken, $token)) {
     http_response_code(403);
     echo "<h1>403 Forbidden</h1><p>Token tidak valid atau tidak diisi.</p>";
-    echo "<p style='color:#888'>Pastikan sudah set <code>GOLIVE_RESET_TOKEN</code> di <code>.env</code> + jalankan <code>config:clear</code>.</p>";
+    echo "<p style='color:#888'>Pastikan sudah set <code>GOLIVE_RESET_TOKEN</code> di <code>.env</code>.</p>";
+    echo "<p style='color:#888'>Debug — token di-detect dari env: " . ($secretToken === '' ? '<b>KOSONG</b> (set belum ter-load, cek .env)' : '<b>ADA</b> (' . strlen($secretToken) . ' karakter) — pastikan URL ?token= match persis') . "</p>";
     exit;
 }
 
