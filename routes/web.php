@@ -1020,4 +1020,13 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
 
 });
 
+// ===== Go-Live Reset (2026-10-16) =====
+// Auth-protected; role check `owner` ada di dalam controller. Setelah
+// go-live selesai, bisa hapus route+controller+view ini (atau biarkan,
+// aman karena butuh login owner).
+Route::middleware(['auth'])->group(function () {
+    Route::get('/go-live-reset',  [\App\Http\Controllers\GoLiveResetController::class, 'form'])->name('go-live-reset.form');
+    Route::post('/go-live-reset', [\App\Http\Controllers\GoLiveResetController::class, 'execute'])->name('go-live-reset.execute');
+});
+
 require __DIR__.'/auth.php';
