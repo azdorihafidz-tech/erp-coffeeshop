@@ -1043,6 +1043,11 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/go-live-reset',  [\App\Http\Controllers\GoLiveResetController::class, 'form'])->name('go-live-reset.form');
     Route::post('/go-live-reset', [\App\Http\Controllers\GoLiveResetController::class, 'execute'])->name('go-live-reset.execute');
+
+    // Update Database (2026-10-19) — migrate + seeder konten tanpa hapus data,
+    // dijalankan Owner setelah upload kode baru ke cPanel (tanpa SSH).
+    Route::get('/update-database',  [\App\Http\Controllers\UpdateDatabaseController::class, 'form'])->name('update-database.form');
+    Route::post('/update-database', [\App\Http\Controllers\UpdateDatabaseController::class, 'execute'])->name('update-database.execute');
 });
 
 require __DIR__.'/auth.php';

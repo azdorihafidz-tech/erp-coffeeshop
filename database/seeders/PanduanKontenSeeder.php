@@ -77,6 +77,44 @@ class PanduanKontenSeeder extends Seeder
         $this->closingPeriodeUpdate();
         // Sprint Label Cup (2026-10-19)
         $this->labelCupUpdate();
+        // Update Database production (2026-10-19)
+        $this->updateDatabaseUpdate();
+    }
+
+    private function updateDatabaseUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'update-database'], [
+            'judul'  => 'Cara Pakai Update Database',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+
+Halaman **Update Database** (khusus Owner) dipakai **setiap selesai upload kode baru** ke server cPanel. Fungsinya menyiapkan database untuk fitur baru — tanpa menghapus data apa pun.
+
+## Cara Pakai
+
+1. Backup dulu: cPanel → phpMyAdmin → pilih database → **Export**
+2. Upload / deploy kode terbaru ke server
+3. Login sebagai Owner → menu **Update Database**
+4. Periksa daftar migration yang akan dijalankan → klik **Jalankan Update Database**
+5. Tunggu sampai muncul **UPDATE BERHASIL**
+
+## Yang Dilakukan
+
+- Menjalankan migration yang **belum pernah** jalan (tabel/kolom baru)
+- Memperbarui daftar permission, panduan Cara Pakai, dan tooltip
+- Menambahkan hak akses fitur baru ke role **hanya kalau belum ada** — pengaturan hak akses yang sudah Anda ubah di menu Role & Hak Akses **tidak direset**
+- Membersihkan cache
+
+## Peringatan
+
+- Ini BEDA dengan `/go-live-reset` yang **mengosongkan seluruh data**. Jangan tertukar.
+- Aman dijalankan berulang kali — kalau tidak ada yang baru, tidak ada yang berubah.
+- Kalau muncul GAGAL: data lama tidak terhapus; screenshot halaman dan kirim ke developer.
+MARKDOWN,
+            'modul'  => 'lainnya',
+            'urutan' => 130,
+            'aktif'  => true,
+        ]);
     }
 
     private function labelCupUpdate(): void

@@ -1236,6 +1236,13 @@
             <span>Backup Database</span>
         </a>
         @endcan
+        @if(auth()->user()->role === \App\Enums\RoleUser::Owner)
+        <a href="{{ route('update-database.form') }}"
+           class="nav-link {{ request()->routeIs('update-database.*') ? 'active' : '' }}">
+            <i class="bi bi-database-up"></i>
+            <span>Update Database</span>
+        </a>
+        @endif
         @endif
 
     </div>

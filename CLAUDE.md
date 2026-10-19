@@ -707,7 +707,13 @@ Owner minta cup label (beverage order label) terpisah dari struk, khusus minuman
 
 **Verifikasi 3.7**: syntax 12 file OK, migrate dev+test DONE, reseed Permission/RolePermission/Panduan/Tooltip dev+test, route 2/2, smoke HTTP owner (edit cabang, POS, detail order, label JSON/HTML, struk modal) 200, log bersih (1 entri dari payload test sendiri yang sudah dibetulkan).
 
-**Belum**: uji cetak fisik (Bluetooth TSPL/ESC/POS belum dites dengan printer nyata — beda merek bisa beda hasil), commit/push & deploy.
+**Belum**: uji cetak fisik (Bluetooth TSPL/ESC/POS belum dites dengan printer nyata — beda merek bisa beda hasil). Commit `7d1abf2` (gabung 4.39 + 4.40), push ke `origin/main` sukses.
+
+### 4.41 🟢 Halaman Update Database Production (2026-10-19)
+
+cPanel production tanpa SSH → `/update-database` (Owner-only, menu sidebar grup admin di bawah Backup Database): `migrate --force` (hanya migration baru), seeder Permission/Panduan/Tooltip, tambah mapping permission baru ke role **hanya kalau belum ada** (konstanta `UpdateDatabaseController::PERMISSION_BARU` — sprint berikutnya yang menambah permission WAJIB menambah ke sini), clear cache + `Cache::forget('all_permission_names')`. Sengaja TIDAK memakai `RolePermissionSeeder` (menghapus & mengisi ulang hak akses role). Halaman menampilkan daftar migration yang belum jalan sebelum dieksekusi. Panduan slug `update-database`. Test `UpdateDatabaseTest` 2/2 PASS (Owner-only; permission baru ditambah, hak akses tambahan/cabutan Owner tidak berubah, data transaksi utuh).
+
+**Temuan `.cpanel.yml`**: `DEPLOYPATH` masih `/home/azwc7142/public_html/erpdimsum.azwacore.com/` (warisan fork Dimsum) — kalau dipakai, perintah artisan jalan di folder production **Dimsum** (CLAUDE.md 3.1). Belum diubah karena path production Kopi Drip belum diketahui (TODO 12.14).
 
 ---
 
@@ -1082,6 +1088,10 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] Label per gelas, pengaturan per cabang, cetak browser + Bluetooth TSPL/ESC/POS, catatan item POS, integrasi struk/Save Bill/approve QR, 13 test PASS
 - [ ] Owner: uji cetak fisik di printer label (PC via browser, tablet via Bluetooth) & sesuaikan ukuran stiker
 - [ ] Isi varian menu (TODO 12.6) supaya Size/Gula/Es/Susu tercetak rapi (sekarang lewat catatan item)
+
+### 12.14 Deploy Production (2026-10-19, lihat 4.41)
+- [ ] **Perbaiki `.cpanel.yml` DEPLOYPATH** ke folder production Kopi Drip (sekarang masih path Dimsum) — butuh path dari Owner
+- [ ] Deploy 4.39–4.41 lalu jalankan `/update-database` sebagai Owner
 
 ---
 
