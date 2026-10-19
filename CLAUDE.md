@@ -1090,8 +1090,8 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [ ] Isi varian menu (TODO 12.6) supaya Size/Gula/Es/Susu tercetak rapi (sekarang lewat catatan item)
 
 ### 12.14 Deploy Production (2026-10-19, lihat 4.41)
-- [ ] **Perbaiki `.cpanel.yml` DEPLOYPATH** ke folder production Kopi Drip (sekarang masih path Dimsum) — butuh path dari Owner
-- [ ] Deploy 4.39–4.41 lalu jalankan `/update-database` sebagai Owner
+- [x] `.cpanel.yml` DEPLOYPATH diganti `$PWD` + pengaman (2026-10-19) — repo di-pull ke 2 folder: demo `erpdrip.azwacore.com`, go-live `kopidripsidikalang.com/erp`
+- [ ] Deploy 4.39–4.41 di demo & go-live via `public/deploy-closing-label440.php` (simulasi → jalankan), lalu hapus file itu dari repo (bukan manual di server)
 
 ---
 

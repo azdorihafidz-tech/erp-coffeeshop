@@ -1,7 +1,19 @@
 ---
+# Dipakai tombol "Deploy HEAD Commit" di cPanel Git Version Control.
+# Repo ini di-pull ke 2 folder (2026-10-19):
+#   demo    : /home/azwc7142/public_html/erpdrip.azwacore.com
+#   go-live : /home/azwc7142/public_html/kopidripsidikalang.com/erp
+# cPanel menjalankan task dari folder repo yang sedang di-deploy, jadi
+# DEPLOYPATH = folder kerja saat itu ($PWD) — Deploy di demo hanya menyentuh
+# demo, Deploy di go-live hanya go-live. JANGAN ditulis mati ke satu folder
+# (dulu masih path erpdimsum.azwacore.com warisan fork Dimsum).
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/azwc7142/public_html/erpdimsum.azwacore.com/
+    - export DEPLOYPATH=$PWD
+
+    # Pengaman: berhenti kalau folder ini bukan aplikasi Laravel Kopi Drip
+    - /bin/test -f $DEPLOYPATH/artisan
+    - /bin/grep -q "erp-coffeeshop\|Kopi Drip" $DEPLOYPATH/README.md
 
     # Set permission folder yang perlu writable
     - /bin/chmod -R 755 $DEPLOYPATH/storage
