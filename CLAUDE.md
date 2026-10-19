@@ -1091,7 +1091,8 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 
 ### 12.14 Deploy Production (2026-10-19, lihat 4.41)
 - [x] `.cpanel.yml` DEPLOYPATH diganti `$PWD` + pengaman (2026-10-19) — repo di-pull ke 2 folder: demo `erpdrip.azwacore.com`, go-live `kopidripsidikalang.com/erp`
-- [ ] Deploy 4.39–4.41 di demo & go-live via `public/deploy-closing-label440.php` (simulasi → jalankan), lalu hapus file itu dari repo (bukan manual di server)
+- [x] Deploy 4.39–4.41 di demo & go-live (2026-10-19) via script satu-link, UPDATE BERHASIL di keduanya (demo sekaligus dapat migration Unit Beli 2026-10-02 yang tertinggal); script dihapus dari repo
+- [ ] Go-live: kas masih 0 — buat Kas Tunai/Transfer/QRIS sebelum POS dipakai
 
 ---
 
