@@ -43,6 +43,12 @@ class CabangRequest extends FormRequest
             'nomor_meja_aktif'        => ['sometimes', 'boolean'],
             'take_away_fee'           => ['nullable', 'numeric', 'min:0'],
             'service_charge_persen'   => ['nullable', 'numeric', 'min:0', 'max:100'],
+            // Sprint Label Cup (2026-10-19)
+            'label_cup_aktif'         => ['sometimes', 'boolean'],
+            'label_cup_kategori'      => ['sometimes', 'array'],
+            'label_cup_kategori.*'    => ['string', 'max:20'],
+            'label_cup_lebar_mm'      => ['sometimes', 'integer', 'min:25', 'max:120'],
+            'label_cup_tinggi_mm'     => ['sometimes', 'integer', 'min:15', 'max:120'],
         ];
     }
 

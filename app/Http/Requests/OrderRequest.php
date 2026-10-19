@@ -57,6 +57,8 @@ class OrderRequest extends FormRequest
             'items.*.harga_satuan'   => 'required|numeric|min:0',
             'items.*.berat_daging'   => 'nullable|required_if:items.*.tipe,jasa_giling|numeric|min:0.001',
             'items.*.jenis_olahan'   => ['nullable', 'string', 'exists:jenis_olahans,slug'],
+            // Sprint Label Cup — catatan per item (mis. "Large, less sugar"), ikut ke label gelas
+            'items.*.catatan'        => 'nullable|string|max:255',
         ];
     }
 

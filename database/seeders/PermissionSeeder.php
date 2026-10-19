@@ -37,6 +37,8 @@ class PermissionSeeder extends Seeder
             // (reuse PenjualanService::batalkan(), tidak ada apapun yang
             // di-restore krn memang belum ada yang dipotong/dicatat).
             ['name' => 'order.bill_tersimpan.batalkan', 'display_name' => 'Batalkan Bill Tersimpan (POS)', 'group' => 'penjualan'],
+            // Sprint Label Cup (2026-10-19) — cetak label stiker gelas minuman
+            ['name' => 'label_cup.print', 'display_name' => 'Cetak Label Cup (stiker gelas)', 'group' => 'penjualan'],
 
             // Pelanggan
             ['name' => 'pelanggan.view',   'display_name' => 'Lihat Pelanggan',   'group' => 'pelanggan'],
@@ -330,6 +332,15 @@ class PermissionSeeder extends Seeder
             ['name' => 'transfer_antar_kas.view',   'display_name' => 'Lihat Transfer Antar Kas',   'group' => 'keuangan'],
             ['name' => 'transfer_antar_kas.create', 'display_name' => 'Buat Transfer Antar Kas',    'group' => 'keuangan'],
             ['name' => 'transfer_antar_kas.delete', 'display_name' => 'Hapus Transfer Antar Kas',   'group' => 'keuangan'],
+
+            // Sprint Closing Periode (2026-10-17). closing.unlock sengaja
+            // TIDAK di-assign ke role manapun (Owner-only via Gate::before).
+            ['name' => 'closing.view',        'display_name' => 'Lihat Arsip Closing Periode',         'group' => 'keuangan'],
+            ['name' => 'closing.create',      'display_name' => 'Buat Draft / Preview Closing',        'group' => 'keuangan'],
+            ['name' => 'closing.finalize',    'display_name' => 'Kunci Closing (Final)',               'group' => 'keuangan'],
+            ['name' => 'closing.konsolidasi', 'display_name' => 'Closing Konsolidasi Semua Cabang',    'group' => 'keuangan'],
+            ['name' => 'closing.unlock',      'display_name' => 'Buka Kunci Closing (Owner)',          'group' => 'keuangan'],
+            ['name' => 'closing.export',      'display_name' => 'Export Closing (PDF/Excel)',          'group' => 'keuangan'],
 
             // Tahap 5 D'mentai — Setoran Kasir (rekonsiliasi harian cabang -> HO,
             // auto-hitung dari order_payments). Namespace BEDA dari 'setoran.*'

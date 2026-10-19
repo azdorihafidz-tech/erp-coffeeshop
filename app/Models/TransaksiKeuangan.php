@@ -9,13 +9,37 @@ use App\Enums\TipeTransaksiKeuangan;
 use App\Traits\FillsDeletedBy;
 use App\Traits\HasAuditLog;
 use App\Traits\HasCabang;
+use App\Traits\TerkunciClosing;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TransaksiKeuangan extends Model
 {
-    use HasFactory, HasCabang, HasAuditLog, SoftDeletes, FillsDeletedBy;
+    use TerkunciClosing, HasFactory, HasCabang, HasAuditLog, SoftDeletes, FillsDeletedBy;
+
+    /** Sprint Closing Periode — kunci berdasarkan cabang + tanggal_transaksi. */
+    public function closingLockTarget(bool $original): array
+    {
+        return $original
+            ? [$this->getOriginal('cabang_id'), $this->getOriginal('tanggal_transaksi')]
+            : [$this->cabang_id, $this->tanggal_transaksi];
+    }
+
+    /**
+     * Konfirmasi terima setoran (status saja) tetap boleh walau periode
+     * pengirim sudah di-closing — setoran itu tercatat "Dalam Perjalanan"
+     * di snapshot closing. Tolak/batal/hapus tetap diblok (mengubah saldo).
+     */
+    public function closingLockKolomBebas(): array
+    {
+        return ['status_setoran', 'diterima_oleh_id', 'waktu_diterima'];
+    }
+
+    public function closingLockKonteks(): string
+    {
+        return 'transaksi keuangan';
+    }
 
     protected $fillable = [
         'cabang_id',

@@ -80,8 +80,26 @@ class KasirMejaController extends Controller
         abort_unless(auth()->user()->can('kasir.queue.approve'), 403);
 
         try {
+            // Sprint Label Cup — batas urutan item bill meja ini sebelum approve,
+            // supaya label hanya untuk item dari pesanan QR yang baru di-approve.
+            $mejaId = \App\Models\OrderQueue::whereKey($id)->value('meja_id');
+            $billLama = $mejaId ? \App\Models\Bill::where('meja_id', $mejaId)->whereIn('status', ['open', 'waiting_payment'])->first() : null;
+            $urutanSebelum = $billLama ? (int) $billLama->items()->max('urutan_masuk') : 0;
+
             $bill = $this->billService->approveQueue($id, auth()->id());
-            return response()->json(['success' => true, 'bill_id' => $bill->id]);
+
+            $label = ['label_count' => 0];
+            if (auth()->user()->can('label_cup.print')) {
+                $ids = $bill->items()->where('urutan_masuk', '>', $urutanSebelum)->pluck('id')->all();
+                $svc = app(\App\Services\CupLabelService::class);
+                $jumlah = $ids ? $svc->jumlah($svc->untukBill($bill->fresh(), $ids)) : 0;
+                $label = [
+                    'label_count' => $jumlah,
+                    'label_url'   => $jumlah > 0 ? route('label-cup.bill', ['bill' => $bill->id, 'items' => implode(',', $ids)]) : null,
+                ];
+            }
+
+            return response()->json(['success' => true, 'bill_id' => $bill->id] + $label);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }

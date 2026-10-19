@@ -169,8 +169,15 @@
         footer.innerHTML =
             '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="kdOpenTransfer(' + data.bill.id + ')"><i class="bi bi-arrow-left-right me-1"></i>Transfer Meja</button>' +
             '<button type="button" class="btn btn-sm btn-outline-success" onclick="kdPrintStruk(' + data.bill.id + ')"><i class="bi bi-printer me-1"></i>Print Struk</button>' +
+            (window.openCupLabel ? '<button type="button" class="btn btn-sm btn-outline-warning" onclick="kdCetakLabel(' + data.bill.id + ')"><i class="bi bi-tag me-1"></i>Label Cup</button>' : '') +
             '<button type="button" class="btn btn-sm btn-success" onclick="kdBayar(' + data.bill.id + ', ' + total + ')"><i class="bi bi-cash-coin me-1"></i>Bayar Sekarang</button>';
     }
+
+    // Sprint Label Cup — cetak ulang label gelas semua item bill meja ini
+    window.kdCetakLabel = async function (billId) {
+        var tampil = await window.openCupLabel('{{ url('/label-cup/bill') }}/' + billId);
+        if (!tampil) alert('Tidak ada item yang perlu label cup di bill ini (atau label cup nonaktif untuk cabang ini).');
+    };
 
     window.kdTandaiTerisi = function (mejaId) {
         fetch(TANDAI_URL_BASE + '/' + mejaId + '/tandai-terisi', {

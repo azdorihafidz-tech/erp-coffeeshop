@@ -1149,5 +1149,43 @@ class TooltipKontenSeeder extends Seeder
             'urutan' => 1,
             'aktif' => true,
         ]);
+
+        // Sprint Closing Periode (2026-10-17).
+        $closing = [
+            ['key' => 'closing.jenis', 'title' => 'Jenis Closing',
+             'content' => 'Label arsip: Harian, Mingguan, Bulanan, atau Custom. Tidak membatasi tanggal — rentang tetap ditentukan oleh kolom Periode. Closing harian dan bulanan boleh mencakup tanggal yang sama.'],
+            ['key' => 'closing.periode', 'title' => 'Periode Closing',
+             'content' => 'Tanggal bebas (custom), maksimal 366 hari dan tidak boleh melewati hari ini. "Siklus tgl 26" = tanggal 26 bulan lalu s/d 25 bulan ini (angka bisa diganti).'],
+            ['key' => 'closing.cakupan', 'title' => 'Cakupan',
+             'content' => 'Satu cabang = angka cabang itu saja. Konsolidasi = gabungan semua cabang; setoran antar cabang & penjualan internal Roastery dieliminasi supaya tidak dobel. Konsolidasi Final mengunci semua cabang.'],
+            ['key' => 'closing.kunci', 'title' => 'Kunci Closing (Final)',
+             'content' => 'Angka dihitung ulang lalu disimpan permanen. Transaksi bertanggal di periode ini (penjualan, transaksi keuangan, setoran, transfer kas) tidak bisa ditambah/diubah/dihapus sampai Owner membuka kuncinya.'],
+            ['key' => 'closing.dalam_perjalanan', 'title' => 'Dalam Perjalanan',
+             'content' => 'Setoran yang sudah keluar dari kas pengirim tapi belum dikonfirmasi diterima. Belum masuk saldo kas mana pun, jadi ditampilkan terpisah supaya total uang tidak terlihat hilang.'],
+            ['key' => 'closing.persediaan', 'title' => 'Pembelian Persediaan & Aset',
+             'content' => 'Uang keluar untuk beli bahan/stok (PBB, PO supplier, pembelian internal dari Roastery) dan aset. Tidak dihitung sebagai beban karena biaya bahan sudah masuk lewat HPP saat produk terjual.'],
+            ['key' => 'closing.eliminasi', 'title' => 'Eliminasi Penjualan Internal',
+             'content' => 'Penjualan Roastery ke outlet sendiri (kanal Internal). Dalam konsolidasi uang & barang hanya pindah di dalam usaha, jadi omzet dan HPP-nya dikeluarkan.'],
+            ['key' => 'closing.stok', 'title' => 'Nilai Stok Akhir',
+             'content' => 'Posisi stok pada akhir periode, dihitung mundur dari stok sekarang dikurangi pergerakan setelah tanggal selesai. Nilai = qty × rata-rata harga batch FIFO (estimasi). Produk jual tanpa stok fisik tidak termasuk.'],
+            ['key' => 'closing.bandingkan', 'title' => 'Bandingkan dengan Data Saat Ini',
+             'content' => 'Menghitung ulang periode yang sama dari data sekarang dan menampilkan selisihnya. Snapshot closing tidak berubah — ini hanya untuk melihat apakah ada koreksi setelah closing.'],
+        ];
+        foreach ($closing as $i => $d) {
+            Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'closing', 'urutan' => $i + 1, 'aktif' => true]));
+        }
+
+        // Sprint Label Cup (2026-10-19).
+        $labelCup = [
+            ['key' => 'cabang.label_cup_aktif', 'title' => 'Label Cup',
+             'content' => 'Stiker gelas minuman (1 stiker = 1 gelas), dicetak terpisah dari struk: saat Charge takeaway, Save Bill dine-in, dan approve pesanan QR. Matikan kalau outlet ini tidak punya printer label.'],
+            ['key' => 'cabang.label_cup_kategori', 'title' => 'Kategori Berlabel',
+             'content' => 'Hanya item dari kategori yang dicentang yang dibuatkan label. Default Kopi dan Manual Brew. Kalau semua tidak dicentang, tidak ada label yang tercetak.'],
+            ['key' => 'cabang.label_cup_ukuran', 'title' => 'Ukuran Stiker',
+             'content' => 'Lebar × tinggi stiker dalam mm (umum: 50×30 atau 40×30). Dipakai untuk ukuran halaman Cetak Browser dan perintah printer label Bluetooth (TSPL).'],
+        ];
+        foreach ($labelCup as $i => $d) {
+            Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'label_cup', 'urutan' => $i + 1, 'aktif' => true]));
+        }
     }
 }

@@ -73,6 +73,144 @@ class PanduanKontenSeeder extends Seeder
         $this->grindingBatchUpdate();
         // Roastery V2 Minggu 5-6 (2026-09-30)
         $this->packingBatchUpdate();
+        // Sprint Closing Periode (2026-10-17)
+        $this->closingPeriodeUpdate();
+        // Sprint Label Cup (2026-10-19)
+        $this->labelCupUpdate();
+    }
+
+    private function labelCupUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'label-cup'], [
+            'judul'  => 'Cara Pakai Label Cup (Stiker Gelas)',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+
+Label Cup adalah stiker kecil yang ditempel di gelas minuman — berisi nama menu, catatan (mis. ukuran/gula/es), nomor order, nama pelanggan, dan Dine-in/Take Away + jam. **1 stiker = 1 gelas**: pesan 3 Latte → keluar 3 label bertanda 1/3, 2/3, 3/3. Label dicetak **terpisah dari struk**.
+
+## Kapan Label Muncul
+
+| Kejadian | Yang terjadi |
+|---|---|
+| **Takeaway — Charge/Bayar di POS** | Di modal struk muncul tombol kuning **🏷️ Cetak Label Cup (n gelas)** |
+| **Dine-in — Save Bill di POS** | Setelah bill tersimpan, jendela Label Cup langsung terbuka (hanya untuk item yang baru masuk) |
+| **Pesanan QR — Approve di Antrian Kasir** | Jendela Label Cup langsung terbuka untuk item pesanan itu |
+| **Bayar bill dine-in** | Tidak ditawari label lagi (sudah dicetak saat pesanan masuk) |
+| **Cetak ulang** | Tombol **Cetak Label Cup** di Detail Order, atau tombol **Label Cup** di detail meja (Layout Meja) |
+
+Kalau tidak ingin mencetak, cukup klik **Selesai** — tidak ada yang tercetak.
+
+## Cara Cetak
+
+Di jendela Label Cup ada 2 cara:
+
+1. **🖨️ Cetak Browser** — membuka halaman label di tab baru dan langsung muncul dialog print. Pilih **printer label** di dialog (bukan printer struk). Cocok untuk PC/laptop, juga tablet Android yang sudah memasang print service printer.
+2. **📶 Cetak Bluetooth** — langsung kirim ke printer Bluetooth tanpa dialog (Chrome/Edge, butuh HTTPS). Pilih bahasa printer:
+   - **Printer label (TSPL)** — printer stiker khusus (umumnya merek Xprinter/label thermal)
+   - **Printer struk / ESC/POS** — printer thermal biasa yang diisi kertas stiker
+   Printer label diingat **terpisah dari printer struk** per perangkat, jadi di tablet struk dan label bisa ke 2 printer berbeda. Berikutnya cukup tekan **🔁 Cetak ke "nama printer"**.
+
+## Catatan per Item
+
+Di keranjang POS tiap item punya kolom **Catatan item** — isi misalnya *Large, less sugar, es sedikit*. Catatan ini ikut tercetak di label. Saat pilihan varian menu (Size/Gula/Es/Susu) sudah diisi di Master Produk, nilainya otomatis ikut tercetak.
+
+## Pengaturan (Cabang → Edit → Label Cup)
+
+- **Aktif/nonaktif** per cabang (mis. outlet tanpa printer label → matikan)
+- **Kategori yang dicetak label** — default Kopi & Manual Brew; centang Non-Kopi bila perlu
+- **Ukuran stiker** (mm) — default 50 × 30 mm, sesuaikan dengan stiker yang dipakai
+
+## Peringatan
+
+- Cetak Bluetooth belum tentu cocok dengan semua merek printer — kalau hasilnya berantakan, coba ganti bahasa printer (TSPL ↔ ESC/POS) atau pakai Cetak Browser
+- Browser memblokir popup? Izinkan popup untuk alamat aplikasi agar Cetak Browser bisa membuka tab label
+- Label dibatasi maksimal 100 stiker per cetak
+MARKDOWN,
+            'modul'  => 'penjualan',
+            'urutan' => 30,
+            'aktif'  => true,
+        ]);
+    }
+
+    private function closingPeriodeUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'closing-periode'], [
+            'judul'  => 'Cara Pakai Closing Periode',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+
+Closing Periode menyimpan **foto (snapshot) angka keuangan** untuk satu periode — penjualan, omzet, HPP, pemasukan & pengeluaran, kas tunai & bank, setoran, sampai nilai stok — lalu **mengunci** periode itu. Kapan pun dibuka lagi, angkanya tetap sama persis seperti saat closing, walau data sesudahnya berubah.
+
+Laporan lain (Laporan Penjualan, Laba Rugi, Saldo Kas, dll) tetap menampilkan data **real-time**. Closing = arsip resmi; laporan biasa = kondisi terkini.
+
+## Cara Pakai
+
+1. **Keuangan → Closing Periode → Buat Closing**
+2. Pilih **Jenis** (Harian / Mingguan / Bulanan / Custom) — ini label untuk arsip
+3. Isi **Periode** dari–sampai. Tanggal bebas (custom); tombol jalan pintas: Hari ini, Kemarin, Minggu ini/lalu, Bulan ini/lalu, dan **Siklus tgl 26** (26 bulan lalu s/d 25 bulan ini — angka 26 bisa diganti)
+4. Pilih **Cakupan**: satu cabang, atau **Konsolidasi (Semua Cabang)**
+5. Klik **Lihat Preview** — periksa angka dan kotak kuning **"Perlu dicek"**
+6. Pilih:
+   - **Simpan sebagai Draft** — belum mengunci apa pun, bisa diperiksa dulu
+   - **Kunci Closing (Final)** — angka dihitung ulang saat itu, disimpan permanen, periode dikunci
+
+Draft bisa dikunci belakangan dari halaman detailnya (tombol **Kunci (Final)**).
+
+## Isi Laporan Closing
+
+| Bagian | Isi |
+|---|---|
+| Laba Rugi | Omzet kotor, diskon, omzet bersih, HPP, laba kotor, pemasukan lain, beban operasional, laba bersih |
+| Rincian Penjualan | Per metode bayar, per tipe (Dine-in/Takeaway), per kanal Roastery, rata-rata per transaksi |
+| Pemasukan & Pengeluaran | Per kategori transaksi |
+| Pembelian persediaan & aset | Pembelian bahan, PO supplier, pembelian internal dari Roastery, aset — **tidak** dihitung beban karena biaya bahan sudah masuk lewat HPP |
+| Mutasi internal | Setoran ke pusat, transfer antar kas, setoran kasir — **bukan** pemasukan/pengeluaran |
+| Posisi Kas | Per akun kas: saldo awal, masuk, keluar, saldo akhir; total Tunai vs Bank |
+| Stok | Nilai persediaan per lokasi pada akhir periode (estimasi qty × harga FIFO) |
+
+## Aturan Penting
+
+- **Bill tersimpan yang belum dibayar** dan **order dibatalkan** tidak dihitung sebagai omzet (ditampilkan sebagai info)
+- **Setoran belum dikonfirmasi penerima** dicatat sebagai **Dalam Perjalanan** — uangnya sudah keluar dari kas pengirim tapi belum masuk kas penerima
+- **Konsolidasi**: setoran antar cabang saling meniadakan (dieliminasi), dan penjualan internal Roastery → outlet dikeluarkan dari omzet & HPP supaya tidak terhitung dobel
+- Usaha **1 cabang**: pilihan Konsolidasi tidak muncul; bagian setoran ke pusat otomatis tidak tampil kalau tidak ada datanya, yang tampil Transfer Antar Kas (mis. laci kasir → bank)
+- Boleh punya closing harian **dan** bulanan untuk tanggal yang sama. Yang tidak boleh: dua closing **jenis sama** & cakupan sama yang tanggalnya bertumpuk
+
+## Periode Terkunci
+
+Setelah Final, transaksi bertanggal di periode itu **ditolak** bila ditambah, diedit, dihapus, atau dibatalkan — untuk penjualan/POS, transaksi keuangan, setoran, dan transfer antar kas di cakupan tersebut. Pesan yang muncul menyebut kode closing yang mengunci.
+
+Pengecualian: konfirmasi **terima setoran** tetap bisa (status saja), serta update antrian/produksi.
+
+Closing Konsolidasi Final mengunci **semua cabang** di rentang tanggalnya.
+
+## Koreksi Setelah Closing (Buka Kunci)
+
+1. Buka detail closing → **Buka Kunci** (khusus Owner) → isi alasan
+2. Lakukan koreksi transaksi
+3. **Buat closing ulang** (link tersedia di halaman closing yang dibuka) → tersimpan sebagai **versi 2**
+4. Versi lama tetap tersimpan sebagai arsip beserta alasan buka kuncinya
+
+Tombol **Bandingkan dengan data saat ini** menunjukkan angka mana yang berubah setelah closing.
+
+## Hak Akses
+
+| Role | Lihat | Draft | Kunci | Konsolidasi | Buka Kunci |
+|---|---|---|---|---|---|
+| Owner | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Admin Pusat | ✅ semua | ✅ | ✅ | ✅ | ❌ |
+| Manajer Cabang | ✅ cabangnya | ✅ cabangnya | ❌ | ❌ | ❌ |
+
+## Peringatan
+
+- Periode tidak boleh melewati hari ini. Kalau closing harian mencakup hari ini, transaksi baru hari itu setelah dikunci akan ditolak — lakukan closing harian setelah toko tutup
+- Nilai stok adalah estimasi: dihitung mundur dari stok sekarang. Paling akurat kalau closing dilakukan segera setelah periode berakhir
+- Selesaikan dulu peringatan di kotak kuning (setoran menunggu, transfer stok dikirim, selisih saldo kas) sebelum mengunci
+MARKDOWN,
+            'modul'  => 'keuangan',
+            'urutan' => 106,
+            'aktif'  => true,
+        ]);
     }
 
     private function packingBatchUpdate(): void

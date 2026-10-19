@@ -298,6 +298,7 @@ class PenjualanController extends Controller
             'items.*.qty'        => 'required|numeric|min:0.001',
             'items.*.satuan'     => 'nullable|string|max:20',
             'items.*.harga_satuan' => 'required|numeric|min:0',
+            'items.*.catatan'    => 'nullable|string|max:255',
         ]);
 
         try {
@@ -311,6 +312,10 @@ class PenjualanController extends Controller
                 if (! $bill) {
                     $bill = $this->billService->tandaiMejaTerisi($mejaId, $authUser->id);
                 }
+
+                // Sprint Label Cup — catat batas urutan item lama, supaya label
+                // hanya dicetak untuk item yang baru masuk di simpan ini.
+                $urutanSebelum = (int) $bill->items()->max('urutan_masuk');
 
                 foreach ($data['items'] as $row) {
                     $varian = ! empty($row['item_variant_id']) ? ['item_variant_id' => (int) $row['item_variant_id']] : null;
@@ -338,7 +343,7 @@ class PenjualanController extends Controller
                     'success' => true,
                     'bill_id' => $bill->id,
                     'message' => "Bill {$bill->meja->nama_meja} tersimpan, belum dibayar.",
-                ]);
+                ] + $this->infoLabelBill($bill, $urutanSebelum));
             }
 
             $order = $this->penjualanService->simpanBill($data, (int) $cabangId);
@@ -626,7 +631,35 @@ class PenjualanController extends Controller
             && auth()->user()->can('loyalty.klaim.buat')
             && LoyaltyProgram::eventBased()->aktif()->exists();
 
-        return view('penjualan._struk_modal_content', compact('order', 'copies', 'showItemPrice', 'adaEventBasedAktif'));
+        // Sprint Label Cup — tombol label gelas. Order dine-in dari bill meja
+        // (meja_id terisi) tidak ditawari lagi: labelnya sudah dicetak saat
+        // pesanan masuk (Save Bill / approve QR), supaya tidak dobel.
+        $jumlahLabelCup = (auth()->user()->can('label_cup.print') && ! $order->meja_id)
+            ? app(\App\Services\CupLabelService::class)->jumlah(app(\App\Services\CupLabelService::class)->untukOrder($order))
+            : 0;
+
+        return view('penjualan._struk_modal_content', compact('order', 'copies', 'showItemPrice', 'adaEventBasedAktif', 'jumlahLabelCup'));
+    }
+
+    /** Sprint Label Cup — info label untuk item bill yang baru masuk (urutan_masuk > batas). */
+    private function infoLabelBill(\App\Models\Bill $bill, int $urutanSebelum): array
+    {
+        if (! auth()->user()->can('label_cup.print')) {
+            return ['label_count' => 0];
+        }
+
+        $ids = $bill->items()->where('urutan_masuk', '>', $urutanSebelum)->pluck('id')->all();
+        if (empty($ids)) {
+            return ['label_count' => 0];
+        }
+
+        $svc = app(\App\Services\CupLabelService::class);
+        $jumlah = $svc->jumlah($svc->untukBill($bill->fresh(), $ids));
+
+        return [
+            'label_count' => $jumlah,
+            'label_url'   => $jumlah > 0 ? route('label-cup.bill', ['bill' => $bill->id, 'items' => implode(',', $ids)]) : null,
+        ];
     }
 
     public function edit(Order $order)

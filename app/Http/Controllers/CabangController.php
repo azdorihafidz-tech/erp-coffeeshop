@@ -157,7 +157,11 @@ class CabangController extends Controller
         // E5 — Kitchen Display settings cabang ini
         $kitchenSetting = \App\Models\KitchenDisplaySetting::forCabang($cabang->id);
 
-        return view('cabang.edit', compact('cabang', 'users', 'tipes', 'assignedUsers', 'shifts', 'kitchenSetting'));
+        // Sprint Label Cup — kategori yang punya produk jual, untuk pilihan label gelas
+        $kategoriLabelOptions = \App\Models\ItemCategory::whereHas('items', fn ($q) => $q->where('tipe', 'produk_jual'))
+            ->orderBy('nama_kategori')->get(['id', 'kode_kategori', 'nama_kategori']);
+
+        return view('cabang.edit', compact('cabang', 'users', 'tipes', 'assignedUsers', 'shifts', 'kitchenSetting', 'kategoriLabelOptions'));
     }
 
     /**
@@ -167,6 +171,10 @@ class CabangController extends Controller
     {
         $data = $request->validated();
         $data['kode_cabang'] = strtoupper($data['kode_cabang']);
+        // Sprint Label Cup — checkbox kategori kosong semua = tidak ada kategori berlabel
+        if ($request->boolean('label_cup_form')) {
+            $data['label_cup_kategori'] = array_values($request->input('label_cup_kategori', []));
+        }
 
         $oldKepalaCabangId = $cabang->kepala_cabang_id;
         $cabang->update($data);

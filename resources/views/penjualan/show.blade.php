@@ -14,6 +14,12 @@
                 onclick="openStrukModal({{ $order->id }}, 2)">
             <i class="bi bi-printer-fill me-1"></i>Cetak 2x
         </button>
+        @can('label_cup.print')
+        <button type="button" class="btn btn-sm btn-outline-warning"
+                onclick="window.openCupLabel('{{ route('label-cup.order', $order) }}').then(function (t) { if (!t) alert('Tidak ada item yang perlu label cup di order ini (atau label cup nonaktif untuk cabang ini).'); })">
+            <i class="bi bi-tag me-1"></i>Cetak Label Cup
+        </button>
+        @endcan
         @can('order.batalkan')
         @if($order->status === \App\Enums\StatusOrder::Selesai)
         @php $bisaBatalkan = $isOwner || $order->created_at->isToday(); @endphp

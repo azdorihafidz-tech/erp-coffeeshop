@@ -31,6 +31,7 @@ class RolePermissionSeeder extends Seeder
             // Fase E3 (2026-09-23) — admin_pusat full akses Kasir Layout Meja + Bill
             'kasir.layout-meja.view', 'kasir.queue.view', 'kasir.queue.approve', 'kasir.queue.reject',
             'kasir.meja.tandai-terisi', 'kasir.bill.tambah-item', 'kasir.bill.transfer', 'kasir.bill.bayar', 'kasir.bill.print',
+            'label_cup.print', // Sprint Label Cup (2026-10-19)
             'jenis-olahan.view', 'jenis-olahan.manage',
             'pembelian.view', 'pembelian.create', 'pembelian.approve', 'pembelian.delete',
             'pembelian.kirim-supplier', 'pembelian.terima',
@@ -78,6 +79,8 @@ class RolePermissionSeeder extends Seeder
             // Tahap 5/6 D'mentai — admin_pusat = role HO yang approve/reject
             // Setoran Kasir + lihat dashboard/laporan owner
             'setoran_kasir.view', 'setoran_kasir.approve', 'setoran_kasir.reject',
+            // Closing Periode (2026-10-17) — semua kecuali buka kunci (Owner-only)
+            'closing.view', 'closing.create', 'closing.finalize', 'closing.konsolidasi', 'closing.export',
             'dashboard.owner.view', 'laporan.setoran_kasir.view', 'laporan.setoran_kasir.export',
         ],
 
@@ -135,6 +138,7 @@ class RolePermissionSeeder extends Seeder
             // Fase E3 (2026-09-23) — manajer_cabang full akses Kasir Layout Meja + Bill
             'kasir.layout-meja.view', 'kasir.queue.view', 'kasir.queue.approve', 'kasir.queue.reject',
             'kasir.meja.tandai-terisi', 'kasir.bill.tambah-item', 'kasir.bill.transfer', 'kasir.bill.bayar', 'kasir.bill.print',
+            'label_cup.print', // Sprint Label Cup (2026-10-19)
             'pembelian.view', 'pembelian.create',
             'keuangan.view', 'keuangan.create', 'keuangan.edit', 'keuangan.delete', 'laporan.view',
             'keuangan.kas_view', 'keuangan.kas_create', 'keuangan.kas_edit', 'keuangan.kas_delete',
@@ -165,6 +169,9 @@ class RolePermissionSeeder extends Seeder
             // Tahap 5 D'mentai — manajer cabang bisa submit setoran (mewakili
             // kasir) + lihat riwayat setoran cabangnya sendiri
             'setoran_kasir.view', 'setoran_kasir.create',
+            // Closing Periode (2026-10-17) — manajer buat draft cabangnya,
+            // yang mengunci (Final) Owner/Admin Pusat
+            'closing.view', 'closing.create', 'closing.export',
         ],
 
         'kasir' => [
@@ -179,6 +186,7 @@ class RolePermissionSeeder extends Seeder
             // Fase E3 (2026-09-23) — kasir full akses Kasir Layout Meja + Bill
             'kasir.layout-meja.view', 'kasir.queue.view', 'kasir.queue.approve', 'kasir.queue.reject',
             'kasir.meja.tandai-terisi', 'kasir.bill.tambah-item', 'kasir.bill.transfer', 'kasir.bill.bayar', 'kasir.bill.print',
+            'label_cup.print', // Sprint Label Cup (2026-10-19)
             'keuangan.view', 'keuangan.kas_view',
             'setoran.view', 'setoran.create', 'setoran.batal',
             'absensi.view',
@@ -198,6 +206,7 @@ class RolePermissionSeeder extends Seeder
         ],
 
         'operator_produksi' => [
+            'label_cup.print', // Sprint Label Cup — barista cetak ulang label gelas
             'order.view',
             'pelanggan.view', 'pelanggan.create',
             'karyawan.view',

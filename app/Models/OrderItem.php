@@ -3,12 +3,26 @@
 namespace App\Models;
 
 use App\Traits\HasAuditLog;
+use App\Traits\TerkunciClosing;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class OrderItem extends Model
 {
-    use HasFactory, HasAuditLog;
+    use TerkunciClosing, HasFactory, HasAuditLog;
+
+    /** Sprint Closing Periode — ikut kunci order induknya. */
+    public function closingLockTarget(bool $original): array
+    {
+        $order = $this->order;
+
+        return [$order?->cabang_id, $order?->tanggal_order];
+    }
+
+    public function closingLockKonteks(): string
+    {
+        return 'item order';
+    }
 
     public $timestamps = false;
 

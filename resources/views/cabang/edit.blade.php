@@ -308,6 +308,51 @@
                         </div>
                     </div>
 
+                    {{-- ===== LABEL CUP (Sprint 2026-10-19) ===== --}}
+                    @php $kategoriLabelTerpilih = old('label_cup_kategori', $cabang->kategoriLabelCup()); @endphp
+                    <div class="border border-info-subtle rounded-3 p-3 mb-3" style="background:#f0f9ff">
+                        <input type="hidden" name="label_cup_form" value="1">
+                        <div class="fw-semibold mb-2" style="font-size:0.9rem">
+                            <i class="bi bi-tag me-1 text-info"></i>Label Cup (stiker gelas)
+                            <x-tooltip key="cabang.label_cup_aktif" placement="top" />
+                            <x-panduan-button slug="label-cup" />
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            <input type="hidden" name="label_cup_aktif" value="0">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                id="labelCupAktif" name="label_cup_aktif" value="1"
+                                {{ old('label_cup_aktif', $cabang->label_cup_aktif ?? true) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="labelCupAktif">Aktifkan cetak label cup di cabang ini</label>
+                        </div>
+                        <div class="form-label small fw-medium mb-1">Kategori yang dicetak label <x-tooltip key="cabang.label_cup_kategori" placement="top" /></div>
+                        <div class="d-flex flex-wrap gap-3 mb-2">
+                            @foreach($kategoriLabelOptions as $kat)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="label_cup_kategori[]"
+                                    id="labelKat{{ $kat->id }}" value="{{ $kat->kode_kategori }}"
+                                    {{ in_array($kat->kode_kategori, (array) $kategoriLabelTerpilih, true) ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="labelKat{{ $kat->id }}">{{ $kat->nama_kategori }}</label>
+                            </div>
+                            @endforeach
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 align-items-end">
+                            <div>
+                                <label for="label_cup_lebar_mm" class="form-label small fw-medium mb-1">Lebar stiker (mm)</label>
+                                <input type="number" id="label_cup_lebar_mm" name="label_cup_lebar_mm" min="25" max="120"
+                                    class="form-control form-control-sm @error('label_cup_lebar_mm') is-invalid @enderror" style="max-width:110px"
+                                    value="{{ old('label_cup_lebar_mm', $cabang->label_cup_lebar_mm ?? 50) }}">
+                            </div>
+                            <div>
+                                <label for="label_cup_tinggi_mm" class="form-label small fw-medium mb-1">Tinggi stiker (mm)</label>
+                                <input type="number" id="label_cup_tinggi_mm" name="label_cup_tinggi_mm" min="15" max="120"
+                                    class="form-control form-control-sm @error('label_cup_tinggi_mm') is-invalid @enderror" style="max-width:110px"
+                                    value="{{ old('label_cup_tinggi_mm', $cabang->label_cup_tinggi_mm ?? 30) }}">
+                            </div>
+                            <x-tooltip key="cabang.label_cup_ukuran" placement="top" />
+                        </div>
+                        <div class="form-text mt-1">1 stiker = 1 gelas. Label dicetak dari POS (setelah bayar / simpan bill dine-in) dan saat approve pesanan QR.</div>
+                    </div>
+
                     {{-- ===== FOOTER STRUK ===== --}}
                     <div class="border border-success-subtle rounded-3 p-3 mb-3" style="background:#f0fdf4">
                         <div class="fw-semibold mb-2" style="font-size:0.9rem">

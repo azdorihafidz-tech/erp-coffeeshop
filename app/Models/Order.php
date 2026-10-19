@@ -10,13 +10,37 @@ use App\Enums\TipeTransaksi;
 use App\Traits\FillsDeletedBy;
 use App\Traits\HasAuditLog;
 use App\Traits\HasCabang;
+use App\Traits\TerkunciClosing;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
-    use HasFactory, HasCabang, HasAuditLog, SoftDeletes, FillsDeletedBy;
+    use TerkunciClosing, HasFactory, HasCabang, HasAuditLog, SoftDeletes, FillsDeletedBy;
+
+    /** Sprint Closing Periode — kunci berdasarkan cabang + tanggal_order. */
+    public function closingLockTarget(bool $original): array
+    {
+        return $original
+            ? [$this->getOriginal('cabang_id'), $this->getOriginal('tanggal_order')]
+            : [$this->cabang_id, $this->tanggal_order];
+    }
+
+    /** Kolom operasional (antrian/produksi) tetap boleh berubah walau periode terkunci. */
+    public function closingLockKolomBebas(): array
+    {
+        return [
+            'status_produksi', 'tampil_di_antrian', 'lokasi_rak', 'dikerjakan_oleh_id',
+            'waktu_mulai_kerja', 'waktu_selesai_kerja', 'waktu_disimpan', 'waktu_diambil',
+            'catatan_produksi', 'nomor_antrian',
+        ];
+    }
+
+    public function closingLockKonteks(): string
+    {
+        return 'order/penjualan';
+    }
 
     protected $fillable = [
         'cabang_id',

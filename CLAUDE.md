@@ -674,6 +674,41 @@ Owner lapor 3 problem beruntun: (1) PO Supplier menampilkan item produk_jual di 
 
 **Belum**: deploy ke staging/production (menunggu instruksi Owner), verifikasi klik UI nyata di browser (form Bahan Baku pakai + Tambah Kategori, dropdown filter stok, PO dropdown).
 
+### 4.39 🟢 Sprint Closing Periode — Snapshot Permanen + Kunci Periode (2026-10-17)
+
+Owner lapor: data closing yang ditarik ulang tidak sesuai kondisi saat closing karena semua laporan menghitung ulang dari data hidup (transaksi lama masih bisa diedit/dihapus/backdate, stok tidak punya riwayat posisi, `kas.saldo_sekarang` bisa beda dengan hasil hitung transaksi). Keputusan Owner: menu baru, periode custom, sisanya ikut saran (kunci periode, snapshot stok, Manajer hanya draft, konsolidasi boleh kapan saja + peringatan cabang belum closing).
+
+- **Menu baru Keuangan → Closing Periode** (`/closing-periode`, route `closing.*`): Buat → Preview → Simpan Draft / Kunci (Final) → Buka Kunci (Owner, wajib alasan) → closing ulang = versi 2 (`parent_id`). Jenis harian/mingguan/bulanan/custom = label; tanggal bebas + tombol pintas (Hari ini, Minggu ini/lalu, Bulan ini/lalu, **Siklus tgl N** mis. 26–25). Cakupan per cabang atau Konsolidasi (`cabang_id` NULL; opsi hilang otomatis kalau cuma 1 cabang aktif).
+- **Tabel baru** `closing_periodes` (snapshot JSON di kolom `data` + kolom ringkasan untuk daftar). Tidak ada kolom tabel lama yang diubah.
+- **`ClosingService::hitung()`**: omzet/HPP dari orders/order_items (Pending & Dibatalkan tidak dihitung, jadi info); TK `referensi_type='order'` = cerminan kas penjualan (tidak dihitung ulang); SETOR/MUTASI/SETORKSR = mutasi (bukan laba rugi), SETOR-OUT menunggu = **Dalam Perjalanan**, SETOR-IN menunggu tidak menambah kas; PBB/ASET/RETUR-BELI/PO/`order_internal` = pembelian persediaan/aset (arus kas, bukan beban — biaya bahan sudah lewat HPP); Konsolidasi mengeliminasi omzet+HPP penjualan internal Roastery. Kas per akun pakai pola dual-path `KeuanganController::hitungExpectedSaldoKas()`. Stok akhir periode = stok sekarang dikoreksi mundur dengan `stock_movements` setelah tanggal selesai (movement `transfer` hanya dihitung keluar di asal), nilai = qty × rata-rata batch FIFO aktif.
+- **Kunci periode**: trait `TerkunciClosing` (Order, OrderItem, OrderPayment, TransaksiKeuangan) + `ClosingLockService` (singleton, daftar closing final dimuat sekali/request; 0 query tambahan selama belum ada closing final). Kolom bebas: status antrian/produksi di Order, `status_setoran`/`diterima_oleh_id`/`waktu_diterima` di TK (terima setoran tetap bisa; tolak/batal/hapus diblok). `PeriodeTerkunciException` di-render global di `bootstrap/app.php` (JSON 422 / back()->with('error')). Konsolidasi Final mengunci semua cabang. Dua closing Final **jenis sama** & cakupan sama tidak boleh bertumpuk; harian+bulanan boleh.
+- **Catatan**: `CascadeDeleteService` menulis via `DB::table()` (hapus cabang/pelanggan massal) sehingga tidak melewati kunci — operasi admin langka, sengaja tidak diubah.
+- Aturan 3.8: sidebar (grup Keuangan, `@can('closing.view')`), 6 permission `closing.*` (admin_pusat semua kecuali `closing.unlock`; manajer_cabang view/create/export; unlock Owner-only), panduan `closing-periode`, 9 tooltip `closing.*`, tombol Cara Pakai di index/create/preview/show. Export PDF + Excel (5 sheet).
+
+**Test**: `tests/Feature/ClosingPeriodeTest.php` **22/22 PASS** (98 assertion). Regresi: 4 sprint test + Tahap5/6/7 dijalankan sebelum & sesudah (git stash) → **43 failed / 287 passed identik**, 0 kegagalan baru (43 itu pre-existing).
+
+**Verifikasi 3.7**: syntax 19 file OK, `view:cache` OK, migrate dev+test DONE, reseed Permission/RolePermission/Panduan/Tooltip di dev+test, route 10/10, smoke HTTP login owner → index/create/preview cabang/preview konsolidasi 200, log bersih.
+
+**Belum**: commit/push & deploy (menunggu instruksi Owner), klik UI nyata di browser. **Deploy production**: jalankan migration + PermissionSeeder; RolePermissionSeeder me-reset mapping role ke default (hapus lalu insert ulang) — kalau Owner sudah mengubah hak akses lewat UI, tambahkan permission `closing.*` manual lewat menu Role & Hak Akses saja.
+
+### 4.40 🟢 Sprint Label Cup — Stiker Gelas Minuman (2026-10-19)
+
+Owner minta cup label (beverage order label) terpisah dari struk, khusus minuman kopi, bisa tidak dicetak. Keputusan: kasir campuran PC + tablet → cetak lewat browser (Opsi A) + Bluetooth (pola struk existing); default kategori Kopi + Manual Brew; dine-in dicetak saat pesanan masuk; isi varian **Tahap 1** = nama menu + catatan per item (label sudah siap varian: nilai `item_variants` otomatis tercetak begitu TODO 12.6 diisi).
+
+- **Pengaturan per cabang** (Cabang → Edit → Label Cup), bukan per kategori global — tidak ada halaman Master Kategori (kategori cuma lewat modal inline). Migration `cabangs.label_cup_aktif` (default true), `label_cup_kategori` (JSON kode kategori, NULL = default `Cabang::LABEL_CUP_KATEGORI_DEFAULT` KPI+MBW), `label_cup_lebar_mm`/`label_cup_tinggi_mm` (50×30). Uncheck semua kategori tersimpan sebagai `[]` (hidden `label_cup_form`).
+- **`CupLabelService`**: 1 label per gelas (qty dibulatkan, maks 100), filter kategori cabang, baris opsi dari varian, catatan item, nama pelanggan, "Take Away/Dine-in · Meja X · jam", nomor = nomor antrian (fallback segmen angka terakhir nomor order/bill). `untukBill($bill, $ids)` bisa dibatasi item tertentu.
+- **`CupLabelController`** `GET /label-cup/order/{order}` & `/label-cup/bill/{bill}?items=` → JSON (default) atau `?format=html` (halaman stiker `@page size W×H mm`, `autoprint=1` cetak otomatis lalu tutup tab). Cek cabang aktif untuk non-owner/admin pusat.
+- **Overlay `<x-cup-label-overlay>`** di `layouts/app` (`@can('label_cup.print')`), bukan Bootstrap modal supaya bisa di atas modal struk. Tombol: Cetak Browser (tab baru) + Bluetooth **TSPL** (printer label) / **ESC/POS** (printer struk berisi stiker). Printer label & protokol disimpan per perangkat di localStorage (`btLastLabelPrinterName`, `labelCupProtocol`) — terpisah dari printer struk.
+- **Titik cetak**: modal struk (tombol kuning, disembunyikan bila `orders.meja_id` terisi = dine-in dari bill, supaya tidak dobel); POS Save Bill dine-in (hanya item baru — batas `bill_items.urutan_masuk` sebelum simpan); approve QR di Antrian Kasir (item pesanan itu saja); cetak ulang di Detail Order & detail meja Layout Meja.
+- **Catatan per item di keranjang POS** (`items[i][catatan]`): sebelumnya TIDAK ada input & tidak divalidasi (dibuang `validate()`), sekarang divalidasi di `OrderRequest` + `simpanBill()` dan tersimpan ke `order_items.catatan`/`bill_items.catatan`.
+- Aturan 3.8: permission `label_cup.print` (admin_pusat, manajer_cabang, kasir, operator_produksi; Owner bypass), panduan `label-cup`, 3 tooltip `cabang.label_cup_*`, tombol Cara Pakai di overlay & form cabang. Tidak ada menu sidebar baru (fitur extend POS/kasir/cabang, preseden 4.31).
+
+**Test**: `tests/Feature/CupLabelTest.php` **13/13 PASS** (63 assertion) — 1 label/gelas, cabang nonaktif, kategori per cabang (termasuk kosong), varian, bill item tertentu, JSON+HTML, isolasi cabang & tanpa izin, Save Bill dine-in hanya item baru, catatan item tersimpan, approve QR, tombol struk (takeaway vs dari meja), simpan pengaturan cabang, render POS/detail order.
+
+**Verifikasi 3.7**: syntax 12 file OK, migrate dev+test DONE, reseed Permission/RolePermission/Panduan/Tooltip dev+test, route 2/2, smoke HTTP owner (edit cabang, POS, detail order, label JSON/HTML, struk modal) 200, log bersih (1 entri dari payload test sendiri yang sudah dibetulkan).
+
+**Belum**: uji cetak fisik (Bluetooth TSPL/ESC/POS belum dites dengan printer nyata — beda merek bisa beda hasil), commit/push & deploy.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1036,6 +1071,17 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - **Es Batu**: Ice Coffee (Americano Ice, Latte Ice, dll) 80–100 g; Es Teh 100–120 g; Iced Chocolate/Matcha 80–100 g; minuman panas 0 g.
 - **Sedotan**: minuman es 1 pcs; minuman panas & manual brew 0; Frappe/Blend 1 pcs (sedotan besar).
 - **Tas Takeaway**: dine-in 0; takeaway 1–2 gelas 1 tas kecil; 3–6 gelas 1 tas sedang; >6 gelas 1 tas besar. **Catatan**: tas tidak per-item — lebih akurat dicatat manual saat opname bulanan.
+
+### 12.12 Closing Periode (2026-10-17, lihat 4.39)
+- [x] Menu, snapshot, kunci periode, buka kunci + versi, export PDF/Excel, permission/panduan/tooltip, 22 test PASS
+- [ ] Owner: uji klik di browser (buat draft → kunci → coba edit transaksi di periode itu → buka kunci → closing ulang)
+- [ ] Commit/push + deploy production (migration + PermissionSeeder; cek catatan RolePermissionSeeder di 4.39)
+- [ ] Opsional nanti: kunci juga Setoran Kasir (`setorans`) & stock adjustment backdate bila dibutuhkan
+
+### 12.13 Label Cup (2026-10-19, lihat 4.40)
+- [x] Label per gelas, pengaturan per cabang, cetak browser + Bluetooth TSPL/ESC/POS, catatan item POS, integrasi struk/Save Bill/approve QR, 13 test PASS
+- [ ] Owner: uji cetak fisik di printer label (PC via browser, tablet via Bluetooth) & sesuaikan ukuran stiker
+- [ ] Isi varian menu (TODO 12.6) supaya Size/Gula/Es/Susu tercetak rapi (sekarang lewat catatan item)
 
 ---
 

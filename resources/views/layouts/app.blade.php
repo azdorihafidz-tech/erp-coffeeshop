@@ -819,7 +819,7 @@
         @endcanany
 
         <!-- KEUANGAN -->
-        @canany(['keuangan.view', 'keuangan.create', 'setoran.view', 'kategori.view', 'bep.view', 'coa.view', 'transfer_antar_kas.view'])
+        @canany(['keuangan.view', 'keuangan.create', 'setoran.view', 'kategori.view', 'bep.view', 'coa.view', 'transfer_antar_kas.view', 'closing.view'])
         <div class="nav-section-title">Keuangan</div>
         @can('keuangan.view')
         <a href="{{ route('keuangan.dashboard') }}" class="nav-link {{ request()->routeIs('keuangan.dashboard') ? 'active' : '' }}">
@@ -836,6 +836,12 @@
             <span>Laporan Keuangan</span>
         </a>
         @endcan
+        @endcan
+        @can('closing.view')
+        <a href="{{ route('closing.index') }}" class="nav-link {{ request()->routeIs('closing.*') ? 'active' : '' }}">
+            <i class="bi bi-journal-check"></i>
+            <span>Closing Periode</span>
+        </a>
         @endcan
         @can('transfer_antar_kas.view')
         <a href="{{ route('transfer-antar-kas.index') }}" class="nav-link {{ request()->routeIs('transfer-antar-kas.*') ? 'active' : '' }}">
@@ -1632,6 +1638,13 @@ window.waitForBootstrapAndOpenStruk = function (orderId, copies, retries) {
     }
 };
 </script>
+
+{{-- Sprint Label Cup (2026-10-19) — overlay cetak label gelas (POS, kasir, detail order) --}}
+@auth
+@can('label_cup.print')
+<x-cup-label-overlay />
+@endcan
+@endauth
 
 @stack('scripts')
 </body>

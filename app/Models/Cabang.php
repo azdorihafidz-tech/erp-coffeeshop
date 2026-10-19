@@ -46,7 +46,15 @@ class Cabang extends Model
         'take_away_fee',
         'service_charge_persen',
         'qr_ordering_active',
+        // Sprint Label Cup (2026-10-19)
+        'label_cup_aktif',
+        'label_cup_kategori',
+        'label_cup_lebar_mm',
+        'label_cup_tinggi_mm',
     ];
+
+    /** Kode kategori default yang dapat label cup bila belum diatur per cabang. */
+    public const LABEL_CUP_KATEGORI_DEFAULT = ['KPI', 'MBW'];
 
     protected function casts(): array
     {
@@ -66,7 +74,17 @@ class Cabang extends Model
             'take_away_fee'          => 'decimal:2',
             'service_charge_persen'  => 'decimal:2',
             'qr_ordering_active'     => 'boolean',
+            'label_cup_aktif'        => 'boolean',
+            'label_cup_kategori'     => 'array',
+            'label_cup_lebar_mm'     => 'integer',
+            'label_cup_tinggi_mm'    => 'integer',
         ];
+    }
+
+    /** Sprint Label Cup — kode kategori item yang dicetak label gelasnya di cabang ini. */
+    public function kategoriLabelCup(): array
+    {
+        return is_array($this->label_cup_kategori) ? $this->label_cup_kategori : self::LABEL_CUP_KATEGORI_DEFAULT;
     }
 
     /** Tahap 3 D'mentai — cek apakah tipe transaksi ini aktif utk cabang ini. */

@@ -53,6 +53,7 @@ use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\KategoriTransaksiController;
 use App\Http\Controllers\SetoranController;
 use App\Http\Controllers\TransferAntarKasController;
+use App\Http\Controllers\ClosingPeriodeController;
 use App\Http\Controllers\LaporanSetoranController;
 use App\Http\Controllers\LaporanKategoriController;
 use App\Http\Controllers\LaporanAuditBuktiController;
@@ -138,6 +139,9 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
     // Dashboard
     // Struk modal — AJAX partial, tanpa layout app
     Route::get('/penjualan/{order}/struk-modal', [PenjualanController::class, 'strukModal'])->name('penjualan.struk-modal');
+    // Sprint Label Cup (2026-10-19) — label gelas per order / per bill dine-in
+    Route::get('/label-cup/order/{order}', [\App\Http\Controllers\CupLabelController::class, 'order'])->name('label-cup.order');
+    Route::get('/label-cup/bill/{bill}', [\App\Http\Controllers\CupLabelController::class, 'bill'])->name('label-cup.bill');
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -654,6 +658,18 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
     Route::post('/keuangan/transfer-antar-kas', [TransferAntarKasController::class, 'store'])->name('transfer-antar-kas.store');
     Route::get('/keuangan/transfer-antar-kas/{transaksi}', [TransferAntarKasController::class, 'show'])->name('transfer-antar-kas.show');
     Route::delete('/keuangan/transfer-antar-kas/{transaksi}', [TransferAntarKasController::class, 'destroy'])->name('transfer-antar-kas.destroy');
+
+    // ===== CLOSING PERIODE (Sprint 2026-10-17) — snapshot permanen + kunci periode =====
+    Route::get('/closing-periode', [ClosingPeriodeController::class, 'index'])->name('closing.index');
+    Route::get('/closing-periode/create', [ClosingPeriodeController::class, 'create'])->name('closing.create');
+    Route::get('/closing-periode/preview', [ClosingPeriodeController::class, 'preview'])->name('closing.preview');
+    Route::post('/closing-periode', [ClosingPeriodeController::class, 'store'])->name('closing.store');
+    Route::get('/closing-periode/{closing}', [ClosingPeriodeController::class, 'show'])->name('closing.show');
+    Route::post('/closing-periode/{closing}/finalize', [ClosingPeriodeController::class, 'finalize'])->name('closing.finalize');
+    Route::post('/closing-periode/{closing}/unlock', [ClosingPeriodeController::class, 'unlock'])->name('closing.unlock');
+    Route::delete('/closing-periode/{closing}', [ClosingPeriodeController::class, 'destroy'])->name('closing.destroy');
+    Route::get('/closing-periode/{closing}/pdf', [ClosingPeriodeController::class, 'exportPdf'])->name('closing.pdf');
+    Route::get('/closing-periode/{closing}/excel', [ClosingPeriodeController::class, 'exportExcel'])->name('closing.excel');
 
     // ===== KATEGORI TRANSAKSI =====
     Route::resource('kategori-transaksi', KategoriTransaksiController::class)->except(['show']);

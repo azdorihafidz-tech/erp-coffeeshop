@@ -62,6 +62,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->registerStorageAwareUrlGenerator();
+
+        // Sprint Closing Periode — daftar periode terkunci dimuat sekali per request.
+        $this->app->singleton(\App\Services\ClosingLockService::class);
     }
 
     /**

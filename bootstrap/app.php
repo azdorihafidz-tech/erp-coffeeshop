@@ -22,5 +22,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Sprint Closing Periode — periode terkunci tampil sebagai pesan biasa,
+        // bukan halaman error 500, untuk alur yang tidak menangkap exception sendiri.
+        $exceptions->render(function (\App\Exceptions\PeriodeTerkunciException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
+
+            return back()->withInput()->with('error', $e->getMessage());
+        });
+        $exceptions->dontReport(\App\Exceptions\PeriodeTerkunciException::class);
     })->create();

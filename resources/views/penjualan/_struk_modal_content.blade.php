@@ -232,6 +232,16 @@
         </button>
     </div>
 
+    {{-- Sprint Label Cup — label gelas, dicetak terpisah dari struk --}}
+    @if(($jumlahLabelCup ?? 0) > 0)
+    <div class="d-grid mb-3">
+        <button class="btn btn-warning" type="button"
+                onclick="window.openCupLabel && window.openCupLabel('{{ route('label-cup.order', $order) }}')">
+            🏷️ Cetak Label Cup ({{ $jumlahLabelCup }} gelas)
+        </button>
+    </div>
+    @endif
+
     {{-- Grup 2: FINISH --}}
     <div class="d-flex gap-2 mb-3">
         {{-- Selesai: tutup modal + reset POS (kalau dipanggil dari halaman POS) --}}

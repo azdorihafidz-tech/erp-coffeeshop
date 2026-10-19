@@ -863,6 +863,10 @@ function tambahProduk() {
                 </button>
             </div>
             <div class="col-12">
+                <input type="text" name="items[${idx}][catatan]" class="form-control form-control-sm" maxlength="255"
+                    placeholder="Catatan item (opsional) — mis. Large, less sugar, es sedikit" title="Ikut tercetak di label cup">
+            </div>
+            <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
                     <small class="text-muted" id="stokInfo_${idx}"></small>
                     <small class="fw-semibold text-primary subtotal-display" id="subtotal_${idx}">Rp 0</small>
@@ -1229,6 +1233,10 @@ async function simpanBill() {
             return;
         }
         await window.showAlert('success', 'Bill Tersimpan', data.message);
+        // Sprint Label Cup — dine-in: label gelas dicetak saat pesanan masuk
+        if (data.label_count > 0 && data.label_url && window.openCupLabel) {
+            await window.openCupLabel(data.label_url);
+        }
         window.location.reload();
     } catch (err) {
         await window.showAlert('error', 'Gagal', 'Gagal terhubung ke server.');
