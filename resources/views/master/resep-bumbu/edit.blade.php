@@ -90,7 +90,6 @@
                             <th>Bahan</th>
                             <th class="text-end">Takaran</th>
                             <th class="text-center">Wajib?</th>
-                            <th class="text-center">Mode</th>
                             <th class="text-end">Harga Beli (Modal) <x-tooltip key="resep_bumbu.harga_beli_modal" placement="top" /></th>
                             <th class="text-end">Total /kg</th>
                             <th class="text-center" style="width:50px"></th>
@@ -107,9 +106,6 @@
                                 @else
                                 <span class="badge bg-secondary-subtle text-secondary">Opsional</span>
                                 @endif
-                            </td>
-                            <td class="text-center small">
-                                {{ $item->mode_harga === 'pakai_master' ? 'Harga Master' : 'Gratis' }}
                             </td>
                             <td class="text-end small">
                                 @if($item->item && $item->item->harga_beli_terakhir)
@@ -135,14 +131,14 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-3">Belum ada bahan. Tambahkan di form bawah.</td>
+                            <td colspan="6" class="text-center text-muted py-3">Belum ada bahan. Tambahkan di form bawah.</td>
                         </tr>
                         @endforelse
                     </tbody>
                     @if($resepBumbu->items->isNotEmpty())
                     <tfoot>
                         <tr class="table-light fw-bold">
-                            <td colspan="5" class="text-end">Total Bahan per 1 unit produksi (porsi/pcs):</td>
+                            <td colspan="4" class="text-end">Total Bahan per 1 unit produksi (porsi/pcs):</td>
                             <td class="text-end">Rp {{ number_format($resepBumbu->items->sum('total_harga_master'), 0, ',', '.') }}</td>
                             <td></td>
                         </tr>
@@ -185,20 +181,13 @@
                             </select>
                         </div>
                         <div class="col-6 col-md-2">
-                            <label class="form-label small">Mode Harga <x-tooltip key="resep_bumbu.mode_harga" placement="top" /></label>
-                            <select name="mode_harga" id="modeHargaSelect" class="form-select form-select-sm">
-                                <option value="gratis">Gratis (include)</option>
-                                <option value="pakai_master">Harga Master</option>
-                            </select>
-                        </div>
-                        <div class="col-6 col-md-2">
                             <div class="form-check mt-4">
                                 <input class="form-check-input" type="checkbox" name="is_wajib" value="1" id="isWajibCheck" checked>
                                 <label class="form-check-label small" for="isWajibCheck">Wajib</label>
                             </div>
                         </div>
                         <div class="col-12">
-                            <small class="text-muted" id="previewTotalBahan">Perkiraan total: Rp 0 (gratis)</small>
+                            <small class="text-muted" id="previewTotalBahan">Perkiraan modal: Rp 0</small>
                         </div>
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary btn-sm">
@@ -216,14 +205,13 @@
 @push('scripts')
 <script>
 // Preview harga (murni tampilan, TIDAK dikirim ke server) — update live saat
-// bahan/takaran/satuan/mode harga di form "Tambah Bahan" diubah.
+// bahan/takaran/satuan di form "Tambah Bahan" diubah.
 (function () {
     const itemSelect  = document.getElementById('itemIdSelect');
     const qtyInput    = document.getElementById('qtyPerUnitInput');
     const satuanEl    = document.getElementById('satuanSelect');
-    const modeEl      = document.getElementById('modeHargaSelect');
     const previewEl   = document.getElementById('previewTotalBahan');
-    if (!itemSelect || !qtyInput || !satuanEl || !modeEl || !previewEl) return;
+    if (!itemSelect || !qtyInput || !satuanEl || !previewEl) return;
 
     function konversiKeKg(qty, satuan) {
         if (satuan === 'g') return qty / 1000;
@@ -259,20 +247,13 @@
         const opt = itemSelect.selectedOptions[0];
         const hargaBeli = opt ? (parseFloat(opt.dataset.hargaBeli) || 0) : 0;
         const qty = parseFloat(qtyInput.value) || 0;
-        const mode = modeEl.value;
-
-        if (mode !== 'pakai_master') {
-            previewEl.textContent = 'Perkiraan total: Rp 0 (gratis, sudah include tarif jasa giling)';
-            return;
-        }
-
         const qtyKg = konversiKeKg(qty, satuanEl.value);
         const total = qtyKg * hargaBeli;
-        previewEl.textContent = 'Perkiraan total: Rp ' + total.toLocaleString('id-ID', { maximumFractionDigits: 0 })
+        previewEl.textContent = 'Perkiraan modal: Rp ' + total.toLocaleString('id-ID', { maximumFractionDigits: 0 })
             + (hargaBeli === 0 ? ' (harga beli bahan ini belum diset)' : '');
     }
 
-    [itemSelect, qtyInput, satuanEl, modeEl].forEach(el => {
+    [itemSelect, qtyInput, satuanEl].forEach(el => {
         el.addEventListener('input', updatePreview);
         el.addEventListener('change', updatePreview);
     });

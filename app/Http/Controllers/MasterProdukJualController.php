@@ -238,7 +238,9 @@ class MasterProdukJualController extends Controller
             if (! $item) continue;
             $qtyDibutuhkan = $row['qty_per_unit'] * $jumlah;
             $hppSatuan = (float) ($item->harga_beli_terakhir ?? 0);
-            $subtotal = $qtyDibutuhkan * $hppSatuan;
+            // 2026-10-30: takaran (mis. 9 g) dikonversi ke satuan stok (kg) dulu,
+            // aturan sama dengan pemotongan stok POS — sebelumnya 9 × harga/kg.
+            $subtotal = \App\Models\ResepBumbuItem::konversiKeSatuanStok($qtyDibutuhkan, $row['satuan']) * $hppSatuan;
             $totalHpp += $subtotal;
 
             $breakdown[] = [
@@ -264,7 +266,9 @@ class MasterProdukJualController extends Controller
     {
         $subtotal = 0.0;
         foreach ($bumbu->items as $inner) {
-            if (! $inner->item || $inner->mode_harga !== 'pakai_master') continue;
+            // 2026-10-30: mode_harga (gratis/pakai_master, warisan jasa giling)
+            // tidak dipakai lagi — semua bahan dihitung sebagai modal.
+            if (! $inner->item) continue;
             $qtyInner = $inner->qty_per_unit_dalam_kg * $qtyPerUnit * $jumlah;
             $subtotal += $qtyInner * (float) ($inner->item->harga_beli_terakhir ?? 0);
         }
@@ -369,7 +373,7 @@ class MasterProdukJualController extends Controller
         $bumbu->load('items.item');
         $cabangs = Cabang::aktif()->orderBy('nama_cabang')->get(['id', 'nama_cabang', 'kode_cabang']);
 
-        $bahan = $bumbu->items->filter(fn ($i) => $i->item && $i->mode_harga === 'pakai_master')->values();
+        $bahan = $bumbu->items->filter(fn ($i) => $i->item)->values();
         $itemIds = $bahan->pluck('item_id')->all();
 
         // Batch tertua per item+lokasi (FIFO) dalam 1 query, bukan N+1.
@@ -529,7 +533,9 @@ class MasterProdukJualController extends Controller
                 'qty_per_unit'        => $row['qty_per_unit'],
                 'satuan'              => $resepBumbuRefId ? 'porsi' : $row['satuan'],
                 'is_wajib'            => filter_var($row['is_wajib'] ?? true, FILTER_VALIDATE_BOOLEAN),
-                'mode_harga'          => $row['mode_harga'] ?? 'gratis',
+                // Pilihan Gratis/Master dihapus dari form (2026-10-30); kolom tetap
+                // diisi demi kompatibilitas, nilainya tidak lagi memengaruhi hitungan.
+                'mode_harga'          => 'pakai_master',
                 'urutan'              => $i,
             ]);
         }

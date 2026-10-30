@@ -41,13 +41,76 @@ class ResepBumbuHargaBeliTest extends TestCase
         $this->assertEqualsWithDelta(20000, $ri->fresh()->total_harga_master, 0.01);
     }
 
-    public function test_total_harga_master_nol_kalau_mode_gratis(): void
+    /**
+     * 2026-10-30: pilihan Gratis/Pakai Master dihapus — data lama yang masih
+     * tersimpan 'gratis' TETAP dihitung sebagai modal (dulu Rp0).
+     */
+    public function test_data_lama_mode_gratis_tetap_dihitung_modal(): void
     {
         $item = $this->bahan(hargaBeli: 20000);
         $bumbu = ResepBumbu::create(['nama' => 'Bumbu Test2', 'kode' => 'BMB-RBH-2', 'is_active' => true, 'dibuat_oleh' => $this->buatUser('owner')->id]);
         $ri = $bumbu->items()->create(['item_id' => $item->id, 'qty_per_unit' => 1, 'satuan' => 'kg', 'mode_harga' => 'gratis', 'is_wajib' => true, 'urutan' => 1]);
 
-        $this->assertEqualsWithDelta(0, $ri->fresh()->total_harga_master, 0.01);
+        $this->assertEqualsWithDelta(20000, $ri->fresh()->total_harga_master, 0.01);
+    }
+
+    public function test_preview_dan_detail_bumbu_pusat_hitung_bahan_mode_gratis(): void
+    {
+        $owner = $this->buatUser('owner');
+        $item = $this->bahan(hargaBeli: 10000);
+        $bumbu = ResepBumbu::create(['nama' => 'Bumbu Gratis Lama', 'kode' => 'BMB-RBH-7', 'is_active' => true, 'dibuat_oleh' => $owner->id]);
+        // 200 g x Rp10.000/kg = Rp2.000 per porsi
+        $bumbu->items()->create(['item_id' => $item->id, 'qty_per_unit' => 200, 'satuan' => 'g', 'mode_harga' => 'gratis', 'is_wajib' => true, 'urutan' => 1]);
+
+        $this->actingAs($owner)->postJson(route('master.produk-jual.preview-bumbu', $bumbu), ['qty_per_unit' => 1, 'jumlah' => 3])
+            ->assertOk()->assertJsonPath('subtotal', fn ($v) => abs($v - 6000) < 0.01);
+
+        $data = $this->actingAs($owner)->get(route('master.produk-jual.bumbu-pusat.detail', $bumbu))->assertOk()->json();
+        $this->assertCount(1, $data['bahan']);
+    }
+
+    public function test_form_tidak_lagi_menampilkan_pilihan_mode_harga(): void
+    {
+        $owner = $this->buatUser('owner');
+        $bumbu = ResepBumbu::create(['nama' => 'Bumbu Form', 'kode' => 'BMB-RBH-8', 'is_active' => true, 'dibuat_oleh' => $owner->id]);
+
+        $this->actingAs($owner)->get(route('master.resep-bumbu.edit', $bumbu))->assertOk()
+            ->assertDontSee('Mode Harga')->assertDontSee('Gratis (include)');
+        $this->actingAs($owner)->get(route('master.produk-jual.create'))->assertOk()
+            ->assertDontSee('Mode Harga')->assertDontSee('Pakai Master');
+    }
+
+    /** 2026-10-30: kalkulator HPP mengonversi takaran gram/ml ke satuan stok. */
+    public function test_kalkulator_hpp_konversi_gram_ke_kg(): void
+    {
+        $owner = $this->buatUser('owner');
+        $biji = $this->bahan(hargaBeli: 83333); // per kg
+        $cup = $this->bahan(hargaBeli: 1500);   // per pcs
+        $produk = Item::where('tipe', 'produk_jual')->firstOrFail();
+
+        $data = $this->actingAs($owner)->postJson(route('master.produk-jual.kalkulator-resep', $produk), [
+            'jumlah' => 2,
+            'resep' => [
+                ['item_id' => $biji->id, 'qty_per_unit' => 9, 'satuan' => 'g'],
+                ['item_id' => $cup->id, 'qty_per_unit' => 1, 'satuan' => 'pcs'],
+            ],
+        ])->assertOk()->json();
+
+        // 2 gelas: 18 g = 0,018 kg × 83.333 = 1.500 ; cup 2 × 1.500 = 3.000
+        $this->assertEqualsWithDelta(4500, $data['total_hpp'], 0.5);
+    }
+
+    public function test_tambah_bahan_bumbu_pusat_tanpa_mode_harga(): void
+    {
+        $owner = $this->buatUser('owner');
+        $item = $this->bahan(hargaBeli: 8000);
+        $bumbu = ResepBumbu::create(['nama' => 'Bumbu Tambah', 'kode' => 'BMB-RBH-9', 'is_active' => true, 'dibuat_oleh' => $owner->id]);
+
+        $this->actingAs($owner)->post(route('master.resep-bumbu.items.store', $bumbu), [
+            'item_id' => $item->id, 'qty_per_unit' => 1, 'satuan' => 'kg', 'is_wajib' => 1,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertEqualsWithDelta(8000, $bumbu->items()->firstOrFail()->total_harga_master, 0.01);
     }
 
     public function test_halaman_resep_bumbu_edit_tampilkan_harga_beli(): void

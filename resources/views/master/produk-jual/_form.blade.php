@@ -136,25 +136,24 @@
                     <thead>
                         <tr>
                             <th>Bahan</th><th style="width:100px">Qty/unit</th><th style="width:90px">Satuan</th><th style="width:70px">Wajib</th>
-                            <th style="width:130px">Harga Master <x-tooltip key="master_produk_jual.harga_master_preview" /></th>
+                            <th style="width:130px">Harga Beli <x-tooltip key="master_produk_jual.harga_master_preview" /></th>
                             <th style="width:120px">Subtotal</th>
-                            <th style="width:110px">Mode Harga <x-tooltip key="master_produk_jual.mode_harga" /></th>
                             <th style="width:40px"></th>
                         </tr>
                     </thead>
                     <tbody id="bodyResep"></tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="4" class="text-end fw-semibold">Total HPP</td>
+                            <td colspan="5" class="text-end fw-semibold">Total HPP</td>
                             <td class="fw-semibold" id="totalHppFooter">Rp 0</td>
-                            <td colspan="2"></td>
+                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
                 <div class="alert alert-warning py-2 small mb-2">
                     <i class="bi bi-exclamation-triangle me-1"></i>
-                    Harga Master &amp; Subtotal murni preview live dari Master Bahan Baku (belum ada konversi satuan otomatis —
-                    kalau angka terlihat aneh, mis. "Rp 45.000/gram", cek &amp; perbaiki harga/satuan bahan itu di menu
+                    Harga Beli &amp; Subtotal murni preview live dari Master Bahan Baku. Takaran gram/ml otomatis dihitung ke kg/liter
+                    (ons ÷10). Kalau angka terlihat aneh, mis. "Rp 45.000/gram", cek &amp; perbaiki harga/satuan bahan itu di menu
                     <a href="{{ route('master.bahan-baku.index') }}" target="_blank">Master Bahan Baku</a>.
                 </div>
             </div>
@@ -352,14 +351,10 @@ function tambahBarisResep(data) {
             <option value="">— Pilih Bahan —</option>${opsi}
         </select></td>
         <td><input type="number" step="0.001" min="0.001" name="resep[${idx}][qty_per_unit]" class="form-control form-control-sm qtyResep" value="${formatQtyInput(data.qty_per_unit)}" oninput="hitungPreviewBaris(this.closest('tr'))"></td>
-        <td><input type="text" name="resep[${idx}][satuan]" class="form-control form-control-sm satuanResep" value="${data.satuan ?? ''}"></td>
+        <td><input type="text" name="resep[${idx}][satuan]" class="form-control form-control-sm satuanResep" value="${data.satuan ?? ''}" oninput="hitungPreviewBaris(this.closest('tr'))"></td>
         <td class="text-center"><input type="checkbox" name="resep[${idx}][is_wajib]" value="1" ${(data.is_wajib ?? true) ? 'checked' : ''}></td>
         <td class="small hargaMasterPreview text-muted">—</td>
         <td class="small subtotalPreview fw-semibold">—</td>
-        <td><select name="resep[${idx}][mode_harga]" class="form-select form-select-sm">
-            <option value="gratis" ${(data.mode_harga??'gratis')=='gratis'?'selected':''}>Gratis</option>
-            <option value="pakai_master" ${data.mode_harga=='pakai_master'?'selected':''}>Pakai Master</option>
-        </select></td>
         <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="hapusBarisResep(this)"><i class="bi bi-x"></i></button></td>
     `;
     document.getElementById('bodyResep').appendChild(tr);
@@ -372,12 +367,17 @@ function hapusBarisResep(btn) {
     hitungTotalHpp();
 }
 
-// ===== Live preview Harga Master & Subtotal (2026-09-19) =====
-// SENGAJA belum ada konversi satuan (Sprint 2, lihat CLAUDE.md TODO) --
-// takaran dikalikan APA ADANYA dgn harga master, supaya data anomali
-// (mis. bahan di-satuan-kan salah di Master Bahan Baku) ketahuan user
-// SEBELUM Simpan, bukan disembunyikan lewat "koreksi otomatis" yang
-// justru bisa nutupin kesalahan input data aslinya.
+// ===== Live preview Harga Beli & Subtotal (2026-09-19) =====
+// 2026-10-30: takaran dikonversi ke satuan stok dulu dengan aturan yang SAMA
+// dgn pemotongan stok POS (ResepBumbuItem::konversiKeSatuanStok) — dulu 9 g
+// dikalikan langsung dgn harga per kg sehingga HPP tampil ratusan kali lipat.
+function konversiKeSatuanStok(qty, satuan) {
+    const s = (satuan || '').toLowerCase().trim();
+    if (['g', 'gr', 'gram', 'ml'].includes(s)) return qty / 1000;
+    if (s === 'ons') return qty / 10;
+    return qty;
+}
+
 function formatRupiahPreview(angka) {
     return 'Rp ' + Math.round(angka).toLocaleString('id-ID');
 }
@@ -416,7 +416,8 @@ function hitungPreviewBaris(tr) {
     }
 
     hargaCell.textContent = formatRupiahPreview(harga) + ' / ' + satuan;
-    subtotalCell.textContent = qty > 0 ? formatRupiahPreview(qty * harga) : '-';
+    const satuanTakaran = tr.querySelector('.satuanResep')?.value || satuan;
+    subtotalCell.textContent = qty > 0 ? formatRupiahPreview(konversiKeSatuanStok(qty, satuanTakaran) * harga) : '-';
     hitungTotalHpp();
 }
 
@@ -440,7 +441,7 @@ function hitungTotalHpp() {
 }
 
 // ===== Fitur Import dari Bumbu Pusat (2026-09-17) =====
-// Baris linked TIDAK pakai dropdown Bahan/Satuan/Mode Harga manual --
+// Baris linked TIDAK pakai dropdown Bahan/Satuan manual --
 // hidden input resep_bumbu_ref_id + qty_per_unit (jumlah porsi bumbu per 1
 // unit produk) saja. satuan dipaksa 'porsi' server-side (syncResep()).
 function tambahBarisResepLinked(bumbuId, bumbuNama, data) {
@@ -457,9 +458,8 @@ function tambahBarisResepLinked(bumbuId, bumbuNama, data) {
         <td><input type="number" step="0.001" min="0.001" name="resep[${idx}][qty_per_unit]" class="form-control form-control-sm" value="${formatQtyInput(data.qty_per_unit ?? 1)}" title="Jumlah porsi bumbu per 1 unit produk" oninput="hitungSubtotalLinkedBaris(this.closest('tr'))"></td>
         <td class="text-muted small">porsi</td>
         <td class="text-center"><input type="checkbox" name="resep[${idx}][is_wajib]" value="1" ${(data.is_wajib ?? true) ? 'checked' : ''}></td>
-        <td class="text-muted small">—</td>
-        <td class="small subtotalPreview fw-semibold text-muted">Menghitung...</td>
         <td class="text-muted small">Ikut Bumbu Pusat <x-tooltip key="master_produk_jual.baris_linked" /></td>
+        <td class="small subtotalPreview fw-semibold text-muted">Menghitung...</td>
         <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="hapusBarisResep(this)"><i class="bi bi-x"></i></button></td>
     `;
     document.getElementById('bodyResep').appendChild(tr);
@@ -570,7 +570,7 @@ function renderDetailBumbu(data) {
     const totalPerCabang = data.total_per_cabang || {};
 
     if (!bahan.length) {
-        document.getElementById('detailBumbuBody').innerHTML = '<div class="text-center text-muted py-3 small">Bumbu ini belum punya bahan dengan mode harga "Harga Master".</div>';
+        document.getElementById('detailBumbuBody').innerHTML = '<div class="text-center text-muted py-3 small">Bumbu ini belum punya bahan.</div>';
         return;
     }
 

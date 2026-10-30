@@ -2164,7 +2164,7 @@ Kartu **Total Omzet** di ringkasan menghitung **SEMUA** baris transaksi di perio
 
 - **Angka lebih kecil dari perkiraan?** Pastikan filter periode sudah benar, cek juga bagian Detail Transaksi untuk lihat rinciannya
 - **Item tidak muncul di laporan?** Order-nya kemungkinan belum disubmit atau berstatus dibatalkan
-- **Kolom Margin menampilkan "-"?** Baris itu omzetnya Rp 0 (biasanya bumbu mode "Gratis") — margin tidak bisa dihitung dari pembagi nol
+- **Kolom Margin menampilkan "-"?** Baris itu omzetnya Rp 0 (mis. item Tambahan Gratis seperti tisu/sedotan) — margin tidak bisa dihitung dari pembagi nol
 - **Export gagal / lambat?** Coba persempit filter periode dulu
 - **Menu tidak muncul di sidebar?** Perlu izin `laporan.konsumsi_bahan.view` — minta Owner mencentang di Pengaturan → Role & Hak Akses
 MARKDOWN
@@ -2211,9 +2211,11 @@ Margin% = (Untung / Omzet) × 100
 
 Baris "Jasa Giling" (biaya jasa itu sendiri, bukan bumbu) biasanya tidak terhubung ke item di Master Barang — di breakdown Per Kategori, baris ini dikelompokkan sebagai **"Jasa"**. HPP-nya selalu Rp 0 (tidak ada biaya bahan dari baris ini) jadi 100% jadi untung — itu wajar, karena ongkos tenaga kerja & operasional gilingnya sendiri tidak dilacak sebagai HPP di sistem ini.
 
-## Item Berlabel "Gratis"
+## Item dengan Omzet Rp 0
 
-Bumbu dengan mode "Gratis" di Master Resep akan tampil **rugi** di level Per Item (HPP > 0, Omzet = Rp 0). Ini **normal** — biayanya sudah disubsidi oleh jasa giling / produk jadi (harga bahan itu sudah termasuk di tarif jasa giling). Untuk lihat profit real, lihat kartu ringkasan total (bukan baris gratis satu-satu), atau lihat level **Per Order** yang menggabungkan semua baris dalam 1 transaksi.
+Item Tambahan Gratis (mis. tisu, sedotan) yang ikut tercatat di order tampil **rugi** di level Per Item (HPP > 0, Omzet = Rp 0). Ini **normal** — biayanya sudah termasuk harga menu yang dibeli. Untuk lihat profit real, lihat kartu ringkasan total atau level **Per Order** yang menggabungkan semua baris dalam 1 transaksi.
+
+Catatan (2026-10-30): pilihan "Gratis / Pakai Master" di komposisi resep sudah dihapus — semua bahan resep selalu dihitung sebagai modal (harga beli).
 
 ## Interpretasi Angka
 

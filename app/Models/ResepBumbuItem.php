@@ -89,26 +89,36 @@ class ResepBumbuItem extends Model
      */
     public function getQtyPerUnitDalamKgAttribute(): float
     {
-        return match (strtolower((string) $this->satuan)) {
-            'g', 'gram', 'ml' => (float) $this->qty_per_unit / 1000,
-            'ons'             => (float) $this->qty_per_unit / 10,
-            default           => (float) $this->qty_per_unit, // 'kg' atau satuan tak dikenal
+        return self::konversiKeSatuanStok((float) $this->qty_per_unit, $this->satuan);
+    }
+
+    /**
+     * Aturan konversi takaran resep → satuan stok (g/gram/ml ÷1000, ons ÷10,
+     * selain itu apa adanya). Static supaya kalkulator HPP form Produk Jual
+     * (baris dari isi form, belum tersimpan) memakai aturan yang SAMA dengan
+     * pemotongan stok di POS.
+     */
+    public static function konversiKeSatuanStok(float $qty, ?string $satuan): float
+    {
+        return match (strtolower(trim((string) $satuan))) {
+            'g', 'gr', 'gram', 'ml' => $qty / 1000,
+            'ons'                   => $qty / 10,
+            default                 => $qty, // 'kg', 'liter', 'pcs', atau satuan tak dikenal
         };
     }
 
     /**
      * Preview harga (display-only, TIDAK disimpan ke DB) — total biaya bahan
-     * ini per 1 unit produksi kalau mode_harga = pakai_master. Gratis = 0.
+     * ini per 1 unit produksi.
      * Sprint Fix (2026-10-02): sumber harga = harga_beli_terakhir (MODAL),
      * bukan harga_jual — Master Bumbu Pusat itung biaya produksi, bukan
      * harga jual ke customer. Lihat CLAUDE.md riwayat "Sprint Fix Harga
      * Master Bumbu Pusat".
+     * 2026-10-30: mode_harga (gratis/pakai_master, warisan jasa giling) tidak
+     * dipakai lagi — semua bahan selalu dihitung sebagai modal.
      */
     public function getTotalHargaMasterAttribute(): float
     {
-        if ($this->mode_harga !== 'pakai_master') {
-            return 0.0;
-        }
         return round($this->qty_per_unit_dalam_kg * (float) ($this->item?->harga_beli_terakhir ?? 0), 2);
     }
 }

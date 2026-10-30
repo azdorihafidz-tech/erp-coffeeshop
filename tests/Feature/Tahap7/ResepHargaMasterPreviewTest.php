@@ -39,9 +39,10 @@ class ResepHargaMasterPreviewTest extends TestCase
         $response = $this->actingAs($admin)->get('/master/produk-jual/create');
 
         $response->assertOk();
-        $response->assertSee('Harga Master', false);
+        // 2026-10-30: kolom "Harga Master" jadi "Harga Beli", kolom Mode Harga dihapus
+        $response->assertSee('Harga Beli', false);
         $response->assertSee('Subtotal', false);
-        $response->assertSee('Mode Harga', false); // rename dari "Harga" biar tidak rancu
+        $response->assertDontSee('Mode Harga', false);
     }
 
     public function test_kolom_harga_master_dan_subtotal_tampil_di_form_edit(): void
@@ -52,7 +53,8 @@ class ResepHargaMasterPreviewTest extends TestCase
         $response = $this->actingAs($admin)->get("/master/produk-jual/{$item->id}/edit");
 
         $response->assertOk();
-        $response->assertSee('Harga Master', false);
+        // 2026-10-30: kolom "Harga Master" jadi "Harga Beli"
+        $response->assertSee('Harga Beli', false);
         $response->assertSee('Subtotal', false);
     }
 
@@ -64,7 +66,7 @@ class ResepHargaMasterPreviewTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('alert-warning', false);
-        $response->assertSee('belum ada konversi satuan otomatis', false);
+        $response->assertSee('otomatis dihitung ke kg/liter', false); // 2026-10-30: konversi satuan aktif
         $response->assertSee(route('master.bahan-baku.index'), false);
     }
 

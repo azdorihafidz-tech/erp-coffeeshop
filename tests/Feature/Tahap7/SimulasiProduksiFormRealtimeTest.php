@@ -52,10 +52,12 @@ class SimulasiProduksiFormRealtimeTest extends TestCase
 
         $response->assertOk();
         $data = $response->json();
-        // 0.2 gram raw x 45000 (TANPA konversi satuan, konsisten dgn Opsi B) = 9000
-        $this->assertEquals(9000, $data['total_hpp']);
-        $this->assertEquals(9000, $data['breakdown'][0]['subtotal']);
-        $this->assertNotEquals(1575000, $data['total_hpp']); // bug lama: 35 x 45000
+        // 2026-10-30: kalkulator kini mengonversi satuan (dulu "Opsi B" tanpa
+        // konversi). 0.2 gram = 0.0002 kg x 45000 = 9 (bukan 9000).
+        $this->assertEqualsWithDelta(9, $data['total_hpp'], 0.001);
+        $this->assertEqualsWithDelta(9, $data['breakdown'][0]['subtotal'], 0.001);
+        // Inti test tetap: pakai qty dari form (0.2 g), BUKAN data DB (35 g = 1575)
+        $this->assertNotEqualsWithDelta(1575, $data['total_hpp'], 0.001);
     }
 
     public function test_kalkulator_fallback_ke_db_kalau_payload_resep_kosong(): void

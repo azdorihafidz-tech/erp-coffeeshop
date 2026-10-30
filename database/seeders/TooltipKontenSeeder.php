@@ -136,8 +136,6 @@ class TooltipKontenSeeder extends Seeder
              'content' => 'Jumlah bahan untuk 1 unit produk (mis. 18 untuk 18 gram biji per gelas), dalam satuan yang dipilih di sebelahnya. Sistem mengonversi otomatis ke satuan stok bahan saat memotong stok.'],
             ['key' => 'resep_bumbu.satuan', 'title' => 'Satuan Takaran', 'modul' => 'penjualan', 'urutan' => 3,
              'content' => 'Satuan angka takaran, bukan satuan stok. gram/ml dibagi 1000 (jadi kg/liter), ons dibagi 10, kg dipakai apa adanya. Contoh: susu bersatuan liter, takaran 150 ml = 0,15 liter terpotong.'],
-            ['key' => 'resep_bumbu.mode_harga', 'title' => 'Mode Harga', 'modul' => 'penjualan', 'urutan' => 4,
-             'content' => 'Gratis (include) = bahan sudah termasuk harga menu, tidak ditagih terpisah. Harga Master = ditagih terpisah memakai Harga Beli Terakhir (modal) bahan di Master Barang — BUKAN harga jual.'],
             // Sprint Fix (2026-10-02): kolom "Harga Beli (Modal)" Master Bumbu Pusat.
             ['key' => 'resep_bumbu.harga_beli_modal', 'title' => 'Harga Beli (Modal)', 'modul' => 'penjualan', 'urutan' => 5,
              'content' => 'Harga Beli Terakhir bahan ini di Master Barang (modal produksi) — BUKAN harga jual ke customer. Dipakai untuk hitung biaya resep, bukan harga di POS.'],
@@ -949,11 +947,6 @@ class TooltipKontenSeeder extends Seeder
                 'content' => 'Isi kalau produk ini butuh potong stok bahan otomatis saat laku (mis. Roasted Bean, Susu). Kosongkan kalau produk memotong stok dirinya sendiri (mis. minuman kemasan jadi).',
             ],
             [
-                'key'     => 'master_produk_jual.mode_harga',
-                'title'   => 'Mode Harga Bahan',
-                'content' => 'Gratis = bahan ini tidak menambah biaya tampilan HPP. Pakai Master = harga bahan diambil dari Harga Jual master item itu, ikut menambah estimasi HPP produk.',
-            ],
-            [
                 'key'     => 'master_produk_jual.kalkulator',
                 'title'   => 'Simulasi Produksi',
                 'content' => 'Cek cepat total HPP dan kebutuhan bahan mentah kalau produksi sekian pcs sekaligus — berguna sebelum belanja bahan dalam jumlah besar.',
@@ -975,8 +968,8 @@ class TooltipKontenSeeder extends Seeder
             ],
             [
                 'key'     => 'master_produk_jual.harga_master_preview',
-                'title'   => 'Harga Master (Preview)',
-                'content' => 'Harga bahan ini di Master Bahan Baku saat ini — murni tampilan, TIDAK disimpan. Belum ada konversi satuan otomatis (mis. gram vs kg) — kalau angka Subtotal di sebelahnya terlihat aneh, cek satuan & harga bahan itu di Master Bahan Baku.',
+                'title'   => 'Harga Beli (Preview)',
+                'content' => 'Harga Beli Terakhir (modal) bahan ini di Master Bahan Baku saat ini — murni tampilan, TIDAK disimpan. Semua bahan resep selalu dihitung sebagai modal. Takaran gram/ml otomatis dikonversi ke kg/liter (ons ÷10) sebelum dikali harga — sama dengan pemotongan stok di POS. Kalau angka Subtotal terlihat aneh, cek satuan & harga bahan itu di Master Bahan Baku.',
             ],
             [
                 'key'     => 'master_produk_jual.punya_varian',
@@ -1187,5 +1180,9 @@ class TooltipKontenSeeder extends Seeder
         foreach ($labelCup as $i => $d) {
             Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'label_cup', 'urutan' => $i + 1, 'aktif' => true]));
         }
+
+        // 2026-10-30 — pilihan Gratis/Pakai Master di komposisi resep dihapus
+        // dari form, tooltip lamanya dinonaktifkan (tidak dihapus).
+        Tooltip::whereIn('key', ['resep_bumbu.mode_harga', 'master_produk_jual.mode_harga'])->update(['aktif' => false]);
     }
 }

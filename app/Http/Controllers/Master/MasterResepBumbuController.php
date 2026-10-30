@@ -128,9 +128,11 @@ class MasterResepBumbuController extends Controller
             'qty_per_unit' => 'required|numeric|min:0.001',
             'satuan'     => 'required|string|max:20',
             'is_wajib'   => 'nullable|boolean',
-            'mode_harga' => 'required|in:gratis,pakai_master',
         ]);
         $validated['is_wajib'] = $request->boolean('is_wajib');
+        // Pilihan Gratis/Master dihapus dari form (2026-10-30); kolom tetap diisi
+        // demi kompatibilitas, nilainya tidak lagi memengaruhi hitungan modal.
+        $validated['mode_harga'] = 'pakai_master';
         $validated['urutan']   = ((int) $resepBumbu->items()->max('urutan')) + 1;
 
         $resepBumbu->items()->create($validated);

@@ -713,7 +713,18 @@ Owner minta cup label (beverage order label) terpisah dari struk, khusus minuman
 
 cPanel production tanpa SSH → `/update-database` (Owner-only, menu sidebar grup admin di bawah Backup Database): `migrate --force` (hanya migration baru), seeder Permission/Panduan/Tooltip, tambah mapping permission baru ke role **hanya kalau belum ada** (konstanta `UpdateDatabaseController::PERMISSION_BARU` — sprint berikutnya yang menambah permission WAJIB menambah ke sini), clear cache + `Cache::forget('all_permission_names')`. Sengaja TIDAK memakai `RolePermissionSeeder` (menghapus & mengisi ulang hak akses role). Halaman menampilkan daftar migration yang belum jalan sebelum dieksekusi. Panduan slug `update-database`. Test `UpdateDatabaseTest` 2/2 PASS (Owner-only; permission baru ditambah, hak akses tambahan/cabutan Owner tidak berubah, data transaksi utuh).
 
-**Temuan `.cpanel.yml`**: `DEPLOYPATH` masih `/home/azwc7142/public_html/erpdimsum.azwacore.com/` (warisan fork Dimsum) — kalau dipakai, perintah artisan jalan di folder production **Dimsum** (CLAUDE.md 3.1). Belum diubah karena path production Kopi Drip belum diketahui (TODO 12.14).
+**Temuan `.cpanel.yml`**: `DEPLOYPATH` masih `/home/azwc7142/public_html/erpdimsum.azwacore.com/` (warisan fork Dimsum) — kalau dipakai, perintah artisan jalan di folder production **Dimsum** (CLAUDE.md 3.1). Sudah diperbaiki jadi `$PWD` + pengaman (lihat TODO 12.14). Logika update dipindah ke `App\Services\UpdateDatabaseService` (konstanta `PERMISSION_BARU` ada di sini sekarang), dipakai halaman `/update-database` dan script satu-link `public/deploy-*.php` (`?confirm=...&tahap=simulasi|jalankan`, dihapus dari repo setelah dipakai — bukan manual di server, karena repo di-pull ke 2 folder demo + go-live).
+
+### 4.42 🟢 Hapus Pilihan Gratis/Master di Komposisi Resep + Konversi Satuan Kalkulator HPP (2026-10-30)
+
+Owner tanya pilihan **Gratis / Pakai Master** di komposisi Produk Jual & Master Bumbu Pusat. Itu warisan jasa giling Berkah Mulyo (bumbu termasuk ongkos giling vs ditagih terpisah) — di Kopi Drip tidak relevan dan menyesatkan: semua 64 baris resep dev berstatus `gratis` → total Bumbu Pusat & subtotal bumbu linked di kalkulator tampil Rp0. **HPP penjualan (POS/Laba Rugi) tidak pernah terpengaruh** (FIFO stok terpotong, `PenjualanService` tidak membaca `mode_harga`). Keputusan Owner: hapus.
+
+- Dropdown/kolom **Mode Harga dihapus** dari form Produk Jual & Master Bumbu Pusat; kolom "Harga Master" di form Produk Jual → **"Harga Beli"**. Kolom DB `resep_bumbu_items.mode_harga` **tetap ada** (tidak ada migration), baris baru diisi `pakai_master`, nilainya **diabaikan** di semua perhitungan modal (`ResepBumbuItem::total_harga_master`, `hitungSubtotalBumbuTunggal`, `detailBumbuPusat`). Endpoint lama `PenjualanController::resepBumbuItems` (jasa giling, tidak dipanggil view mana pun) dibiarkan.
+- **Bug lama ikut ketemu & difix (layar yang sama)**: Total HPP form Produk Jual (JS) & Simulasi Produksi (`kalkulatorResep`) mengalikan takaran **tanpa konversi satuan** (keputusan "Opsi B" era Dimsum) → Espresso 9 g × Rp83.333/kg tampil **Rp752.000**. Sekarang pakai `ResepBumbuItem::konversiKeSatuanStok()` (g/gr/gram/ml ÷1000, ons ÷10 — aturan yang sama dgn pemotongan stok POS; accessor `qty_per_unit_dalam_kg` kini memanggil helper ini) → Espresso **Rp2.750**.
+- Tooltip `resep_bumbu.mode_harga` & `master_produk_jual.mode_harga` dinonaktifkan (`aktif=false`), tooltip `harga_master_preview` & alert form diperbarui, panduan Laba Rugi & Konsumsi Bahan tidak lagi menyebut "mode Gratis".
+- Test: `ResepBumbuHargaBeliTest` ditulis ulang/ditambah (data lama `gratis` tetap dihitung, preview & detail bumbu, form tanpa Mode Harga, tambah bahan tanpa mode, konversi gram→kg) — 11/11 PASS. 4 test Tahap7 lama yang mengunci perilaku lama disesuaikan (`ResepHargaMasterPreviewTest` ×2, `PreviewBumbuDanTotalHppParseTest`, `SimulasiProduksiFormRealtimeTest` — inti "pakai qty dari form, bukan DB" dipertahankan). Regresi: kembali ke **43 kegagalan lama identik**, 0 baru.
+
+**Verifikasi 3.7**: syntax OK, `view:cache` OK, reseed Panduan/Tooltip dev+test, smoke HTTP owner (create/edit Produk Jual, daftar Bumbu Pusat) 200 tanpa teks "Mode Harga", kalkulator Espresso Rp2.750, log bersih. Deploy via `public/deploy-modal-resep442.php` (tanpa migration).
 
 ---
 
@@ -1093,6 +1104,7 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] `.cpanel.yml` DEPLOYPATH diganti `$PWD` + pengaman (2026-10-19) — repo di-pull ke 2 folder: demo `erpdrip.azwacore.com`, go-live `kopidripsidikalang.com/erp`
 - [x] Deploy 4.39–4.41 di demo & go-live (2026-10-19) via script satu-link, UPDATE BERHASIL di keduanya (demo sekaligus dapat migration Unit Beli 2026-10-02 yang tertinggal); script dihapus dari repo
 - [ ] Go-live: kas masih 0 — buat Kas Tunai/Transfer/QRIS sebelum POS dipakai
+- [ ] Deploy 4.42 (hapus Gratis/Master + konversi satuan HPP) di demo & go-live via `public/deploy-modal-resep442.php`, lalu hapus script dari repo
 
 ---
 
