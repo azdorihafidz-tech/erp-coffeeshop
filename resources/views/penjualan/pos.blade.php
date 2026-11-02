@@ -1235,7 +1235,7 @@ async function simpanBill() {
         await window.showAlert('success', 'Bill Tersimpan', data.message);
         // Sprint Label Cup — dine-in: label gelas dicetak saat pesanan masuk
         if (data.label_count > 0 && data.label_url && window.openCupLabel) {
-            await window.openCupLabel(data.label_url);
+            await window.openCupLabel(data.label_url, { otomatis: true });
         }
         window.location.reload();
     } catch (err) {
@@ -1939,6 +1939,22 @@ async function laciFindWritableChar(service) {
 async function bukaLaciManual() {
     const alasan = prompt('Alasan buka laci?', 'Ambil kembalian');
     if (!alasan) return;
+
+    // Aplikasi kasir Android: buka laci lewat printer struk yang diatur di aplikasi
+    if (window.KDApk && window.KDApk.ada()) {
+        try {
+            await window.KDApk.bukaLaci();
+            await fetch(LACI_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': LACI_CSRF },
+                body: JSON.stringify({ alasan }),
+            });
+            await window.showAlert('success', 'Berhasil', 'Laci berhasil dibuka.');
+        } catch (e) {
+            await window.showAlert('error', 'Gagal Buka Laci', e.message);
+        }
+        return;
+    }
 
     if (!navigator.bluetooth) {
         await window.showAlert('error', 'Bluetooth Tidak Didukung', 'Browser tidak mendukung Web Bluetooth. Gunakan Chrome atau Edge.');

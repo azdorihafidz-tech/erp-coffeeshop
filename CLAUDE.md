@@ -726,6 +726,18 @@ Owner tanya pilihan **Gratis / Pakai Master** di komposisi Produk Jual & Master 
 
 **Verifikasi 3.7**: syntax OK, `view:cache` OK, reseed Panduan/Tooltip dev+test, smoke HTTP owner (create/edit Produk Jual, daftar Bumbu Pusat) 200 tanpa teks "Mode Harga", kalkulator Espresso Rp2.750, log bersih. Deploy via `public/deploy-modal-resep442.php` (tanpa migration).
 
+### 4.43 🟡 APK "Kopi Drip Kasir" — Cetak Bluetooth Tanpa Pilih Printer (Tahap A1+A2, 2026-11-03)
+
+Owner: kasir tablet harus memilih printer Bluetooth tiap cetak (Web Bluetooth Chrome Android: `getDevices()` sering tidak tersedia, hanya BLE, 2 printer struk+label makin repot). Perangkat: tablet **Redmi Pad 2**, printer struk **IWARE C58BT** 58 mm (laci kasir RJ11 tercolok di sini), printer label **Blueprint ECO80BT** + stiker **40×30 mm** (ubah ukuran di Cabang → Edit → Label Cup), kasir campur PC + tablet. Keputusan: APK pembungkus WebView + jembatan printer (bukan POS native baru).
+
+- **`android/`** (Kotlin, `com.kopidrip.kasir`, minSdk 26 / target 34, AGP 8.5.2, tanpa gradle wrapper — CI pakai Gradle 8.9): `MainActivity` (WebView ERP, langsung `/penjualan/pos`, tautan host lain dibuka aplikasi luar, izin kamera absensi wajah/foto bukti via FileProvider, lokasi absensi, unduh PDF/Excel via DownloadManager, user-agent `KopiDripKasir/x`), `SettingsActivity` (alamat Go-live/Demo/lain, pilih printer struk & label dari daftar ter-pair, bahasa label TSPL/ESC-POS, cetak otomatis struk/label, tes cetak, tes laci), `PrinterBridge` (`window.KopiDripPrinter`: `info()`, `print(target, base64, cbId)`, `openDrawer(cbId)`, `openSettings()`; hanya host ERP yang diatur yang boleh memakai), `BluetoothPrinter` (Bluetooth **Klasik SPP** + 3 cara koneksi fallback, kunci per printer).
+- **Format struk/label tetap dibuat ERP** (ESC/POS `buildReceipt`, TSPL/ESC-POS overlay label) — APK hanya meneruskan byte, jadi perbaikan format cukup deploy ERP.
+- **ERP** (`components/apk-printer.blade.php` → `window.KDApk` di `layouts/app`, no-op di browser biasa): modal struk di APK → **cetak otomatis** (termasuk buka laci untuk tunai) lalu **label otomatis** (hanya transaksi baru di POS, bukan cetak ulang); overlay label punya jalur APK (`openCupLabel(url, {otomatis:true})` dari Save Bill dine-in & approve QR mencetak langsung tanpa jendela); tombol Buka Laci POS lewat APK. Jalur Web Bluetooth/Cetak Browser lama **tetap utuh** untuk PC/Chrome. Tanpa migration, tanpa perubahan data.
+- **Build**: `.github/workflows/android-apk.yml` (push `android/**` atau manual) → artifact `KopiDripKasir-apk`. Release bertanda tangan kalau secrets `KOPIDRIP_KEYSTORE_BASE64` + `KOPIDRIP_KEYSTORE_PASSWORD` diisi, kalau tidak build debug. Keystore PKCS12 (alias `kopidrip`, s/d 2056) dibuat dengan OpenSSL lokal, disimpan **di luar repo** `D:\kopidrip-kasir-keystore\` (+ `BACA-SAYA.txt`) — WAJIB di-backup Owner.
+- **Batasan**: unduh JDK/Android SDK untuk compile lokal ditolak sistem keamanan → kode Kotlin **belum pernah di-compile**; verifikasi compile pertama terjadi di GitHub Actions. Belum diuji di printer fisik.
+
+**Test**: `ApkPrinterTest` 4/4 PASS (helper & tombol APK ada, jalur Bluetooth lama tetap ada, URL label hanya bila ada minuman berlabel, detail order & layout meja normal); test Node `KDApk` 4/4 PASS (non-APK tidak aktif, 20.000 byte utuh via base64, error aplikasi diteruskan, timeout 30 s); 24 blok `<script>` POS/struk/antrian lolos cek syntax; regresi **43 kegagalan lama identik, 0 baru**; log bersih.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1105,6 +1117,13 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] Deploy 4.39–4.41 di demo & go-live (2026-10-19) via script satu-link, UPDATE BERHASIL di keduanya (demo sekaligus dapat migration Unit Beli 2026-10-02 yang tertinggal); script dihapus dari repo
 - [ ] Go-live: kas masih 0 — buat Kas Tunai/Transfer/QRIS sebelum POS dipakai
 - [ ] Deploy 4.42 (hapus Gratis/Master + konversi satuan HPP) di demo & go-live via `public/deploy-modal-resep442.php`, lalu hapus script dari repo
+
+### 12.15 APK Kopi Drip Kasir (2026-11-03, lihat 4.43)
+- [x] A1 kode APK + workflow GitHub + keystore (di luar repo), A2 integrasi ERP (struk/label/laci) + test
+- [ ] Owner: isi 2 GitHub Secrets (lihat `D:/kopidrip-kasir-keystore/BACA-SAYA.txt`) & backup folder keystore
+- [ ] Cek hasil build pertama di tab Actions (kode Kotlin belum pernah di-compile lokal)
+- [ ] A3 pasang di Redmi Pad, pair IWARE C58BT + Blueprint ECO80BT, uji di demo; ubah ukuran label 40×30
+- [ ] A4 perbaikan hasil uji, lalu pakai di go-live
 
 ---
 

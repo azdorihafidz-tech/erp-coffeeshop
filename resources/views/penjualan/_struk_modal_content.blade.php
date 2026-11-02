@@ -219,8 +219,15 @@
 {{-- ==================== TOMBOL AKSI (di luar loop, tidak ikut cetak) ==================== --}}
 <div class="struk-no-print">
 
+    {{-- Aplikasi kasir Android (APK): cetak langsung ke printer struk yang diatur di aplikasi.
+         Disembunyikan di browser biasa; ditampilkan oleh script di bawah kalau window.KDApk ada. --}}
+    <div class="d-grid gap-2 mb-3" id="strukApkGroup" style="display:none">
+        <button class="btn btn-primary btn-lg" id="strukBtnApk" onclick="window.strukCetakApk()">🖨️ Cetak Struk</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="window.KDApk && window.KDApk.bukaPengaturan()">⚙️ Pengaturan Printer Aplikasi</button>
+    </div>
+
     {{-- Grup 1: PRIMARY — cetak Bluetooth --}}
-    <div class="d-grid gap-2 mb-3">
+    <div class="d-grid gap-2 mb-3" id="strukWebBtGroup">
         {{-- Cetak ke printer terakhir — muncul kalau ada printer tersimpan --}}
         <button class="btn btn-primary btn-lg" id="strukBtnLastPrinter"
                 onclick="window.strukCetakBluetooth(true)" style="display:none">
@@ -272,7 +279,7 @@
             🗑️ Lupakan Printer
         </button>
         {{-- Browser Print (mencetak semua salinan sekaligus) --}}
-        <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+        <button class="btn btn-sm btn-outline-secondary" id="strukBtnBrowserPrint" onclick="window.print()">
             🖨️ Cetak Browser
         </button>
     </div>
@@ -431,6 +438,9 @@ $_struData = [
         var isSecure = url.protocol === 'https:' || url.hostname === 'localhost' || url.hostname === '127.0.0.1';
         var isChrome = /Chrome|Chromium|Edg/.test(navigator.userAgent) && !/Firefox/.test(navigator.userAgent);
         var hasBtApi = 'bluetooth' in navigator;
+
+        // Aplikasi kasir Android: UI Web Bluetooth tidak dipakai (lihat initApk di bawah)
+        if (window.KDApk && window.KDApk.ada()) return;
 
         chk('strukChkBrowser', isChrome,  'Browser: ' + browserName() + ' ✓',         'Browser: ' + browserName() + ' — gunakan Chrome/Edge');
         chk('strukChkHttps',   isSecure,  'Protokol: ' + url.protocol + ' ✓',         'Protokol: ' + url.protocol + ' — perlu HTTPS atau localhost');
@@ -848,6 +858,60 @@ $_struData = [
     window.strukToggleGuide      = toggleGuide;
     window.strukTutup            = tutup;
     window.closeStrukModal       = closeStrukModal;
+
+    // ============================================================
+    //  APLIKASI KASIR ANDROID (Sprint APK 2026-11-03)
+    //  Data struk sama persis (buildReceipt, termasuk buka laci untuk
+    //  tunai) — hanya jalur kirimnya lewat jembatan Bluetooth aplikasi,
+    //  tanpa memilih printer. Cetak otomatis kalau diaktifkan di aplikasi,
+    //  lalu label cup menyusul (kalau ada minuman berlabel).
+    // ============================================================
+    var LABEL_URL = @json(($jumlahLabelCup ?? 0) > 0 ? route('label-cup.order', $order) : null);
+
+    async function cetakApk() {
+        var btn = el('strukBtnApk');
+        if (btn) btn.disabled = true;
+        var copies = STRUK.copies || 1;
+        btStatus('Mengirim struk ke printer…', 'info');
+        try {
+            await window.KDApk.cetak('struk', buildReceipt());
+            btStatus('✓ Struk tercetak' + (copies > 1 ? ' (' + copies + ' salinan)' : '') + '.', 'success');
+            return true;
+        } catch (e) {
+            btStatus('Gagal cetak struk: ' + e.message + '\nCek printer lalu tekan "Cetak Struk" lagi, atau buka Pengaturan Printer Aplikasi.', 'error');
+            return false;
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    (function initApk() {
+        if (!(window.KDApk && window.KDApk.ada())) return;
+        ['strukWebBtGroup', 'strukBtnForgetPrinter', 'strukBtnBrowserPrint', 'strukToggleGuide', 'strukBtGuide'].forEach(function (id) {
+            var x = el(id);
+            if (x) x.style.display = 'none';
+        });
+        var grup = el('strukApkGroup');
+        if (grup) grup.style.display = '';
+
+        var info = window.KDApk.info();
+        if (!info.struk) {
+            btStatus('Printer struk belum dipilih di aplikasi. Tekan "Pengaturan Printer Aplikasi".', 'warning');
+            return;
+        }
+        if (!info.auto_struk) return;
+
+        // Label otomatis hanya untuk transaksi baru di halaman POS (ada resetPosForm),
+        // bukan saat struk dibuka ulang dari Detail Order / Riwayat (cetak ulang).
+        var transaksiBaru = typeof window.resetPosForm === 'function';
+        cetakApk().then(function (ok) {
+            if (ok && transaksiBaru && LABEL_URL && info.auto_label && window.openCupLabel) {
+                window.openCupLabel(LABEL_URL, { otomatis: true });
+            }
+        });
+    })();
+
+    window.strukCetakApk = cetakApk;
 
 })();
 </script>

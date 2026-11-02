@@ -18,7 +18,13 @@
         <div class="card-body" style="overflow:auto">
             <div id="cupLabelPreview" class="d-flex flex-column gap-2 mb-3"></div>
 
-            <div class="d-grid gap-2">
+            {{-- Aplikasi kasir Android: cetak langsung ke printer label yang diatur di aplikasi --}}
+            <div class="d-grid gap-2" id="cupLabelApkControls" style="display:none">
+                <button type="button" class="btn btn-primary btn-lg" id="cupLabelBtnApk" onclick="window.cupLabelCetakApk()">🖨️ Cetak Label</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.KDApk && window.KDApk.bukaPengaturan()">⚙️ Pengaturan Printer Aplikasi</button>
+            </div>
+
+            <div class="d-grid gap-2" id="cupLabelWebControls">
                 <button type="button" class="btn btn-primary" onclick="window.cupLabelCetakBrowser()">🖨️ Cetak Browser</button>
                 <button type="button" class="btn btn-outline-primary" id="cupLabelBtnLast" style="display:none" onclick="window.cupLabelCetakBluetooth(true)"></button>
                 <div class="input-group">
@@ -81,7 +87,11 @@
     }
 
     // ---- Buka overlay. Resolve true kalau overlay tampil, false kalau tidak ada label ----
-    window.openCupLabel = async function (url) {
+    // opsi.otomatis = dipanggil otomatis (Save Bill dine-in, approve QR, setelah
+    // struk) — di aplikasi kasir dengan "cetak label otomatis" aktif, label
+    // langsung dicetak tanpa membuka jendela.
+    window.openCupLabel = async function (url, opsi) {
+        opsi = opsi || {};
         try {
             var res = await fetch(url, { headers: { 'Accept': 'application/json' } });
             if (!res.ok) return false;
@@ -90,13 +100,45 @@
             state = data;
         } catch (e) { return false; }
 
+        var apk = window.KDApk && window.KDApk.ada();
+        if (apk && opsi.otomatis && window.KDApk.info().auto_label) {
+            await cetakApk(true);
+            return true;
+        }
+
         renderPreview(state.labels);
-        el('cupLabelProtocol').value = ls(KEY_PROTOCOL) || 'tspl';
-        refreshPrinterUi();
+        el('cupLabelApkControls').style.display = apk ? '' : 'none';
+        el('cupLabelWebControls').style.display = apk ? 'none' : '';
+        if (!apk) {
+            el('cupLabelProtocol').value = ls(KEY_PROTOCOL) || 'tspl';
+            refreshPrinterUi();
+        } else {
+            el('cupLabelBtnForget').style.display = 'none';
+        }
         status('');
         el('cupLabelOverlay').style.display = 'flex';
         return new Promise(function (resolve) { resolver = resolve; });
     };
+
+    // ---- Aplikasi kasir: kirim ke printer label lewat jembatan Android ----
+    async function cetakApk(diam) {
+        if (!state) return;
+        var proto = (window.KDApk.info().label_protokol === 'escpos') ? 'escpos' : 'tspl';
+        var btn = el('cupLabelBtnApk');
+        if (btn) btn.disabled = true;
+        if (!diam) status('Mengirim ke printer label…', 'muted');
+        try {
+            var bytes = proto === 'tspl' ? buildTspl() : buildEscpos();
+            await window.KDApk.cetak('label', bytes);
+            var ok = '✓ ' + state.labels.length + ' label tercetak.';
+            diam ? window.KDApk.toast(ok, true) : status(ok, 'success');
+        } catch (e) {
+            diam ? window.KDApk.toast('Label gagal: ' + e.message, false) : status('Gagal cetak label: ' + e.message, 'danger');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+    window.cupLabelCetakApk = function () { return cetakApk(false); };
 
     window.cupLabelTutup = function () {
         el('cupLabelOverlay').style.display = 'none';

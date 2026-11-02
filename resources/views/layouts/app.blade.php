@@ -1646,6 +1646,11 @@ window.waitForBootstrapAndOpenStruk = function (orderId, copies, retries) {
 };
 </script>
 
+{{-- Sprint APK Kasir (2026-11-03) — jembatan printer aplikasi Android (no-op di browser biasa) --}}
+@auth
+<x-apk-printer />
+@endauth
+
 {{-- Sprint Label Cup (2026-10-19) — overlay cetak label gelas (POS, kasir, detail order) --}}
 @auth
 @can('label_cup.print')

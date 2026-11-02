@@ -99,7 +99,7 @@
             alert('Order berhasil di-approve, bill dibuka.');
             // Sprint Label Cup — cetak label gelas pesanan QR yang baru di-approve
             if (result.data.label_count > 0 && result.data.label_url && window.openCupLabel) {
-                window.openCupLabel(result.data.label_url);
+                window.openCupLabel(result.data.label_url, { otomatis: true });
             }
         });
     };

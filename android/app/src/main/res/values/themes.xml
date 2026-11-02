@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="kd_hitam">#1A1A1A</color>
+    <color name="kd_hijau">#2D6A4F</color>
+    <color name="kd_cream">#F5F0E6</color>
+
+    <style name="Theme.KopiDrip" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/kd_hitam</item>
+        <item name="colorPrimaryDark">@color/kd_hitam</item>
+        <item name="colorAccent">@color/kd_hijau</item>
+        <item name="android:statusBarColor">@color/kd_hitam</item>
+    </style>
+
+    <style name="Theme.KopiDrip.Fullscreen" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/kd_hitam</item>
+        <item name="colorPrimaryDark">@color/kd_hitam</item>
+        <item name="colorAccent">@color/kd_hijau</item>
+        <item name="android:statusBarColor">@color/kd_hitam</item>
+    </style>
+</resources>
