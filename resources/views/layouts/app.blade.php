@@ -546,6 +546,13 @@
         </a>
         @endif
 
+        {{-- Sprint APK Kasir — hanya tampil kalau ERP dibuka dari aplikasi Android (lihat components/apk-printer) --}}
+        <a href="#" id="kdApkSettingsLink" class="nav-link" style="display:none"
+           onclick="window.KDApk && window.KDApk.bukaPengaturan(); return false;">
+            <i class="bi bi-printer"></i>
+            <span>Pengaturan Printer Aplikasi</span>
+        </a>
+
         <!-- PENJUALAN -->
         @canany(['order.view', 'order.create', 'kasir.layout-meja.view', 'kasir.queue.view'])
         <div class="nav-section-title">Penjualan</div>

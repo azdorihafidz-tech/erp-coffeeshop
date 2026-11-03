@@ -78,5 +78,11 @@
             setTimeout(function () { el.remove(); }, ok === false ? 5000 : 2500);
         },
     };
+
+    // Menu sidebar "Pengaturan Printer Aplikasi" hanya muncul di aplikasi kasir
+    if (bridge()) {
+        var link = document.getElementById('kdApkSettingsLink');
+        if (link) link.style.display = '';
+    }
 })();
 </script>

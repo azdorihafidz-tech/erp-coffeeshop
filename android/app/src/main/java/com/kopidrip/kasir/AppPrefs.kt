@@ -53,6 +53,11 @@ class AppPrefs(context: Context) {
         get() = sp.getBoolean("auto_label", true)
         set(v) = sp.edit().putBoolean("auto_label", v).apply()
 
+    /** false = aplikasi baru pertama kali dibuka → tampilkan Pengaturan Printer dulu. */
+    var sudahSetup: Boolean
+        get() = sp.getBoolean("sudah_setup", false)
+        set(v) = sp.edit().putBoolean("sudah_setup", v).apply()
+
     /** Host ERP — hanya halaman dari host ini yang boleh memakai printer. */
     fun baseHost(): String? = Uri.parse(baseUrl).host
 

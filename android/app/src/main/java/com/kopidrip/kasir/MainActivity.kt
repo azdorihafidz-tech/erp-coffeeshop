@@ -134,6 +134,11 @@ class MainActivity : AppCompatActivity() {
 
         mintaIzinBluetooth()
 
+        // Pertama kali dibuka: atur alamat ERP & printer dulu
+        if (savedInstanceState == null && !prefs.sudahSetup) {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
             baseUrlTermuat = prefs.baseUrl

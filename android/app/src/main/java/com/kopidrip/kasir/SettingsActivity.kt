@@ -70,7 +70,17 @@ class SettingsActivity : AppCompatActivity() {
         tombol("Buka Pengaturan Bluetooth Tablet") { startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) }
         tombol("Muat Ulang Daftar Printer") { cekIzinLaluMuat() }
 
+        judul("Selesai")
+        tombol("Selesai — Buka ERP") { finish() }
+        teksKecil("Pengaturan ini bisa dibuka lagi kapan saja dari menu \"Pengaturan Printer Aplikasi\" di sidebar ERP.")
+
         teksKecil("Versi aplikasi ${BuildConfigInfo.versionName(this)}")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Pengaturan sudah pernah dibuka → berikutnya aplikasi langsung ke ERP
+        prefs.sudahSetup = true
     }
 
     override fun onResume() {

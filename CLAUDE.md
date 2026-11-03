@@ -736,6 +736,8 @@ Owner: kasir tablet harus memilih printer Bluetooth tiap cetak (Web Bluetooth Ch
 - **Build**: `.github/workflows/android-apk.yml` (push `android/**` atau manual) → artifact `KopiDripKasir-apk`. Release bertanda tangan kalau secrets `KOPIDRIP_KEYSTORE_BASE64` + `KOPIDRIP_KEYSTORE_PASSWORD` diisi, kalau tidak build debug. Keystore PKCS12 (alias `kopidrip`, s/d 2056) dibuat dengan OpenSSL lokal, disimpan **di luar repo** `D:\kopidrip-kasir-keystore\` (+ `BACA-SAYA.txt`) — WAJIB di-backup Owner.
 - **Batasan**: unduh JDK/Android SDK untuk compile lokal ditolak sistem keamanan → kode Kotlin **belum pernah di-compile**; verifikasi compile pertama terjadi di GitHub Actions. Belum diuji di printer fisik.
 
+**Update (sama hari)**: build GitHub #1 **SUKSES** (assembleDebug, compile pertama langsung lolos). Celah UX ditutup: aplikasi pertama kali dibuka langsung masuk Pengaturan Printer (`AppPrefs.sudahSetup`) + tombol "Selesai — Buka ERP", dan menu sidebar ERP **"Pengaturan Printer Aplikasi"** (`#kdApkSettingsLink`, hanya ditampilkan JS bila `KDApk.ada()`).
+
 **Test**: `ApkPrinterTest` 4/4 PASS (helper & tombol APK ada, jalur Bluetooth lama tetap ada, URL label hanya bila ada minuman berlabel, detail order & layout meja normal); test Node `KDApk` 4/4 PASS (non-APK tidak aktif, 20.000 byte utuh via base64, error aplikasi diteruskan, timeout 30 s); 24 blok `<script>` POS/struk/antrian lolos cek syntax; regresi **43 kegagalan lama identik, 0 baru**; log bersih.
 
 ---

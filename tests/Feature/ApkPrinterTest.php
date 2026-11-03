@@ -58,6 +58,8 @@ class ApkPrinterTest extends TestCase
             ->get(route('penjualan.pos'))->assertOk()
             ->assertSee('window.KDApk', false)
             ->assertSee('KopiDripPrinterResult', false)
+            // Menu sidebar pengaturan printer: ada tapi tersembunyi (hanya ditampilkan JS di APK)
+            ->assertSee('id="kdApkSettingsLink" class="nav-link" style="display:none"', false)
             ->assertSee('cupLabelApkControls', false)
             ->assertSee('cupLabelWebControls', false)
             // Tombol buka laci punya jalur APK, jalur Web Bluetooth lama tetap ada
