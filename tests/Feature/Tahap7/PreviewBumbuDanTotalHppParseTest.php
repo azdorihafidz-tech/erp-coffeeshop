@@ -58,7 +58,7 @@ class PreviewBumbuDanTotalHppParseTest extends TestCase
     public function test_preview_bumbu_hitung_subtotal_benar(): void
     {
         $admin = $this->buatUser('admin_pusat');
-        $bahan = Item::create(['kode_item' => 'BB-PB-001', 'nama_item' => 'Bahan Preview Bumbu', 'tipe' => 'bahan_baku', 'satuan' => 'gram', 'harga_beli_terakhir' => 5000, 'is_active' => true]);
+        $bahan = Item::create(['kode_item' => 'BB-PB-001', 'nama_item' => 'Bahan Preview Bumbu', 'tipe' => 'bahan_baku', 'satuan' => 'kg', 'harga_beli_terakhir' => 5000, 'is_active' => true]);
         $bumbu = ResepBumbu::create(['nama' => 'Bumbu Preview Test', 'kode' => 'BP1-' . uniqid('', false), 'item_id' => null, 'is_active' => true]);
         ResepBumbuItem::create(['resep_bumbu_id' => $bumbu->id, 'item_id' => $bahan->id, 'qty_per_unit' => 1000, 'satuan' => 'gram', 'is_wajib' => true, 'mode_harga' => 'pakai_master', 'urutan' => 0]);
 

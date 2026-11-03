@@ -757,6 +757,18 @@ Owner ingin program yang sama dipakai pengusaha lain (subdomain + database baru)
 
 **Test**: `BrandingTest` 9/9 PASS (login/sidebar dari Pengaturan Umum, tagline kosong, simpan langsung berlaku, upload → PNG 1024 px + 8 ikon + manifest + hapus logo, SVG ditolak, kasir 403, penanda panduan/tooltip, struk, `/app-info`). `ErrorPagesAndLogoSyncTest::test_logo_observer_menyalin...` sengaja diganti (perilaku lama = bug) jadi "tidak menimpa logo bawaan & logo lama tetap dipakai". Regresi: **43 kegagalan lama identik, 0 baru**. Smoke HTTP owner: dashboard/Pengaturan Umum/POS/panduan/cabang/layout meja 200; upload logo nyata → 8 ikon, PDF BEP terbentuk dengan logo, manifest & `/app-info` ikut berubah; log bersih.
 
+### 4.45 🟢 Fix Komposisi Resep — Bahan Bersatuan Stok Gram (2026-11-03)
+
+Owner: di komposisi Produk Jual, bahan bersatuan **gram** subtotalnya tidak tampil. Penyebab: konversi takaran (4.42) **selalu** g/ml ÷1000 karena menganggap stok bahan kg/liter. Akibatnya bahan dengan stok per gram (harga per gram) subtotalnya Rp0 dibulatkan, dan **stok POS ikut terpotong 1/1000** (10 g tercatat 0,01 gram).
+
+- **`ResepBumbuItem::konversiKeSatuanStok($qty, $satuanTakaran, $satuanStok = null)`**: kalau takaran dan satuan stok bahan sekelompok (massa: mg/g/gr/gram/ons/kg; volume: ml/cc/l/lt/ltr/liter), dihitung dengan faktornya (10 g dari stok gram = 10, dari stok kg = 0,01, 0,5 kg dari stok gram = 500). Satuan stok tak dikenal atau beda kelompok → aturan lama, jadi resep lama (stok kg/liter, sirup botol) **tidak berubah**. Accessor `qty_per_unit_dalam_kg` memakai `item->satuan` (berlaku juga untuk pemotongan stok POS, cek bisa dijual, Bumbu Pusat, detail cost cabang).
+- Hal yang ikut disesuaikan:
+  - kalkulator HPP (`MasterProdukJualController`);
+  - JS form Produk Jual dan form Master Bumbu Pusat (aturan sama);
+  - grid POS eager-load `resep.items.item`.
+- Harga beli bahan 0: subtotal tampil "Rp 0" merah + "Harga beli bahan belum diisi" (dulu "-").
+- Test: `ResepBumbuHargaBeliTest` +2 (13 kombinasi konversi, bahan stok gram: kalkulator, total Bumbu Pusat, kebutuhan stok). 3 test Tahap7 lama memakai data tidak konsisten (bahan stok "gram" tapi harga dianggap per kg) → datanya diubah ke kg, maksud test tetap. Regresi **43 kegagalan lama identik, 0 baru**. Tanpa migration.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN

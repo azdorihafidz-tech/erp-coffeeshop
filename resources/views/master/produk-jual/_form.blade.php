@@ -152,8 +152,8 @@
                 </table>
                 <div class="alert alert-warning py-2 small mb-2">
                     <i class="bi bi-exclamation-triangle me-1"></i>
-                    Harga Beli &amp; Subtotal murni preview live dari Master Bahan Baku. Takaran gram/ml otomatis dihitung ke kg/liter
-                    (ons ÷10). Kalau angka terlihat aneh, mis. "Rp 45.000/gram", cek &amp; perbaiki harga/satuan bahan itu di menu
+                    Harga Beli &amp; Subtotal murni preview live dari Master Bahan Baku. Takaran otomatis dihitung ke satuan stok bahan
+                    (mis. 10 g dari bahan per kg = 0,01 kg; dari bahan per gram = 10 g). Subtotal Rp 0 merah = harga beli bahan belum diisi. Kalau angka terlihat aneh, mis. "Rp 45.000/gram", cek &amp; perbaiki harga/satuan bahan itu di menu
                     <a href="{{ route('master.bahan-baku.index') }}" target="_blank">Master Bahan Baku</a>.
                 </div>
             </div>
@@ -371,8 +371,17 @@ function hapusBarisResep(btn) {
 // 2026-10-30: takaran dikonversi ke satuan stok dulu dengan aturan yang SAMA
 // dgn pemotongan stok POS (ResepBumbuItem::konversiKeSatuanStok) — dulu 9 g
 // dikalikan langsung dgn harga per kg sehingga HPP tampil ratusan kali lipat.
-function konversiKeSatuanStok(qty, satuan) {
+// 2026-11-03: ikut satuan stok bahan (bahan stok gram + takaran gram = apa adanya).
+const FAKTOR_SATUAN = [
+    { mg: 0.001, g: 1, gr: 1, gram: 1, ons: 100, kg: 1000, kilogram: 1000 },
+    { ml: 1, cc: 1, l: 1000, lt: 1000, ltr: 1000, liter: 1000 },
+];
+function konversiKeSatuanStok(qty, satuan, satuanStok) {
     const s = (satuan || '').toLowerCase().trim();
+    const st = (satuanStok || '').toLowerCase().trim();
+    for (const f of FAKTOR_SATUAN) {
+        if (f[s] !== undefined && f[st] !== undefined) return qty * f[s] / f[st];
+    }
     if (['g', 'gr', 'gram', 'ml'].includes(s)) return qty / 1000;
     if (s === 'ons') return qty / 10;
     return qty;
@@ -410,14 +419,16 @@ function hitungPreviewBaris(tr) {
     const qty = parseFloat(qtyInput?.value || '0');
 
     if (!harga) {
-        hargaCell.innerHTML = '<span class="text-danger">Rp 0 / ' + satuan + '</span>';
-        subtotalCell.textContent = '-';
+        hargaCell.innerHTML = '<span class="text-danger">Rp 0 / ' + satuan + '</span>'
+            + '<div class="text-danger" style="font-size:.7rem">Harga beli bahan belum diisi</div>';
+        subtotalCell.innerHTML = '<span class="text-danger">Rp 0</span>';
+        hitungTotalHpp();
         return;
     }
 
     hargaCell.textContent = formatRupiahPreview(harga) + ' / ' + satuan;
     const satuanTakaran = tr.querySelector('.satuanResep')?.value || satuan;
-    subtotalCell.textContent = qty > 0 ? formatRupiahPreview(konversiKeSatuanStok(qty, satuanTakaran) * harga) : '-';
+    subtotalCell.textContent = qty > 0 ? formatRupiahPreview(konversiKeSatuanStok(qty, satuanTakaran, satuan) * harga) : '-';
     hitungTotalHpp();
 }
 

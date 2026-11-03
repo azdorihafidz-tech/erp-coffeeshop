@@ -213,9 +213,20 @@
     const previewEl   = document.getElementById('previewTotalBahan');
     if (!itemSelect || !qtyInput || !satuanEl || !previewEl) return;
 
-    function konversiKeKg(qty, satuan) {
-        if (satuan === 'g') return qty / 1000;
-        if (satuan === 'ons') return qty / 10;
+    // Sama dgn ResepBumbuItem::konversiKeSatuanStok — ikut satuan stok bahan
+    // (bahan stok gram + takaran g = apa adanya, bukan ÷1000).
+    const FAKTOR_SATUAN = [
+        { mg: 0.001, g: 1, gr: 1, gram: 1, ons: 100, kg: 1000, kilogram: 1000 },
+        { ml: 1, cc: 1, l: 1000, lt: 1000, ltr: 1000, liter: 1000 },
+    ];
+    function konversiKeKg(qty, satuan, satuanStok) {
+        const s = (satuan || '').toLowerCase().trim();
+        const st = (satuanStok || '').toLowerCase().trim();
+        for (const f of FAKTOR_SATUAN) {
+            if (f[s] !== undefined && f[st] !== undefined) return qty * f[s] / f[st];
+        }
+        if (['g', 'gr', 'gram', 'ml'].includes(s)) return qty / 1000;
+        if (s === 'ons') return qty / 10;
         return qty; // 'kg'
     }
 
@@ -247,7 +258,7 @@
         const opt = itemSelect.selectedOptions[0];
         const hargaBeli = opt ? (parseFloat(opt.dataset.hargaBeli) || 0) : 0;
         const qty = parseFloat(qtyInput.value) || 0;
-        const qtyKg = konversiKeKg(qty, satuanEl.value);
+        const qtyKg = konversiKeKg(qty, satuanEl.value, opt ? opt.dataset.satuan : '');
         const total = qtyKg * hargaBeli;
         previewEl.textContent = 'Perkiraan modal: Rp ' + total.toLocaleString('id-ID', { maximumFractionDigits: 0 })
             + (hargaBeli === 0 ? ' (harga beli bahan ini belum diset)' : '');

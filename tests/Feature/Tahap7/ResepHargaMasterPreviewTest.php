@@ -66,7 +66,7 @@ class ResepHargaMasterPreviewTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('alert-warning', false);
-        $response->assertSee('otomatis dihitung ke kg/liter', false); // 2026-10-30: konversi satuan aktif
+        $response->assertSee('otomatis dihitung ke satuan stok bahan', false); // 2026-11-03: ikut satuan stok bahan
         $response->assertSee(route('master.bahan-baku.index'), false);
     }
 

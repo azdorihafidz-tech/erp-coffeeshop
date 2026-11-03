@@ -80,7 +80,7 @@ class SimulasiProduksiFormRealtimeTest extends TestCase
     public function test_kalkulator_expand_bumbu_pusat_masih_benar_dengan_resep_dari_form(): void
     {
         $admin = $this->buatUser('admin_pusat');
-        $bahanBumbu = Item::create(['kode_item' => 'BB-SIM-003', 'nama_item' => 'Bahan Bumbu Sim', 'tipe' => 'bahan_baku', 'satuan' => 'gram', 'harga_beli_terakhir' => 5000, 'is_active' => true]);
+        $bahanBumbu = Item::create(['kode_item' => 'BB-SIM-003', 'nama_item' => 'Bahan Bumbu Sim', 'tipe' => 'bahan_baku', 'satuan' => 'kg', 'harga_beli_terakhir' => 5000, 'is_active' => true]);
         $bumbu = ResepBumbu::create(['nama' => 'Bumbu Sim Test', 'kode' => 'BMB-S-' . uniqid('', false), 'item_id' => null, 'is_active' => true]);
         ResepBumbuItem::create(['resep_bumbu_id' => $bumbu->id, 'item_id' => $bahanBumbu->id, 'qty_per_unit' => 1000, 'satuan' => 'gram', 'is_wajib' => true, 'mode_harga' => 'pakai_master', 'urutan' => 0]);
 

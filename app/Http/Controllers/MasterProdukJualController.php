@@ -240,7 +240,7 @@ class MasterProdukJualController extends Controller
             $hppSatuan = (float) ($item->harga_beli_terakhir ?? 0);
             // 2026-10-30: takaran (mis. 9 g) dikonversi ke satuan stok (kg) dulu,
             // aturan sama dengan pemotongan stok POS — sebelumnya 9 × harga/kg.
-            $subtotal = \App\Models\ResepBumbuItem::konversiKeSatuanStok($qtyDibutuhkan, $row['satuan']) * $hppSatuan;
+            $subtotal = \App\Models\ResepBumbuItem::konversiKeSatuanStok($qtyDibutuhkan, $row['satuan'], $item->satuan) * $hppSatuan;
             $totalHpp += $subtotal;
 
             $breakdown[] = [

@@ -89,18 +89,42 @@ class ResepBumbuItem extends Model
      */
     public function getQtyPerUnitDalamKgAttribute(): float
     {
-        return self::konversiKeSatuanStok((float) $this->qty_per_unit, $this->satuan);
+        // Baris linked (Bumbu Pusat) tidak punya item — satuannya 'porsi', apa adanya.
+        $satuanStok = $this->item_id ? $this->item?->satuan : null;
+
+        return self::konversiKeSatuanStok((float) $this->qty_per_unit, $this->satuan, $satuanStok);
     }
 
+    /** Faktor ke satuan dasar (gram / ml) per kelompok satuan. */
+    private const FAKTOR_SATUAN = [
+        'massa'  => ['mg' => 0.001, 'g' => 1, 'gr' => 1, 'gram' => 1, 'ons' => 100, 'kg' => 1000, 'kilogram' => 1000],
+        'volume' => ['ml' => 1, 'cc' => 1, 'l' => 1000, 'lt' => 1000, 'ltr' => 1000, 'liter' => 1000],
+    ];
+
     /**
-     * Aturan konversi takaran resep → satuan stok (g/gram/ml ÷1000, ons ÷10,
-     * selain itu apa adanya). Static supaya kalkulator HPP form Produk Jual
-     * (baris dari isi form, belum tersimpan) memakai aturan yang SAMA dengan
-     * pemotongan stok di POS.
+     * Aturan konversi takaran resep → satuan stok bahan. Static supaya
+     * kalkulator HPP form Produk Jual (baris dari isi form, belum tersimpan)
+     * memakai aturan yang SAMA dengan pemotongan stok di POS.
+     *
+     * 2026-11-03: dulu takaran gram/ml SELALU ÷1000 (anggapan stok bahan kg/liter)
+     * → bahan yang stoknya dicatat per gram ikut ÷1000 (subtotal Rp0, stok
+     * terpotong 1/1000). Sekarang kalau takaran & satuan stok sekelompok
+     * (massa/volume) dihitung sesuai faktornya (10 g dari stok gram = 10,
+     * dari stok kg = 0,01). Satuan stok tak dikenal/beda kelompok → aturan
+     * lama (g/ml ÷1000, ons ÷10) supaya resep lama tidak berubah.
      */
-    public static function konversiKeSatuanStok(float $qty, ?string $satuan): float
+    public static function konversiKeSatuanStok(float $qty, ?string $satuan, ?string $satuanStok = null): float
     {
-        return match (strtolower(trim((string) $satuan))) {
+        $takaran = strtolower(trim((string) $satuan));
+        $stok = strtolower(trim((string) $satuanStok));
+
+        foreach (self::FAKTOR_SATUAN as $faktor) {
+            if (isset($faktor[$takaran], $faktor[$stok])) {
+                return $qty * $faktor[$takaran] / $faktor[$stok];
+            }
+        }
+
+        return match ($takaran) {
             'g', 'gr', 'gram', 'ml' => $qty / 1000,
             'ons'                   => $qty / 10,
             default                 => $qty, // 'kg', 'liter', 'pcs', atau satuan tak dikenal

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Cabang;
 use App\Models\Item;
 use App\Models\ResepBumbu;
+use App\Models\ResepBumbuItem;
 use App\Models\StockBatch;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\Feature\Tahap25\Concerns\CreatesTahap25Users;
@@ -21,11 +22,11 @@ class ResepBumbuHargaBeliTest extends TestCase
     use DatabaseTransactions;
     use CreatesTahap25Users;
 
-    private function bahan(float $hargaBeli, float $hargaJual = 0): Item
+    private function bahan(float $hargaBeli, float $hargaJual = 0, string $satuan = 'kg'): Item
     {
         return Item::create([
             'kode_item' => 'BB-RBH-' . uniqid(), 'nama_item' => 'Bahan Test',
-            'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => 'kg',
+            'tipe' => 'bahan_baku', 'jenis' => 'bahan_baku', 'satuan' => $satuan,
             'harga_beli_terakhir' => $hargaBeli, 'harga_jual' => $hargaJual, 'is_active' => true,
         ]);
     }
@@ -98,6 +99,46 @@ class ResepBumbuHargaBeliTest extends TestCase
 
         // 2 gelas: 18 g = 0,018 kg × 83.333 = 1.500 ; cup 2 × 1.500 = 3.000
         $this->assertEqualsWithDelta(4500, $data['total_hpp'], 0.5);
+    }
+
+    /** 2026-11-03: konversi ikut satuan stok bahan, resep lama (stok kg/liter) tidak berubah. */
+    public function test_konversi_takaran_ikut_satuan_stok_bahan(): void
+    {
+        $k = fn ($q, $s, $st) => ResepBumbuItem::konversiKeSatuanStok($q, $s, $st);
+
+        $this->assertEqualsWithDelta(10, $k(10, 'gram', 'gram'), 1e-9);
+        $this->assertEqualsWithDelta(10, $k(10, 'g', 'gr'), 1e-9);
+        $this->assertEqualsWithDelta(0.01, $k(10, 'gram', 'kg'), 1e-9);
+        $this->assertEqualsWithDelta(0.15, $k(150, 'ml', 'liter'), 1e-9);
+        $this->assertEqualsWithDelta(150, $k(150, 'ml', 'ml'), 1e-9);
+        $this->assertEqualsWithDelta(500, $k(0.5, 'kg', 'gram'), 1e-9);
+        $this->assertEqualsWithDelta(100, $k(1, 'ons', 'gram'), 1e-9);
+        // Satuan stok tak dikenal → aturan lama
+        $this->assertEqualsWithDelta(0.01, $k(10, 'g', null), 1e-9);
+        $this->assertEqualsWithDelta(0.02, $k(0.02, 'botol', 'botol'), 1e-9);
+        $this->assertEqualsWithDelta(1, $k(1, 'pcs', 'kg'), 1e-9);
+    }
+
+    /** Bug 2026-11-03: bahan stok gram dipilih di komposisi → subtotal Rp0 & stok terpotong 1/1000. */
+    public function test_bahan_stok_gram_subtotal_dan_kebutuhan_stok_benar(): void
+    {
+        $owner = $this->buatUser('owner');
+        $gula = $this->bahan(hargaBeli: 15, satuan: 'gram'); // Rp15 per gram
+        $produk = Item::where('tipe', 'produk_jual')->firstOrFail();
+
+        $data = $this->actingAs($owner)->postJson(route('master.produk-jual.kalkulator-resep', $produk), [
+            'jumlah' => 2,
+            'resep' => [['item_id' => $gula->id, 'qty_per_unit' => 10, 'satuan' => 'gram']],
+        ])->assertOk()->json();
+        $this->assertEqualsWithDelta(300, $data['total_hpp'], 0.01); // 2 × 10 g × Rp15
+
+        $bumbu = ResepBumbu::create(['nama' => 'Bumbu Gram', 'kode' => 'BMB-RBH-10', 'is_active' => true, 'dibuat_oleh' => $owner->id]);
+        $ri = $bumbu->items()->create(['item_id' => $gula->id, 'qty_per_unit' => 10, 'satuan' => 'gram', 'mode_harga' => 'pakai_master', 'is_wajib' => true, 'urutan' => 1]);
+        $ri = $ri->fresh();
+
+        $this->assertEqualsWithDelta(150, $ri->total_harga_master, 0.01);
+        // Stok yang dipotong POS per 1 unit = 10 gram (bukan 0,01)
+        $this->assertEqualsWithDelta(10, $ri->expandKeBahanMentah()[0]['butuh_kg'], 1e-9);
     }
 
     public function test_tambah_bahan_bumbu_pusat_tanpa_mode_harga(): void
