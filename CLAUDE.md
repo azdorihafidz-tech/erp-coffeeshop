@@ -1122,8 +1122,9 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 
 ### 12.15 APK Kopi Drip Kasir (2026-11-03, lihat 4.43)
 - [x] A1 kode APK + workflow GitHub + keystore (di luar repo), A2 integrasi ERP (struk/label/laci) + test
-- [ ] Owner: isi 2 GitHub Secrets (lihat `D:/kopidrip-kasir-keystore/BACA-SAYA.txt`) & backup folder keystore
-- [ ] Cek hasil build pertama di tab Actions (kode Kotlin belum pernah di-compile lokal)
+- [x] GitHub Secrets keystore diisi Owner via `gh secret set` (2026-11-03); build release **v1.0.3** sukses & terverifikasi bertanda tangan kunci Kopi Drip (bukan debug). GitHub CLI terpasang & login (`C:/Program Files/GitHub CLI/gh.exe`) → Claude bisa baca hasil build sendiri
+- [ ] Owner: backup folder `D:/kopidrip-kasir-keystore/`
+- [x] Build GitHub #1 & #2 sukses (compile pertama langsung lolos)
 - [ ] A3 pasang di Redmi Pad, pair IWARE C58BT + Blueprint ECO80BT, uji di demo; ubah ukuran label 40×30
 - [ ] A4 perbaikan hasil uji, lalu pakai di go-live
 
