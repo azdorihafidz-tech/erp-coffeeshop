@@ -181,9 +181,13 @@
             var y = 10, x = 12;
             var colS = Math.floor((dotsW - 24) / 12), colB = Math.floor((dotsW - 24) / 16);
             var kanan = '#' + l.nomor + ' ' + l.ke + '/' + l.dari;
-            var head = ascii(l.toko.toUpperCase()).slice(0, Math.max(0, colS - kanan.length - 1));
             var q = function (t) { return '"' + ascii(t).replace(/"/g, "'") + '"'; };
-            cmds.push('TEXT ' + x + ',' + y + ',"2",0,1,1,' + q(head + ' '.repeat(Math.max(1, colS - head.length - kanan.length)) + kanan));
+            // Nama toko (Pengaturan Umum) pakai font kecil 8 dot supaya muat utuh
+            // di stiker 40 mm; nomor antrean font 12 dot rata kanan.
+            var xKanan = dotsW - 12 - kanan.length * 12;
+            var head = ascii(l.toko.toUpperCase()).slice(0, Math.max(0, Math.floor((xKanan - x - 8) / 8)));
+            cmds.push('TEXT ' + x + ',' + (y + 5) + ',"1",0,1,1,' + q(head));
+            cmds.push('TEXT ' + xKanan + ',' + y + ',"2",0,1,1,' + q(kanan));
             y += 24; cmds.push('BAR ' + x + ',' + y + ',' + (dotsW - 24) + ',2'); y += 6;
             wrap(l.nama, colB).slice(0, 2).forEach(function (t) { if (y + 26 < dotsH - 20) { cmds.push('TEXT ' + x + ',' + y + ',"3",0,1,1,' + q(t)); y += 28; } });
             bodyLines(l).forEach(function (b) {
