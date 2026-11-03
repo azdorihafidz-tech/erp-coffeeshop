@@ -740,6 +740,22 @@ Owner: kasir tablet harus memilih printer Bluetooth tiap cetak (Web Bluetooth Ch
 
 **Test**: `ApkPrinterTest` 4/4 PASS (helper & tombol APK ada, jalur Bluetooth lama tetap ada, URL label hanya bila ada minuman berlabel, detail order & layout meja normal); test Node `KDApk` 4/4 PASS (non-APK tidak aktif, 20.000 byte utuh via base64, error aplikasi diteruskan, timeout 30 s); 24 blok `<script>` POS/struk/antrian lolos cek syntax; regresi **43 kegagalan lama identik, 0 baru**; log bersih.
 
+### 4.44 🟢 Identitas Usaha — Program Bisa Dipakai Banyak Usaha (2026-11-03)
+
+Owner ingin program yang sama dipakai pengusaha lain (subdomain + database baru) tanpa mengubah kode. Keputusan Owner: APK nama/ikon **netral** (opsi a), modul on/off & Setup Awal (**Tahap 2**) **ditunda** — semua modul tetap tampil, warna tema nanti.
+
+- **Sumber tunggal `App\Support\Branding`** (singleton, `$brand` dibagikan ke semua view via `View::share`; data di-cache `branding:v1`, dihapus `PengaturanUmumObserver`): `nama()`, `namaSingkat()` (fallback nama), `tagline()`, `alamat()`, `telepon()`, `logoUrl()`, `logoFile()` (untuk dompdf), `ikonUrl($u)`, `footerStruk()`, `isiPenanda()`, `untukAplikasi()`. **ATURAN BARU: jangan tulis nama/logo usaha langsung di view — pakai `$brand`.**
+- **Migration** `pengaturan_umums` + `nama_singkat`, `tagline`, `telepon`. Instalasi lama: baris dibuat kalau belum ada (hanya bila tabel `cabangs` berisi data) dan diisi "Kopi Drip" / "Coffee Shop & Roastery" → tampilan Kopi Drip tidak berubah. Ternyata DB dev **tidak punya baris Pengaturan Umum** sama sekali (belum pernah disimpan).
+- **Logo**: upload → disimpan ulang sebagai PNG (maks 1024 px) di **`public/uploads/branding/`** (di-`.gitignore`) + 8 ikon persegi PWA (`icon-{72..512}.png`, jarak tepi 8%). SVG ditolak (bisa berisi script, tidak bisa diolah GD). **Bug lama difix**: observer dulu menyalin logo ke `public/images/logo.png` yang **ikut git** → update program menimpa logo & `git pull` di server bisa bentrok. Logo lama di disk public tetap didukung lewat `/img/`. Tanpa upload → logo bawaan repo.
+- **PWA**: middleware `TerapkanBranding` (grup web) mengisi `config('laravelpwa.*')` (nama, short_name, ikon) per request.
+- **~45 file tampilan** diganti: login, guest/app/public layout (judul tab, favicon, sidebar, tagline disembunyikan kalau kosong), error 403/404/500, menu & status QR, TV Antrian, 3 struk + preview bill + struk bill meja (header = nama singkat, footer bawaan = `footerStruk()`), 7 PDF laporan + slip gaji + absensi PDF/CSV + stiker QR meja (nama, tagline · telepon, logo), label cup, placeholder email `nama@email.com`, POS "Kirim ke Outlet {nama singkat}".
+- **Panduan & tooltip**: teks memakai penanda `{nama_usaha}` / `{nama_singkat}`, diganti saat tampil (`Panduan::konten_html`, `<x-tooltip>`). Tooltip lama (seeder `firstOrCreate`) dikonversi otomatis oleh `TooltipKontenSeeder`. Panduan `pengaturan-umum` ditulis ulang (dulu keliru: "ikon PWA disiapkan developer"), 3 tooltip baru `pengaturan_umum.*`.
+- **`GET /app-info`** (publik): `{erp, nama, nama_singkat, tagline, logo_url, ikon_url}` untuk APK.
+- **APK (Tahap 3)**: nama "**Kasir POS**", ikon struk netral (background slate), `applicationId` & nama file APK tetap. Pengaturan: ketik alamat ERP (https:// otomatis) → **Hubungkan** → cek `/app-info`, simpan nama + ikon usaha (header Pengaturan, recent apps, tes cetak); riwayat 5 alamat (pindah demo ↔ go-live sekali tekan). Alamat Kopi Drip tidak lagi ditanam di kode; aplikasi tidak bisa dipakai sebelum alamat diisi. Identitas diperbarui diam-diam tiap aplikasi dibuka. `window.KopiDripPrinter` & user-agent `KopiDripKasir/` sengaja **tidak** diganti (dipakai ERP).
+- **Deploy**: `public/deploy-identitas-usaha.php` (`YES-IDENTITAS`) — menggantikan `deploy-modal-resep442.php` (langkahnya sama + migration ini).
+
+**Test**: `BrandingTest` 9/9 PASS (login/sidebar dari Pengaturan Umum, tagline kosong, simpan langsung berlaku, upload → PNG 1024 px + 8 ikon + manifest + hapus logo, SVG ditolak, kasir 403, penanda panduan/tooltip, struk, `/app-info`). `ErrorPagesAndLogoSyncTest::test_logo_observer_menyalin...` sengaja diganti (perilaku lama = bug) jadi "tidak menimpa logo bawaan & logo lama tetap dipakai". Regresi: **43 kegagalan lama identik, 0 baru**. Smoke HTTP owner: dashboard/Pengaturan Umum/POS/panduan/cabang/layout meja 200; upload logo nyata → 8 ikon, PDF BEP terbentuk dengan logo, manifest & `/app-info` ikut berubah; log bersih.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -940,6 +956,7 @@ database/
 - **Trait `FillsDeletedBy`**: dipakai di banyak model
 - **Gate pattern**: permission di-cache 1 jam (`all_permission_names`), delegasi ke `$user->hasPermission()`
 - **DB::transaction()**: WAJIB untuk operasi multi-tabel
+- **Identitas usaha via `$brand`** (`App\Support\Branding`, sejak 4.44): nama, logo, tagline usaha JANGAN ditulis langsung di view/kode — program dipakai banyak usaha. Teks panduan/tooltip pakai penanda `{nama_usaha}` / `{nama_singkat}`
 - **🔴 Nested `<form>` HTML DILARANG** — HTML5 parser membuang tag form bersarang tapi child input-nya (termasuk `_method`) tetap masuk ke form luar, bisa menyebabkan method-spoofing salah sasaran (pernah jadi bug KRITIS data-ghost di Dimsum). Kalau butuh tombol submit "di dalam" card form lain, pisahkan jadi sibling + pakai HTML5 `form="id-form-lain"` attribute.
 
 ---
@@ -1118,7 +1135,7 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] `.cpanel.yml` DEPLOYPATH diganti `$PWD` + pengaman (2026-10-19) — repo di-pull ke 2 folder: demo `erpdrip.azwacore.com`, go-live `kopidripsidikalang.com/erp`
 - [x] Deploy 4.39–4.41 di demo & go-live (2026-10-19) via script satu-link, UPDATE BERHASIL di keduanya (demo sekaligus dapat migration Unit Beli 2026-10-02 yang tertinggal); script dihapus dari repo
 - [ ] Go-live: kas masih 0 — buat Kas Tunai/Transfer/QRIS sebelum POS dipakai
-- [ ] Deploy 4.42 (hapus Gratis/Master + konversi satuan HPP) di demo & go-live via `public/deploy-modal-resep442.php`, lalu hapus script dari repo
+- [ ] Deploy 4.42 + 4.44 di demo & go-live via **`public/deploy-identitas-usaha.php`** (`?confirm=YES-IDENTITAS&tahap=simulasi` → backup → `tahap=jalankan`) — script 442 digabung ke sini; hapus script dari repo setelah dijalankan di keduanya
 
 ### 12.15 APK Kopi Drip Kasir (2026-11-03, lihat 4.43)
 - [x] A1 kode APK + workflow GitHub + keystore (di luar repo), A2 integrasi ERP (struk/label/laci) + test
@@ -1127,6 +1144,14 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] Build GitHub #1 & #2 sukses (compile pertama langsung lolos)
 - [ ] A3 pasang di Redmi Pad, pair IWARE C58BT + Blueprint ECO80BT, uji di demo; ubah ukuran label 40×30 — uji v1.0.3: pasang + pair + tes struk/laci/label **berhasil**; buka ERP gagal karena (1) alamat go-live di APK salah (`kopidripsidikalang.com/erp` = 404 — alamat benar **`https://erp.kopidripsidikalang.com`**; `/erp/public` juga jalan), (2) pilihan Demo baru tersimpan kalau tombol Simpan ditekan. Difix di v1.0.4: alamat benar (nilai lama dialihkan otomatis), Go-live/Demo langsung tersimpan saat dipilih. **v1.0.4 diuji Owner di demo (2026-11-03): BERHASIL**
 - [ ] A4 perbaikan hasil uji, lalu pakai di go-live
+- [x] Label cup TSPL: nama toko (Pengaturan Umum) utuh di stiker 40 mm (2026-11-03) — Owner masih perlu kirim foto hasil cetak untuk dirapikan lebih lanjut
+
+### 12.16 Identitas Usaha / Multi-Usaha (2026-11-03, lihat 4.44)
+- [x] Tahap 1 ERP: nama/logo/tagline/telepon dari Pengaturan Umum, ikon PWA otomatis, ~45 file diganti, 9 test PASS
+- [x] Tahap 3 APK: nama & ikon netral "Kasir POS", alamat ERP bebas + riwayat, nama/logo usaha dari `/app-info`
+- [ ] Owner: deploy (lihat 12.14), upload logo di Pengaturan Umum demo & go-live, pasang APK baru di tablet → di Pengaturan ketik `erpdrip.azwacore.com` lalu Hubungkan
+- [ ] **Tahap 2 (DITUNDA atas keputusan Owner)**: Setup Awal untuk usaha baru (akun Owner sendiri, bukan `admin@kopidrip.com`), pilihan data awal kosong vs contoh, modul bisa dimatikan. Sampai Tahap 2 dikerjakan, instalasi baru tetap memakai seeder Kopi Drip (nama, menu, cabang) — ganti identitas lewat Pengaturan Umum
+- [ ] Opsional nanti: warna tema per usaha (keputusan Owner: nama & logo dulu)
 
 ---
 

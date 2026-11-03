@@ -37,3 +37,6 @@ audit.json
 audit.php
 erp-coffeeshop - Copy/
 .claude/
+
+# Logo & ikon usaha hasil upload (Pengaturan Umum) — milik tiap instalasi
+/public/uploads/branding

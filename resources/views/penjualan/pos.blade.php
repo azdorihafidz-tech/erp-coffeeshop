@@ -200,7 +200,7 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
                         <select name="customer_type" id="selectCustomerType" class="form-select form-select-sm" style="max-width:260px">
                             <option value="retail" selected>Retail (Walk-in)</option>
                             <option value="wholesale">Wholesale (B2B)</option>
-                            <option value="internal">Internal — Kirim ke Outlet Kopi Drip</option>
+                            <option value="internal">Internal — Kirim ke Outlet {{ $brand->namaSingkat() }}</option>
                         </select>
                         <div class="d-none mt-2" id="wrapOutletTujuan" style="max-width:260px">
                             <label class="form-label small">Outlet Tujuan <x-tooltip key="pos.outlet_tujuan" /></label>

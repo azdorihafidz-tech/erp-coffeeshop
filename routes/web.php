@@ -119,6 +119,12 @@ Route::get('/offline.html', function () {
     ]);
 })->name('pwa.offline');
 
+// Sprint Identitas Usaha — nama & logo usaha untuk aplikasi kasir Android
+// (publik: hanya identitas yang memang tampil di halaman login).
+Route::get('/app-info', function (\App\Support\Branding $brand) {
+    return response()->json(['erp' => true] + $brand->untukAplikasi());
+})->name('app.info');
+
 // ===== ANTRIAN PRODUKSI — DISPLAY PUBLIK (tanpa auth) =====
 Route::get('/antrian/display/{cabang}', [AntrianDisplayController::class, 'show'])->name('antrian.display');
 Route::get('/antrian/data/{cabang}',    [AntrianDisplayController::class, 'data'])->name('antrian.data');

@@ -35,13 +35,13 @@
 <table class="layout header-table">
     <tr>
         <td style="width: 60px;">
-            @if(file_exists(public_path('images/logo.png')))
-            <img src="{{ public_path('images/logo.png') }}" class="logo">
+            @if($brand->logoFile())
+            <img src="{{ $brand->logoFile() }}" class="logo">
             @endif
         </td>
         <td>
-            <div class="company-name">Kopi Drip</div>
-            <div class="company-sub">Coffee Shop & Roastery</div>
+            <div class="company-name">{{ $brand->nama() }}</div>
+            <div class="company-sub">{{ collect([$brand->tagline(), $brand->telepon()])->filter()->implode(' · ') }}</div>
         </td>
         <td style="text-align:right">
             <div class="report-title">LAPORAN LABA RUGI FORMAL</div>

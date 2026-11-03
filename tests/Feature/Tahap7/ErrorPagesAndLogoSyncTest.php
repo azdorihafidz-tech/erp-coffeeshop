@@ -49,32 +49,27 @@ class ErrorPagesAndLogoSyncTest extends TestCase
         $this->assertStringContainsString('#FF6B00', $html);
     }
 
-    public function test_logo_observer_menyalin_file_ke_public_images(): void
+    /**
+     * Sprint Identitas Usaha (2026-11-03) — logo TIDAK lagi disalin ke
+     * public/images/logo.png (file itu ikut git; menimpanya membuat git pull
+     * di server bentrok). Logo lama di disk public tetap dipakai lewat /img/.
+     */
+    public function test_logo_observer_tidak_menimpa_logo_bawaan_dan_logo_lama_tetap_dipakai(): void
     {
         Storage::fake('public');
         $file = UploadedFile::fake()->image('logo-baru.png', 200, 200);
         $path = $file->store('logo', 'public');
+        $isiBawaan = file_get_contents(public_path('images/logo.png'));
 
-        $backupPath = public_path('images/logo.png.bak-test');
-        if (file_exists(public_path('images/logo.png'))) {
-            copy(public_path('images/logo.png'), $backupPath);
-        }
+        $setting = PengaturanUmum::firstOrCreate([], ['nama_perusahaan' => 'Kopi Drip Sidikalang']);
+        $setting->logo_path = $path;
+        $setting->save();
 
-        try {
-            $setting = PengaturanUmum::getSetting();
-            $setting->logo_path = $path;
-            $setting->save();
+        $this->assertSame($isiBawaan, file_get_contents(public_path('images/logo.png')));
 
-            $this->assertFileExists(public_path('images/logo.png'));
-            $isiStatic = file_get_contents(public_path('images/logo.png'));
-            $isiUpload = Storage::disk('public')->get($path);
-            $this->assertSame($isiUpload, $isiStatic, 'Isi file public/images/logo.png harus sama persis dengan file yang diupload.');
-        } finally {
-            if (file_exists($backupPath)) {
-                copy($backupPath, public_path('images/logo.png'));
-                unlink($backupPath);
-            }
-        }
+        $brand = app(\App\Support\Branding::class);
+        $this->assertTrue($brand->adaLogoUpload());
+        $this->assertStringContainsString('/img/' . $path, $brand->logoUrl());
     }
 
     // ===== Regresi cleanup dead code =====

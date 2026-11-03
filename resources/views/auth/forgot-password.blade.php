@@ -19,7 +19,7 @@
             <input id="email" type="email" name="email"
                 class="form-control @error('email') is-invalid @enderror"
                 value="{{ old('email') }}" required autofocus
-                placeholder="nama@kopidrip.com">
+                placeholder="nama@email.com">
             @error('email')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

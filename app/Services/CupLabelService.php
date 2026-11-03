@@ -7,7 +7,7 @@ use App\Models\Cabang;
 use App\Models\Item;
 use App\Models\ItemVariant;
 use App\Models\Order;
-use App\Models\PengaturanUmum;
+use App\Support\Branding;
 use Illuminate\Support\Collection;
 
 /**
@@ -168,15 +168,6 @@ class CupLabelService
 
     private function namaToko(): string
     {
-        static $nama = null;
-        if ($nama === null) {
-            try {
-                $nama = PengaturanUmum::getSetting()->nama_perusahaan ?: 'Kopi Drip';
-            } catch (\Throwable) {
-                $nama = 'Kopi Drip';
-            }
-        }
-
-        return $nama;
+        return app(Branding::class)->nama();
     }
 }

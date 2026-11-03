@@ -7,8 +7,8 @@
 @if($tooltip)
     @php
         $tipContent = $tooltip->title
-            ? '<strong>' . e($tooltip->title) . '</strong><br>' . e($tooltip->content)
-            : e($tooltip->content);
+            ? '<strong>' . e($tooltip->title) . '</strong><br>' . e($brand->isiPenanda($tooltip->content))
+            : e($brand->isiPenanda($tooltip->content));
     @endphp
     <span
         class="ms-1 tooltip-helper"

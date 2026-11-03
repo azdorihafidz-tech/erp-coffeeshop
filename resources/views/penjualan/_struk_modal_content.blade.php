@@ -110,7 +110,7 @@
 <div class="struk-wrap">
 
     {{-- Header --}}
-    <div class="center bold header-store">Kopi Drip</div>
+    <div class="center bold header-store">{{ $brand->namaSingkat() }}</div>
     <div class="center">{{ $order->cabang?->nama_cabang ?? 'Cabang' }}</div>
     @if($order->cabang?->alamat)
     <div class="center" style="font-size:10px">{{ $order->cabang->alamat }}</div>
@@ -197,12 +197,12 @@
     @php
         $footerLines = ($order->cabang?->footer_struk && trim($order->cabang->footer_struk) !== '')
             ? explode("\n", $order->cabang->footer_struk)
-            : ['Terima kasih atas kunjungan Anda!', "Kopi Drip Sidikalang - Coffee & Roastery"];
+            : explode("\n", $brand->footerStruk());
     @endphp
     <div class="center footer-gap" style="font-size:10px">
         {!! nl2br(e(($order->cabang?->footer_struk && trim($order->cabang->footer_struk) !== '')
             ? $order->cabang->footer_struk
-            : "Terima kasih atas kunjungan Anda!\nKopi Drip Sidikalang - Coffee & Roastery")) !!}
+            : $brand->footerStruk())) !!}
     </div>
 
 </div>{{-- /.struk-wrap --}}
@@ -340,10 +340,10 @@ $_jenisOlahanLabel = $_jasaItem ? ucwords(str_replace('_', ' ', $_jasaItem->jeni
 
 $_footerLines = ($order->cabang?->footer_struk && trim($order->cabang->footer_struk) !== '')
     ? array_values(array_filter(explode("\n", $order->cabang->footer_struk), fn($l) => trim($l) !== ''))
-    : ['Terima kasih atas kunjungan Anda!', "Kopi Drip Sidikalang - Coffee & Roastery"];
+    : explode("\n", $brand->footerStruk());
 
 $_struData = [
-    'toko'         => "Kopi Drip",
+    'toko'         => $brand->namaSingkat(),
     'cabang'       => $order->cabang?->nama_cabang ?? '',
     'alamat'       => $order->cabang?->alamat ?? '',
     'telepon'      => $order->cabang?->telepon ?? '',

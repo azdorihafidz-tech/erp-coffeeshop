@@ -48,9 +48,9 @@ class Panduan extends Model
                 'html_input'         => 'strip',
                 'allow_unsafe_links' => false,
             ]);
-            return $converter->convert($this->konten)->getContent();
+            return $converter->convert(app(\App\Support\Branding::class)->isiPenanda($this->konten))->getContent();
         } catch (\Throwable) {
-            return e($this->konten);
+            return e(app(\App\Support\Branding::class)->isiPenanda($this->konten));
         }
     }
 

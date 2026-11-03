@@ -7,10 +7,14 @@ import java.util.Locale
 /** Data contoh untuk tombol "Tes Cetak" di Pengaturan Printer. */
 object TesCetak {
 
+    /** Nama usaha untuk dicetak: hanya huruf ASCII (printer tidak kenal huruf khusus). */
+    private fun ascii(s: String, maks: Int): String =
+        java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD).replace(Regex("[^\\x20-\\x7E]"), "").uppercase().take(maks)
+
     private fun waktu(): String = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("id", "ID")).format(Date())
 
     /** ESC/POS, kertas 58 mm (32 karakter). */
-    fun struk(): ByteArray {
+    fun struk(namaUsaha: String): ByteArray {
         val out = ArrayList<Byte>()
         fun raw(vararg b: Int) = b.forEach { out.add(it.toByte()) }
         fun teks(s: String) = s.toByteArray(Charsets.US_ASCII).forEach { out.add(it) }
@@ -18,7 +22,7 @@ object TesCetak {
         raw(0x1B, 0x40)            // init
         raw(0x1B, 0x61, 0x01)      // tengah
         raw(0x1B, 0x45, 0x01)      // tebal
-        teks("KOPI DRIP KASIR\n")
+        teks(ascii(namaUsaha, 32) + "\n")
         raw(0x1B, 0x45, 0x00)
         teks("Tes printer struk\n")
         teks(waktu() + "\n")
@@ -32,13 +36,13 @@ object TesCetak {
     }
 
     /** Label TSPL ukuran lebar×tinggi mm (default stiker 40×30). */
-    fun labelTspl(lebarMm: Int = 40, tinggiMm: Int = 30): String =
+    fun labelTspl(namaUsaha: String, lebarMm: Int = 40, tinggiMm: Int = 30): String =
         listOf(
             "SIZE $lebarMm mm,$tinggiMm mm",
             "GAP 2 mm,0 mm",
             "DIRECTION 1",
             "CLS",
-            "TEXT 12,10,\"2\",0,1,1,\"KOPI DRIP  #TES 1/1\"",
+            "TEXT 12,10,\"2\",0,1,1,\"${ascii(namaUsaha, 14)}  #TES 1/1\"",
             "BAR 12,36,${lebarMm * 8 - 24},2",
             "TEXT 12,44,\"3\",0,1,1,\"TES LABEL\"",
             "TEXT 12,76,\"2\",0,1,1,\"${waktu()}\"",
@@ -48,8 +52,8 @@ object TesCetak {
         ).joinToString("\r\n")
 
     /** Label untuk printer ESC/POS yang diisi kertas stiker. */
-    fun labelEscpos(): ByteArray {
-        val teks = "KOPI DRIP  #TES 1/1\nTES LABEL\n${waktu()}\nPrinter label siap\n"
+    fun labelEscpos(namaUsaha: String): ByteArray {
+        val teks = "${ascii(namaUsaha, 22)}  #TES 1/1\nTES LABEL\n${waktu()}\nPrinter label siap\n"
         return byteArrayOf(0x1B, 0x40) + teks.toByteArray(Charsets.US_ASCII) + byteArrayOf(0x0C)
     }
 }

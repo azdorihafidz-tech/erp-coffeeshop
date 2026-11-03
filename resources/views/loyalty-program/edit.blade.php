@@ -71,7 +71,7 @@
                 <div class="col-12 col-md-4 field-auto-track">
                     <label class="form-label">Tipe Order Dihitung <x-tooltip key="loyalty.tipe_item" placement="top" /></label>
                     <select name="tipe_item" class="form-select">
-                        <option value="penjualan" {{ old('tipe_item',$loyaltyProgram->tipe_item)==='penjualan'?'selected':'' }}>Penjualan (Kopi Drip)</option>
+                        <option value="penjualan" {{ old('tipe_item',$loyaltyProgram->tipe_item)==='penjualan'?'selected':'' }}>Penjualan</option>
                         <option value="jasa_giling" {{ old('tipe_item',$loyaltyProgram->tipe_item)==='jasa_giling'?'selected':'' }}>Jasa Giling (legacy)</option>
                     </select>
                 </div>

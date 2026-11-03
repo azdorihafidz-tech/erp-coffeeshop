@@ -10,12 +10,14 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.text.InputType
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -24,6 +26,7 @@ import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -44,7 +47,8 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var spinnerStruk: Spinner
     private lateinit var spinnerLabel: Spinner
     private lateinit var inputAlamat: EditText
-    private lateinit var pilihanLain: RadioButton
+    private lateinit var logoUsaha: ImageView
+    private lateinit var namaUsaha: TextView
     private var perangkat: List<BluetoothDevice> = emptyList()
 
     private val izinBluetooth = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
@@ -62,6 +66,14 @@ class SettingsActivity : AppCompatActivity() {
         }
         setContentView(ScrollView(this).apply { addView(isi) })
 
+        // Tombol kembali HP: tanpa alamat ERP aplikasi tidak bisa dipakai → tutup aplikasi
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (prefs.sudahAdaAlamat()) finish() else finishAffinity()
+            }
+        })
+
+        bagianUsaha()
         bagianAlamat()
         bagianStruk()
         bagianLabel()
@@ -73,7 +85,7 @@ class SettingsActivity : AppCompatActivity() {
         tombol("Muat Ulang Daftar Printer") { cekIzinLaluMuat() }
 
         judul("Selesai")
-        tombol("Selesai — Buka ERP") { if (simpanAlamatLain()) finish() }
+        tombol("Selesai — Buka ERP") { if (bolehTutup()) finish() }
         teksKecil("Pengaturan ini bisa dibuka lagi kapan saja dari menu \"Pengaturan Printer Aplikasi\" di sidebar ERP.")
 
         teksKecil("Versi aplikasi ${BuildConfigInfo.versionName(this)}")
@@ -91,58 +103,83 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        if (simpanAlamatLain()) finish()
+        if (bolehTutup()) finish()
         return true
     }
 
     // ---------------------------------------------------------------- bagian
 
-    private fun bagianAlamat() {
-        judul("Alamat ERP")
-        val grup = RadioGroup(this)
-        val golive = RadioButton(this).apply { text = "Go-live (${AppPrefs.URL_GOLIVE})"; id = View.generateViewId() }
-        val demo = RadioButton(this).apply { text = "Demo / latihan (${AppPrefs.URL_DEMO})"; id = View.generateViewId() }
-        val lain = RadioButton(this).apply { text = "Alamat lain"; id = View.generateViewId() }
-        grup.addView(golive); grup.addView(demo); grup.addView(lain)
-        isi.addView(grup)
-
-        val input = EditText(this).apply {
-            hint = "https://…"
-            inputType = InputType.TYPE_TEXT_VARIATION_URI
-            setText(prefs.baseUrl)
+    /** Kepala halaman: logo & nama usaha dari ERP yang terhubung. */
+    private fun bagianUsaha() {
+        val baris = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(8), 0, dp(4))
         }
-        isi.addView(input)
-
-        when (prefs.baseUrl) {
-            AppPrefs.URL_GOLIVE -> golive.isChecked = true
-            AppPrefs.URL_DEMO -> demo.isChecked = true
-            else -> lain.isChecked = true
-        }
-        input.isEnabled = lain.isChecked
-
-        // Go-live / Demo langsung tersimpan begitu dipilih (tidak perlu tekan Simpan)
-        grup.setOnCheckedChangeListener { _, id ->
-            input.isEnabled = id == lain.id
-            when (id) {
-                golive.id -> { input.setText(AppPrefs.URL_GOLIVE); prefs.baseUrl = AppPrefs.URL_GOLIVE; pesan("Alamat Go-live dipakai.") }
-                demo.id -> { input.setText(AppPrefs.URL_DEMO); prefs.baseUrl = AppPrefs.URL_DEMO; pesan("Alamat Demo dipakai.") }
-            }
-        }
-        inputAlamat = input
-        pilihanLain = lain
-        tombol("Simpan Alamat Lain") { if (simpanAlamatLain()) pesan("Alamat disimpan.") }
+        logoUsaha = ImageView(this).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
+        baris.addView(logoUsaha, LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginEnd = dp(14) })
+        namaUsaha = TextView(this).apply { textSize = 18f; setTypeface(typeface, Typeface.BOLD) }
+        baris.addView(namaUsaha, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        isi.addView(baris)
+        tampilkanUsaha()
     }
 
-    /** Simpan isian "Alamat lain" kalau pilihan itu aktif. false = isian tidak valid. */
-    private fun simpanAlamatLain(): Boolean {
-        if (!pilihanLain.isChecked) return true
-        val url = inputAlamat.text.toString().trim()
-        if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            pesan("Alamat harus diawali http:// atau https://")
-            return false
+    private fun tampilkanUsaha() {
+        val logo = IdentitasUsaha.logo(prefs)
+        if (logo != null) logoUsaha.setImageBitmap(logo) else logoUsaha.setImageResource(R.mipmap.ic_launcher)
+        namaUsaha.text = when {
+            prefs.identitasBerlaku() -> "Terhubung ke:\n${prefs.usahaNama}"
+            prefs.sudahAdaAlamat() -> "Terhubung ke:\n${prefs.baseUrl}"
+            else -> "Belum terhubung ke ERP"
         }
-        prefs.baseUrl = url
-        return true
+    }
+
+    private fun bagianAlamat() {
+        judul("Alamat ERP")
+        teksKecil("Ketik alamat ERP usaha Anda (mis. erp.namausaha.com), lalu tekan Hubungkan. Nama & logo usaha diambil otomatis dari ERP.")
+
+        inputAlamat = EditText(this).apply {
+            hint = "https://erp.namausaha.com"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            setSingleLine()
+            setText(prefs.baseUrl)
+        }
+        isi.addView(inputAlamat)
+        tombol("Hubungkan") { hubungkan(inputAlamat.text.toString()) }
+
+        // Alamat yang pernah dipakai (mis. demo & go-live) — sekali tekan untuk pindah
+        val riwayat = prefs.riwayatAlamat.filter { it != prefs.baseUrl }
+        if (riwayat.isNotEmpty()) {
+            teksKecil("Pernah dipakai:")
+            riwayat.forEach { url -> tombol(url) { inputAlamat.setText(url); hubungkan(url) } }
+        }
+    }
+
+    private fun hubungkan(alamat: String) {
+        if (alamat.isBlank()) {
+            pesan("Isi alamat ERP dulu.")
+            return
+        }
+        pesan("Menghubungkan…")
+        executor.execute {
+            val hasil = try {
+                "Terhubung ke ${IdentitasUsaha.hubungkan(prefs, alamat)}."
+            } catch (e: Exception) {
+                e.message ?: "Gagal terhubung."
+            }
+            runOnUiThread {
+                inputAlamat.setText(prefs.baseUrl)
+                tampilkanUsaha()
+                pesan(hasil)
+            }
+        }
+    }
+
+    /** Pengaturan tidak bisa ditutup sebelum alamat ERP diisi. */
+    private fun bolehTutup(): Boolean {
+        if (prefs.sudahAdaAlamat()) return true
+        pesan("Isi alamat ERP lalu tekan Hubungkan dulu.")
+        return false
     }
 
     private fun bagianStruk() {
@@ -151,7 +188,7 @@ class SettingsActivity : AppCompatActivity() {
         spinnerStruk = Spinner(this)
         isi.addView(spinnerStruk)
         baris(
-            tombolKecil("Tes Cetak Struk") { kirimTes(prefs.strukMac, "struk") { TesCetak.struk() } },
+            tombolKecil("Tes Cetak Struk") { kirimTes(prefs.strukMac, "struk") { TesCetak.struk(prefs.namaTampil()) } },
             tombolKecil("Tes Buka Laci") { kirimTes(prefs.strukMac, "struk (laci)") { PrinterBridge.BUKA_LACI } },
         )
     }
@@ -175,8 +212,8 @@ class SettingsActivity : AppCompatActivity() {
 
         tombol("Tes Cetak Label (40×30 mm)") {
             kirimTes(prefs.labelMac, "label") {
-                if (prefs.labelProtokol == AppPrefs.PROTOKOL_ESCPOS) TesCetak.labelEscpos()
-                else TesCetak.labelTspl().toByteArray(Charsets.US_ASCII)
+                if (prefs.labelProtokol == AppPrefs.PROTOKOL_ESCPOS) TesCetak.labelEscpos(prefs.namaTampil())
+                else TesCetak.labelTspl(prefs.namaTampil()).toByteArray(Charsets.US_ASCII)
             }
         }
     }

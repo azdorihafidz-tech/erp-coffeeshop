@@ -13,8 +13,11 @@ class PengaturanUmum extends Model
 
     protected $fillable = [
         'nama_perusahaan',
+        'nama_singkat',
+        'tagline',
         'logo_path',
         'alamat_perusahaan',
+        'telepon',
     ];
 
     /** Singleton getter — selalu return instance baris pertama/satu-satunya */

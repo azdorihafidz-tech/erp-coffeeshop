@@ -397,7 +397,7 @@ MARKDOWN,
             'konten' => <<<'MARKDOWN'
 ## Tentang
 
-Daftar petani/kebun pemasok **buah kopi cherry** untuk roastery Kopi Drip Sidikalang (Fase Roastery V2 — processing sendiri dari buah petani, lihat `FASE_ROASTERY_V2_DESIGN.md`). Data ini jadi dasar pencatatan pembelian buah dan pelacakan asal biji (petani → kebun → metode olah) sampai ke produk jadi.
+Daftar petani/kebun pemasok **buah kopi cherry** untuk roastery {nama_usaha} (Fase Roastery V2 — processing sendiri dari buah petani, lihat `FASE_ROASTERY_V2_DESIGN.md`). Data ini jadi dasar pencatatan pembelian buah dan pelacakan asal biji (petani → kebun → metode olah) sampai ke produk jadi.
 
 ## Cara Menambah
 
@@ -2662,11 +2662,11 @@ MARKDOWN
             'konten' => <<<'MARKDOWN'
 ## Mulai dari Sini Kalau Baru Pertama Pakai Akuntansi ERP
 
-Sistem ERP Kopi Drip sekarang punya fondasi akuntansi profesional berstandar **SAK ETAP** (Standar Akuntansi Keuangan Entitas Tanpa Akuntabilitas Publik — standar akuntansi resmi untuk UMKM di Indonesia). Kalau ini pertama kalinya Anda dengar istilah "Chart of Accounts" atau "kode akun", halaman ini adalah titik awal yang tepat.
+Sistem ERP {nama_singkat} sekarang punya fondasi akuntansi profesional berstandar **SAK ETAP** (Standar Akuntansi Keuangan Entitas Tanpa Akuntabilitas Publik — standar akuntansi resmi untuk UMKM di Indonesia). Kalau ini pertama kalinya Anda dengar istilah "Chart of Accounts" atau "kode akun", halaman ini adalah titik awal yang tepat.
 
 ## Urutan Baca yang Disarankan
 
-1. **[Apa itu Chart of Accounts?](/panduan/chart-of-accounts-overview)** — konsep dasar, kenapa penting, manfaatnya untuk Kopi Drip
+1. **[Apa itu Chart of Accounts?](/panduan/chart-of-accounts-overview)** — konsep dasar, kenapa penting, manfaatnya untuk {nama_singkat}
 2. **[Referensi Lengkap Kode Akun](/panduan/chart-of-accounts-referensi)** — tabel semua 59 kode akun yang tersedia
 3. **[Cheat Sheet: Skenario Sehari-hari](/panduan/chart-of-accounts-cheat-sheet)** — "kalau kejadiannya begini, kodenya apa?"
 4. **[Alur Kerja Harian](/panduan/chart-of-accounts-workflow)** — bagaimana kasir, Owner, dan proses audit pajak saling terhubung
@@ -2697,15 +2697,15 @@ Contoh sederhana:
 - Bayar gaji karyawan → arsip nomor **6-1101** (Beban Gaji)
 - Beli mesin roasting baru → arsip nomor **1-2101** (Mesin Produksi, ini ASET bukan beban!)
 
-## Manfaat untuk Kopi Drip
+## Manfaat untuk {nama_singkat}
 
 1. **Laporan Neraca otomatis** — begitu semua transaksi punya kode akun, sistem bisa hitung otomatis berapa total Aset, Kewajiban, dan Modal usaha tanpa rekap manual
 2. **Laporan Laba Rugi formal** — siap dipakai untuk keperluan audit pajak atau pengajuan pinjaman bank, bukan cuma rekap sederhana
-3. **Standar SAK ETAP** — standar resmi untuk UMKM di Indonesia, jadi laporan keuangan Kopi Drip "berbicara bahasa yang sama" dengan akuntan, bank, atau kantor pajak
+3. **Standar SAK ETAP** — standar resmi untuk UMKM di Indonesia, jadi laporan keuangan {nama_singkat} "berbicara bahasa yang sama" dengan akuntan, bank, atau kantor pajak
 
 ## Kenapa 59 Kode Akun, Bukan Cuma 10?
 
-Kategori transaksi yang sudah ada (Gaji, Sewa, dll) itu untuk kebutuhan operasional harian — simpel dan cukup untuk kasir. Tapi laporan keuangan formal butuh detail lebih (misalnya beda antara "Kas Tunai" dan "Kas Bank", atau antara "Aset Tetap" dan "Akumulasi Depresiasi"-nya). 59 kode akun ini mengikuti struktur standar SAK ETAP yang sudah disesuaikan khusus untuk bisnis coffee shop dan roastery seperti Kopi Drip.
+Kategori transaksi yang sudah ada (Gaji, Sewa, dll) itu untuk kebutuhan operasional harian — simpel dan cukup untuk kasir. Tapi laporan keuangan formal butuh detail lebih (misalnya beda antara "Kas Tunai" dan "Kas Bank", atau antara "Aset Tetap" dan "Akumulasi Depresiasi"-nya). 59 kode akun ini mengikuti struktur standar SAK ETAP yang sudah disesuaikan khusus untuk bisnis coffee shop dan roastery seperti {nama_singkat}.
 
 ## FAQ
 
@@ -2769,7 +2769,7 @@ MARKDOWN
             'konten' => <<<'MARKDOWN'
 ## Cheat Sheet Cepat
 
-Tabel di bawah menjawab pertanyaan "kalau kejadiannya begini, kodenya apa?" untuk skenario yang paling sering terjadi di operasional Kopi Drip. Cheat sheet interaktif dengan search juga tersedia langsung di form **Tambah/Edit Transaksi Keuangan** — klik tombol **"?"** kecil di sebelah label Kategori.
+Tabel di bawah menjawab pertanyaan "kalau kejadiannya begini, kodenya apa?" untuk skenario yang paling sering terjadi di operasional {nama_singkat}. Cheat sheet interaktif dengan search juga tersedia langsung di form **Tambah/Edit Transaksi Keuangan** — klik tombol **"?"** kecil di sebelah label Kategori.
 
 | Skenario | Kategori Simple (yang dipilih kasir) | Kode Akun COA |
 |---|---|---|
@@ -2905,7 +2905,7 @@ MARKDOWN
             'judul'  => 'Laporan Neraca (Balance Sheet)',
             'konten' => <<<'MARKDOWN'
 ## Tujuan
-Melihat posisi keuangan Kopi Drip pada satu titik waktu tertentu — berapa total **Aset** (harta), **Kewajiban** (hutang), dan **Modal** (kekayaan bersih) usaha. Berstandar **SAK ETAP**, siap dipakai untuk keperluan audit pajak atau pengajuan pinjaman bank.
+Melihat posisi keuangan {nama_singkat} pada satu titik waktu tertentu — berapa total **Aset** (harta), **Kewajiban** (hutang), dan **Modal** (kekayaan bersih) usaha. Berstandar **SAK ETAP**, siap dipakai untuk keperluan audit pajak atau pengajuan pinjaman bank.
 
 ## Cara Baca
 
@@ -3425,7 +3425,7 @@ MARKDOWN
             'konten' => <<<'MARKDOWN'
 ## Tentang
 
-Program Loyalty membantu Kopi Drip Sidikalang menghargai pelanggan setia. Ada **2 tipe program**, dipilih saat **Tambah Program** (field di form menyesuaikan otomatis):
+Program Loyalty membantu {nama_usaha} menghargai pelanggan setia. Ada **2 tipe program**, dipilih saat **Tambah Program** (field di form menyesuaikan otomatis):
 
 - **Auto-Track** — sistem menghitung sendiri progress tiap pelanggan dari transaksi POS (total belanja Rupiah atau jumlah kunjungan), lalu mencatat saat target tercapai. Contoh: *"Belanja kumulatif Rp500.000 → gratis 1 Kopi Susu"*.
 - **Event-Based** — pelanggan mengklaim manual dengan bukti, lalu Owner/Admin Pusat menyetujui. Contoh: *"Posting di Instagram + tag @kopidrip → voucher Rp15.000"* (1x per pelanggan).
@@ -3438,7 +3438,7 @@ Program Loyalty membantu Kopi Drip Sidikalang menghargai pelanggan setia. Ada **
 
 1. Buka **Penjualan → Program Loyalty → Tambah Program**
 2. Pilih **Tipe Program: Auto-Track** dan isi:
-   - **Nama Program** (mis. "Kopi Drip Rewards 2026")
+   - **Nama Program** (mis. "{nama_singkat} Rewards 2026")
    - **Basis Perhitungan**: *Total Belanja (Rp)* atau *Jumlah Transaksi* — menentukan satuan Target
    - **Tipe Order Dihitung**: pilih **Penjualan** (opsi "Jasa Giling" dan "Berat Gilingan" adalah sisa sistem lama, jangan dipakai)
    - **Target** (mis. 500000 untuk Rp500.000, atau 10 untuk 10 kunjungan) dan **Hadiah** (mis. "Gratis 1 Kopi Susu")
@@ -3473,11 +3473,11 @@ Program Loyalty membantu Kopi Drip Sidikalang menghargai pelanggan setia. Ada **
 - Program bisa dinonaktifkan kapan saja tanpa menghapus riwayat pencapaian/klaim
 - Hak akses: lihat program `loyalty.view`; Tandai Hadiah `loyalty.manage`; Buat Klaim `loyalty.klaim.buat` (Kasir); Setujui/Tolak/Diberikan hanya Owner + Admin Pusat
 
-## Ide Program untuk Kopi Drip
+## Ide Program untuk {nama_singkat}
 
 - **"Belanja 10x gratis 1"**: Auto-Track, basis *Jumlah Transaksi*, target 10, hadiah 1 minuman favorit
 - **Pelanggan Sultan**: Auto-Track *Total Belanja* target Rp1.000.000, hadiah 1 pack Roasted Bean 250 g
-- **Konten Sosmed**: Event-Based, voucher Rp15.000 untuk posting + tag akun Kopi Drip
+- **Konten Sosmed**: Event-Based, voucher Rp15.000 untuk posting + tag akun {nama_singkat}
 - Program berjangka (mis. Ramadan / anniversary outlet): isi Periode Mulai–Akhir
 
 ## Troubleshooting
@@ -3865,36 +3865,47 @@ MARKDOWN
     private function pengaturanUmumUpdate(): void
     {
         Panduan::updateOrCreate(['slug' => 'pengaturan-umum'], [
-            'judul'  => 'Pengaturan Umum (Branding)',
+            'judul'  => 'Pengaturan Umum (Identitas Usaha)',
             'konten' => <<<'MARKDOWN'
 ## Tujuan
-Mengatur identitas brand aplikasi — nama perusahaan, tagline, dan logo — yang tampil di sidebar, halaman login, struk, dan ikon aplikasi (PWA) saat di-install ke HP/tablet.
+Mengatur identitas usaha — nama, nama singkat, tagline, alamat, telepon, dan logo. Semua tampilan program mengambil identitas dari sini, jadi program yang sama bisa dipakai usaha lain tanpa mengubah kode (cukup subdomain + database baru, lalu isi halaman ini).
 
 ## Langkah-langkah
 
-1. Buka menu **Pengaturan → Umum** (Owner only)
+1. Buka menu **Pengaturan → Umum**
 2. Isi/ubah:
-   - **Nama Perusahaan** — tampil di sidebar, halaman login, header struk
-   - **Tagline** — tampil di bawah nama perusahaan (contoh: "Coffee & Roastery")
-   - **Logo** — upload file gambar (disarankan format persegi, PNG dengan background transparan untuk hasil terbaik)
-3. Klik **Simpan**
-4. Perubahan nama/tagline langsung tampil di seluruh halaman setelah refresh
+   - **Nama Usaha** — nama lengkap (login, laporan PDF, menu QR pelanggan, label cup, TV Antrian)
+   - **Nama Singkat** — untuk tempat sempit: sidebar, judul tab, header struk, ikon aplikasi. Kosong = pakai Nama Usaha
+   - **Tagline** — kalimat di bawah nama (sidebar, PDF, footer struk bawaan). Boleh kosong
+   - **Alamat** dan **No. Telepon** — tampil di header laporan PDF
+   - **Logo** — upload PNG/JPG/WebP maks 2 MB. Paling bagus PNG latar transparan berbentuk persegi/bulat
+3. Klik **Simpan Pengaturan** — perubahan langsung berlaku di semua halaman
 
-## Catatan Tentang Logo & PWA
+## Ikon Aplikasi & Favicon
 
-Ada 2 tempat logo dipakai:
-- **Logo yang diupload di sini** — tampil di sidebar, halaman login, dan TV Antrian
-- **Ikon Aplikasi (PWA)** — logo yang muncul saat aplikasi di-install ke HP/tablet sebagai ikon, dan sebagai favicon browser. Ikon PWA **disiapkan terpisah oleh developer** (8 ukuran file), TIDAK otomatis ikut berubah kalau kamu ganti logo di sini — kalau butuh update ikon PWA juga, sampaikan ke developer/tim teknis
+Setelah logo di-upload, **favicon browser dan ikon aplikasi (PWA, 8 ukuran) dibuat otomatis** dari logo — tidak perlu bantuan teknis. Pratinjau ikon tampil di sebelah logo. Centang **Hapus logo ini** untuk kembali ke logo bawaan program.
+
+## Dipakai di Mana Saja
+
+| Tempat | Yang tampil |
+|---|---|
+| Login, sidebar, judul tab | Logo, nama singkat, tagline |
+| Struk & label cup | Nama singkat / nama usaha (footer struk per cabang di **Cabang → Edit**) |
+| Laporan PDF & slip gaji | Logo, nama usaha, tagline, telepon |
+| Menu QR pelanggan, TV Antrian | Logo & nama usaha |
+| Aplikasi kasir Android | Nama & logo (diambil saat aplikasi terhubung) |
+| Teks panduan | Nama usaha otomatis mengikuti |
 
 ## Catatan Penting
 
-- Perubahan di sini bersifat GLOBAL — berlaku untuk SEMUA outlet, bukan per-cabang (footer struk per-cabang diatur terpisah di menu **Cabang → Edit Cabang**)
-- Kalau rebranding total (ganti nama bisnis), pastikan juga cek dokumen/kontrak eksternal yang mencantumkan nama lama — sistem ini cuma mengubah tampilan aplikasi
+- Berlaku GLOBAL untuk semua cabang. Footer struk per cabang diatur di **Cabang → Edit Cabang**
+- Logo disimpan di folder khusus server yang tidak tersentuh update program — update tidak akan menimpa logo Anda
+- Ikon aplikasi yang **sudah terpasang** di HP/tablet bisa tetap ikon lama sampai aplikasi dihapus dari layar utama lalu dipasang lagi (keterbatasan HP, bukan program)
 
 ## Troubleshooting
 
-- **Logo tidak berubah setelah upload?** Coba hard refresh browser (Ctrl+Shift+R) — logo lama mungkin masih ter-cache
-- **Mau ganti ikon aplikasi PWA juga?** Ini butuh bantuan teknis (generate 8 ukuran ikon dari file logo baru), tidak bisa dilakukan sendiri lewat menu ini
+- **Logo tidak berubah setelah upload?** Hard refresh browser (Ctrl+Shift+R)
+- **Logo gagal diproses?** Simpan ulang gambar sebagai PNG/JPG biasa (bukan SVG), ukuran di bawah 2 MB
 MARKDOWN
             ,
             'modul'  => 'lainnya',
@@ -3914,7 +3925,7 @@ MARKDOWN
             'konten' => <<<'MARKDOWN'
 ## Tentang Fitur
 
-Halaman ini digunakan untuk mengelola daftar meja di setiap outlet Kopi Drip Sidikalang. Setiap meja punya QR code unik yang bisa dicetak dan ditempel di meja fisik, sehingga pelanggan bisa memesan lewat scan QR (fitur QR Table Ordering).
+Halaman ini digunakan untuk mengelola daftar meja di setiap outlet {nama_usaha}. Setiap meja punya QR code unik yang bisa dicetak dan ditempel di meja fisik, sehingga pelanggan bisa memesan lewat scan QR (fitur QR Table Ordering).
 
 ## Cara Menambah Meja Baru
 
@@ -4037,7 +4048,7 @@ MARKDOWN
             ['cabang', 'Manajemen Cabang & Gudang', 'master', 10, <<<'MARKDOWN'
 ## Tentang
 
-Daftar semua lokasi Kopi Drip Sidikalang di sistem: **1 Gudang Pusat (GP001, sekaligus roastery)** dan **5 outlet (OUT001–OUT005)**. Data cabang dipakai hampir di semua modul — stok, kas, POS, absensi, laporan.
+Daftar semua lokasi {nama_usaha} di sistem: **1 Gudang Pusat (GP001, sekaligus roastery)** dan **5 outlet (OUT001–OUT005)**. Data cabang dipakai hampir di semua modul — stok, kas, POS, absensi, laporan.
 
 ## Cara Menambah / Mengedit
 
@@ -4058,7 +4069,7 @@ MARKDOWN],
             ['user', 'Manajemen User', 'master', 11, <<<'MARKDOWN'
 ## Tentang
 
-Mengelola akun yang bisa login ke ERP Kopi Drip. Setiap user punya **role** (menentukan menu & hak akses) dan **cabang** yang boleh diakses.
+Mengelola akun yang bisa login ke ERP {nama_singkat}. Setiap user punya **role** (menentukan menu & hak akses) dan **cabang** yang boleh diakses.
 
 ## Role yang Tersedia
 
@@ -4098,7 +4109,7 @@ Halaman **khusus Owner** untuk menentukan permission apa yang dimiliki tiap role
 2. Pilih role (mis. Kasir), lalu centang/hilangkan permission per modul (Penjualan, Stok, Keuangan, HR, Roastery, dll)
 3. Simpan — perubahan berlaku ke semua user dengan role itu pada login berikutnya (cache permission maksimal 1 jam)
 
-## Contoh Kasus Kopi Drip
+## Contoh Kasus {nama_singkat}
 
 - Ingin **Manajer Cabang** boleh melihat Laporan Laba Rugi → centang `laporan.laba_rugi.view`
 - Ingin **Kasir** tidak bisa membatalkan bill tersimpan → hilangkan `order.bill_tersimpan.batalkan`
@@ -4203,7 +4214,7 @@ Pengaturan dasar perhitungan gaji, saat ini **Hari Kerja Per Minggu** (mis. 6 ha
 ## Cara Pakai
 
 1. **Pengaturan → Pengaturan Penggajian**
-2. Ubah jumlah hari kerja per minggu sesuai jadwal Kopi Drip, lalu simpan
+2. Ubah jumlah hari kerja per minggu sesuai jadwal {nama_singkat}, lalu simpan
 3. Berlaku untuk perhitungan gaji **periode berikutnya**
 
 ## Peringatan

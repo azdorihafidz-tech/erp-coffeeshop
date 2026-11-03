@@ -25,11 +25,11 @@
 </head>
 <body>
 
-    @if(file_exists(public_path('images/logo.png')))
-    <img src="{{ public_path('images/logo.png') }}" class="logo">
+    @if($brand->logoFile())
+    <img src="{{ $brand->logoFile() }}" class="logo">
     @endif
 
-    <div class="brand-name">KOPI DRIP</div>
+    <div class="brand-name">{{ mb_strtoupper($brand->nama()) }}</div>
     <div class="outlet-name">{{ $meja->cabang->nama_cabang }}</div>
 
     <div class="qr-box">

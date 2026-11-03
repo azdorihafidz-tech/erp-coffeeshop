@@ -65,6 +65,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Sprint Closing Periode — daftar periode terkunci dimuat sekali per request.
         $this->app->singleton(\App\Services\ClosingLockService::class);
+
+        // Sprint Identitas Usaha — nama & logo usaha dari Pengaturan Umum.
+        $this->app->singleton(\App\Support\Branding::class);
     }
 
     /**
@@ -118,6 +121,9 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('rupiah', function ($expression) {
             return "<?php echo 'Rp ' . number_format((int) round((float) ($expression ?? 0)), 0, ',', '.'); ?>";
         });
+
+        // $brand di semua view (data dimuat saat pertama dipakai, bukan di sini)
+        \Illuminate\Support\Facades\View::share('brand', $this->app->make(\App\Support\Branding::class));
 
         // Owner bypass semua gate check
         Gate::before(function (User $user, string $ability) {

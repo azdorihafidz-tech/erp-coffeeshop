@@ -5,11 +5,11 @@
 @section('content')
 
 <div class="kd-header">
-    @if(file_exists(public_path('images/logo.png')))
-    <img src="{{ asset('images/logo.png') }}" alt="Kopi Drip">
+    @if($brand->logoFile())
+    <img src="{{ $brand->logoUrl() }}" alt="{{ $brand->namaSingkat() }}">
     @endif
     <div class="kd-title">
-        <div class="brand">Kopi Drip Sidikalang</div>
+        <div class="brand">{{ $brand->nama() }}</div>
         <div class="outlet">{{ $queue->meja->cabang->nama_cabang }}</div>
     </div>
     <div class="kd-meja-badge">MEJA {{ $queue->meja->nomor_meja }}</div>

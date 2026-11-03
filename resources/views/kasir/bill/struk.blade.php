@@ -21,7 +21,7 @@
 
 {{-- ===== HALAMAN 1 — CUSTOMER COPY ===== --}}
 <div class="page-break">
-    <div class="center header-store">KOPI DRIP</div>
+    <div class="center header-store">{{ mb_strtoupper($brand->namaSingkat()) }}</div>
     <div class="center">{{ $bill->meja->cabang->nama_cabang }}</div>
     <div class="line"></div>
 
@@ -50,7 +50,7 @@
 
 {{-- ===== HALAMAN 2 — KITCHEN / BARISTA COPY ===== --}}
 <div>
-    <div class="center bold" style="font-size:16px">KOPI DRIP DAPUR</div>
+    <div class="center bold" style="font-size:16px">{{ mb_strtoupper($brand->namaSingkat()) }} DAPUR</div>
     <div class="line"></div>
 
     <div class="row bold" style="font-size:14px"><span>{{ $bill->meja->nama_meja }}</span><span>#{{ $bill->nomor_bill }}</span></div>

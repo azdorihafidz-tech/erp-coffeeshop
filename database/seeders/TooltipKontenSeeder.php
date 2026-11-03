@@ -107,9 +107,9 @@ class TooltipKontenSeeder extends Seeder
 
             // ===== Roastery V2 Minggu 6-7 (2026-09-30): POS Roastery Multi-Kanal =====
             ['key' => 'pos.customer_type', 'title' => 'Jenis Pembeli', 'modul' => 'penjualan', 'urutan' => 20,
-             'content' => 'Retail: pembeli datang langsung (harga normal). Wholesale: pembeli B2B seperti cafe lain/reseller (dicatat terpisah untuk laporan, harga masih sama — diskon manual kalau perlu). Internal: dikirim ke salah satu outlet Kopi Drip — transaksi ini DICATAT DUA KALI (pendapatan di Roastery + jadi biaya/stok masuk di outlet tujuan), sesuai keputusan Owner.'],
+             'content' => 'Retail: pembeli datang langsung (harga normal). Wholesale: pembeli B2B seperti cafe lain/reseller (dicatat terpisah untuk laporan, harga masih sama — diskon manual kalau perlu). Internal: dikirim ke salah satu outlet {nama_singkat} — transaksi ini DICATAT DUA KALI (pendapatan di Roastery + jadi biaya/stok masuk di outlet tujuan), sesuai keputusan Owner.'],
             ['key' => 'pos.outlet_tujuan', 'title' => 'Outlet Tujuan', 'modul' => 'penjualan', 'urutan' => 21,
-             'content' => 'Wajib diisi kalau Jenis Pembeli = Internal. Pilih outlet Kopi Drip yang menerima kiriman. Otomatis: stok pack masuk di outlet tujuan (harga beli = harga jual roastery) dan Kas Tunai outlet tujuan berkurang senilai transaksi. Kalau order dibatalkan, semuanya dibalik (dibatalkan ditolak bila stok di outlet sudah terpakai).'],
+             'content' => 'Wajib diisi kalau Jenis Pembeli = Internal. Pilih outlet {nama_singkat} yang menerima kiriman. Otomatis: stok pack masuk di outlet tujuan (harga beli = harga jual roastery) dan Kas Tunai outlet tujuan berkurang senilai transaksi. Kalau order dibatalkan, semuanya dibalik (dibatalkan ditolak bila stok di outlet sudah terpakai).'],
 
             // ===== Audit retroaktif 3.8 (2026-09-24): 6 menu form kompleks =====
             ['key' => 'supplier.kode_supplier', 'title' => 'Kode Supplier', 'modul' => 'pembelian', 'urutan' => 1,
@@ -147,7 +147,7 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'loyalty.nominal_voucher', 'title' => 'Nominal Voucher Default', 'modul' => 'loyalty', 'urutan' => 3,
              'content' => 'Nilai voucher yang terisi otomatis saat klaim disetujui (Event-Based). Bisa diubah per klaim saat approve.'],
             ['key' => 'loyalty.tipe_item', 'title' => 'Tipe Order Dihitung', 'modul' => 'loyalty', 'urutan' => 4,
-             'content' => 'Jenis transaksi yang ikut dihitung. Untuk Kopi Drip pilih Penjualan. Opsi Jasa Giling adalah warisan sistem lama dan tidak dipakai.'],
+             'content' => 'Jenis transaksi yang ikut dihitung. Untuk {nama_singkat} pilih Penjualan. Opsi Jasa Giling adalah warisan sistem lama dan tidak dipakai.'],
             ['key' => 'loyalty.sumber_data', 'title' => 'Basis Perhitungan', 'modul' => 'loyalty', 'urutan' => 5,
              'content' => 'Total Belanja (Rp) = jumlah rupiah transaksi pelanggan. Jumlah Transaksi = banyaknya kunjungan/order. Opsi berat gilingan (kg) adalah warisan lama. Menentukan satuan Target.'],
 
@@ -159,7 +159,7 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'transfer_dana.kas_asal', 'title' => 'Kas Asal', 'modul' => 'keuangan', 'urutan' => 1,
              'content' => 'Kas pengirim dana (mis. Kas Tunai Outlet 1 untuk setoran ke pusat). Saldo berkurang saat transfer dibuat.'],
             ['key' => 'transfer_dana.cabang_tujuan', 'title' => 'Cabang Tujuan', 'modul' => 'keuangan', 'urutan' => 2,
-             'content' => 'Cabang/kantor penerima dana (mis. Kopi Drip Pusat). Penerima harus menyetujui dulu; setelah diterima baru saldo Kas Tujuan bertambah.'],
+             'content' => 'Cabang/kantor penerima dana (mis. {nama_singkat} Pusat). Penerima harus menyetujui dulu; setelah diterima baru saldo Kas Tujuan bertambah.'],
             ['key' => 'transfer_dana.kas_tujuan', 'title' => 'Kas Tujuan', 'modul' => 'keuangan', 'urutan' => 3,
              'content' => 'Kas di cabang tujuan yang akan menerima dana setelah transfer disetujui.'],
             ['key' => 'transfer_dana.keterangan', 'title' => 'Keterangan', 'modul' => 'keuangan', 'urutan' => 4,
@@ -1184,5 +1184,24 @@ class TooltipKontenSeeder extends Seeder
         // 2026-10-30 — pilihan Gratis/Pakai Master di komposisi resep dihapus
         // dari form, tooltip lamanya dinonaktifkan (tidak dihapus).
         Tooltip::whereIn('key', ['resep_bumbu.mode_harga', 'master_produk_jual.mode_harga'])->update(['aktif' => false]);
+
+        // Sprint Identitas Usaha (2026-11-03).
+        $identitas = [
+            ['key' => 'pengaturan_umum.nama_singkat', 'title' => 'Nama Singkat',
+             'content' => 'Versi pendek nama usaha untuk tempat sempit: sidebar, judul tab browser, header struk, ikon aplikasi di HP. Maksimal 30 huruf. Kosongkan kalau ingin memakai Nama Usaha lengkap.'],
+            ['key' => 'pengaturan_umum.tagline', 'title' => 'Tagline',
+             'content' => 'Kalimat singkat di bawah nama usaha (mis. "Coffee Shop & Roastery"). Tampil di sidebar, header laporan PDF, slip gaji, dan footer struk bawaan. Boleh dikosongkan.'],
+            ['key' => 'pengaturan_umum.logo', 'title' => 'Logo Usaha',
+             'content' => 'Tampil di halaman login, sidebar, laporan PDF, menu QR pelanggan, TV Antrian, dan aplikasi kasir. Favicon & ikon aplikasi (PWA) dibuat otomatis dari logo ini. Paling bagus PNG latar transparan berbentuk persegi/bulat.'],
+        ];
+        foreach ($identitas as $i => $d) {
+            Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'pengaturan', 'urutan' => $i + 1, 'aktif' => true]));
+        }
+
+        // Tooltip lama (firstOrCreate di atas tidak menimpa) yang masih menyebut
+        // nama Kopi Drip → penanda, ditampilkan sesuai Pengaturan Umum.
+        Tooltip::where('content', 'like', '%Kopi Drip%')->get()->each(function (Tooltip $t) {
+            $t->update(['content' => str_replace(['Kopi Drip Sidikalang', 'Kopi Drip'], ['{nama_usaha}', '{nama_singkat}'], $t->content)]);
+        });
     }
 }

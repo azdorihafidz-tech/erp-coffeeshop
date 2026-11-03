@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>@yield('title', 'Kopi Drip Sidikalang')</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/logo-icon.png') }}">
+    <title>@yield('title', $brand->nama())</title>
+    <link rel="icon" type="image/png" href="{{ $brand->ikonUrl(96) }}">
 
     <style>
         :root {

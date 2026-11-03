@@ -2,6 +2,7 @@ package com.kopidrip.kasir
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.ActivityNotFoundException
@@ -37,7 +38,7 @@ import androidx.core.content.FileProvider
 import java.io.File
 
 /**
- * Layar utama: menampilkan ERP Kopi Drip (langsung ke POS) di WebView, plus
+ * Layar utama: menampilkan ERP usaha (alamat dari Pengaturan, langsung ke POS) di WebView, plus
  * jembatan printer Bluetooth `window.KopiDripPrinter` (lihat PrinterBridge).
  * Seluruh fitur & tampilan tetap dari website — APK tidak menyimpan logika ERP.
  */
@@ -134,23 +135,37 @@ class MainActivity : AppCompatActivity() {
 
         mintaIzinBluetooth()
 
-        // Pertama kali dibuka: atur alamat ERP & printer dulu
-        if (savedInstanceState == null && !prefs.sudahSetup) {
+        // Pertama kali dibuka / alamat ERP belum diisi: atur alamat & printer dulu
+        if (savedInstanceState == null && (!prefs.sudahSetup || !prefs.sudahAdaAlamat())) {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
             baseUrlTermuat = prefs.baseUrl
-        } else {
+        } else if (prefs.sudahAdaAlamat()) {
             muatAwal()
+        }
+
+        // Nama & logo usaha bisa berubah di ERP — perbarui diam-diam tiap aplikasi dibuka
+        if (savedInstanceState == null) {
+            Thread {
+                if (IdentitasUsaha.perbarui(prefs)) runOnUiThread { tampilkanUsaha() }
+            }.start()
         }
     }
 
     override fun onResume() {
         super.onResume()
-        // Alamat ERP diganti di Pengaturan → muat ulang dari halaman POS
-        if (baseUrlTermuat != null && baseUrlTermuat != prefs.baseUrl) muatAwal()
+        // Alamat ERP baru diisi / diganti di Pengaturan → muat ulang dari halaman POS
+        if (prefs.sudahAdaAlamat() && baseUrlTermuat != prefs.baseUrl) muatAwal()
+        tampilkanUsaha()
+    }
+
+    /** Nama & logo usaha di daftar aplikasi terbuka (recent apps). */
+    @Suppress("DEPRECATION")
+    private fun tampilkanUsaha() {
+        setTaskDescription(ActivityManager.TaskDescription(prefs.namaTampil(), IdentitasUsaha.logo(prefs)))
     }
 
     override fun onPause() {

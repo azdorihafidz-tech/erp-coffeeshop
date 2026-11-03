@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'cabang' => CabangMiddleware::class,
         ]);
+        $middleware->web(append: [\App\Http\Middleware\TerapkanBranding::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Sprint Closing Periode — periode terkunci tampil sebagai pesan biasa,

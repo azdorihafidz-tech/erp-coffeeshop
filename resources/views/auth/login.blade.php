@@ -1,10 +1,10 @@
 <x-guest-layout>
     <div class="text-center mb-4">
         <div class="auth-logo">
-            <img src="{{ asset('images/logo.png') }}" alt="Kopi Drip">
+            <img src="{{ $brand->logoUrl() }}" alt="{{ $brand->namaSingkat() }}">
         </div>
         <h1 class="auth-title">Selamat Datang</h1>
-        <p class="auth-subtitle">Masuk ke ERP Kopi Drip</p>
+        <p class="auth-subtitle">Masuk ke ERP {{ $brand->namaSingkat() }}</p>
     </div>
 
     <!-- Session Status -->
@@ -20,7 +20,7 @@
             <input id="email" type="email" name="email"
                 class="form-control @error('email') is-invalid @enderror"
                 value="{{ old('email') }}" required autofocus autocomplete="username"
-                placeholder="nama@kopidrip.com">
+                placeholder="nama@email.com">
             @error('email')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

@@ -1,22 +1,24 @@
 <?php
 /**
- * Deploy 4.42 Hapus Gratis/Master + Konversi Satuan HPP Resep (2026-10-30)
- * =======================================================================
+ * Deploy 4.44 Identitas Usaha (nama & logo dari Pengaturan Umum) — 2026-11-03
+ * ========================================================================
+ * Sekaligus mencakup 4.42 (modal resep) kalau belum pernah dijalankan.
  * Langkah:
  * 1. git pull di server
- * 2. Buka  /deploy-modal-resep442.php?confirm=YES-MODAL-RESEP&tahap=simulasi
+ * 2. Buka  /deploy-identitas-usaha.php?confirm=YES-IDENTITAS&tahap=simulasi
  *    → hanya MELIHAT rencana, tidak ada yang diubah
  * 3. Backup database lewat cPanel (phpMyAdmin → Export)
  * 4. Buka alamat yang sama dengan &tahap=jalankan
  * 5. HAPUS file ini dari server (lewat GitHub — developer menghapusnya, lalu Pull lagi)
  *
- * Tidak ada migration (tidak ada tabel/kolom baru). Yang dijalankan hanya
- * pembaruan panduan & tooltip + clear cache.
+ * 1 migration: kolom nama_singkat, tagline, telepon di pengaturan_umums
+ * (instalasi lama otomatis diisi "Kopi Drip" / "Coffee Shop & Roastery").
+ * Lalu panduan & tooltip diperbarui + clear cache.
  * Aman: hanya menambah tabel/kolom baru + permission/panduan/tooltip.
  * Data transaksi, stok, kas, dan hak akses role yang sudah diatur TIDAK diubah.
  */
 
-const CONFIRM = 'YES-MODAL-RESEP';
+const CONFIRM = 'YES-IDENTITAS';
 
 header('Content-Type: text/html; charset=utf-8');
 
@@ -47,7 +49,7 @@ $sesudah = $tahap === 'jalankan' ? $svc->jumlahData() : null;
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deploy 4.42 — <?= $e($tahap) ?></title>
+<title>Deploy 4.44 — <?= $e($tahap) ?></title>
 <style>
     body { font-family: system-ui, sans-serif; max-width: 760px; margin: 24px auto; padding: 0 16px; color: #1e293b; }
     h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 24px; }
@@ -59,7 +61,7 @@ $sesudah = $tahap === 'jalankan' ? $svc->jumlahData() : null;
 </style>
 </head>
 <body>
-<h1>Deploy: Modal Resep (Hapus Gratis/Master + Konversi Satuan)</h1>
+<h1>Deploy: Identitas Usaha (Nama &amp; Logo dari Pengaturan Umum)</h1>
 
 <?php if ($tahap === 'simulasi'): ?>
 <div class="box sim"><strong>TAHAP SIMULASI</strong> — belum ada yang diubah. Periksa rencana di bawah, backup database, lalu jalankan.</div>
