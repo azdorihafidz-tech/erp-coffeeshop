@@ -1125,7 +1125,7 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] GitHub Secrets keystore diisi Owner via `gh secret set` (2026-11-03); build release **v1.0.3** sukses & terverifikasi bertanda tangan kunci Kopi Drip (bukan debug). GitHub CLI terpasang & login (`C:/Program Files/GitHub CLI/gh.exe`) → Claude bisa baca hasil build sendiri
 - [ ] Owner: backup folder `D:/kopidrip-kasir-keystore/`
 - [x] Build GitHub #1 & #2 sukses (compile pertama langsung lolos)
-- [ ] A3 pasang di Redmi Pad, pair IWARE C58BT + Blueprint ECO80BT, uji di demo; ubah ukuran label 40×30
+- [ ] A3 pasang di Redmi Pad, pair IWARE C58BT + Blueprint ECO80BT, uji di demo; ubah ukuran label 40×30 — uji v1.0.3: pasang + pair + tes struk/laci/label **berhasil**; buka ERP gagal karena (1) alamat go-live di APK salah (`kopidripsidikalang.com/erp` = 404 — alamat benar **`https://erp.kopidripsidikalang.com`**; `/erp/public` juga jalan), (2) pilihan Demo baru tersimpan kalau tombol Simpan ditekan. Difix di v1.0.4: alamat benar (nilai lama dialihkan otomatis), Go-live/Demo langsung tersimpan saat dipilih
 - [ ] A4 perbaikan hasil uji, lalu pakai di go-live
 
 ---

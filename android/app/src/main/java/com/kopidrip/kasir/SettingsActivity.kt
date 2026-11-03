@@ -43,6 +43,8 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var isi: LinearLayout
     private lateinit var spinnerStruk: Spinner
     private lateinit var spinnerLabel: Spinner
+    private lateinit var inputAlamat: EditText
+    private lateinit var pilihanLain: RadioButton
     private var perangkat: List<BluetoothDevice> = emptyList()
 
     private val izinBluetooth = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
@@ -71,7 +73,7 @@ class SettingsActivity : AppCompatActivity() {
         tombol("Muat Ulang Daftar Printer") { cekIzinLaluMuat() }
 
         judul("Selesai")
-        tombol("Selesai — Buka ERP") { finish() }
+        tombol("Selesai — Buka ERP") { if (simpanAlamatLain()) finish() }
         teksKecil("Pengaturan ini bisa dibuka lagi kapan saja dari menu \"Pengaturan Printer Aplikasi\" di sidebar ERP.")
 
         teksKecil("Versi aplikasi ${BuildConfigInfo.versionName(this)}")
@@ -89,7 +91,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        finish()
+        if (simpanAlamatLain()) finish()
         return true
     }
 
@@ -118,22 +120,29 @@ class SettingsActivity : AppCompatActivity() {
         }
         input.isEnabled = lain.isChecked
 
+        // Go-live / Demo langsung tersimpan begitu dipilih (tidak perlu tekan Simpan)
         grup.setOnCheckedChangeListener { _, id ->
             input.isEnabled = id == lain.id
             when (id) {
-                golive.id -> input.setText(AppPrefs.URL_GOLIVE)
-                demo.id -> input.setText(AppPrefs.URL_DEMO)
+                golive.id -> { input.setText(AppPrefs.URL_GOLIVE); prefs.baseUrl = AppPrefs.URL_GOLIVE; pesan("Alamat Go-live dipakai.") }
+                demo.id -> { input.setText(AppPrefs.URL_DEMO); prefs.baseUrl = AppPrefs.URL_DEMO; pesan("Alamat Demo dipakai.") }
             }
         }
-        tombol("Simpan Alamat") {
-            val url = input.text.toString().trim()
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                pesan("Alamat harus diawali http:// atau https://")
-                return@tombol
-            }
-            prefs.baseUrl = url
-            pesan("Alamat disimpan. Halaman ERP akan dimuat ulang.")
+        inputAlamat = input
+        pilihanLain = lain
+        tombol("Simpan Alamat Lain") { if (simpanAlamatLain()) pesan("Alamat disimpan.") }
+    }
+
+    /** Simpan isian "Alamat lain" kalau pilihan itu aktif. false = isian tidak valid. */
+    private fun simpanAlamatLain(): Boolean {
+        if (!pilihanLain.isChecked) return true
+        val url = inputAlamat.text.toString().trim()
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            pesan("Alamat harus diawali http:// atau https://")
+            return false
         }
+        prefs.baseUrl = url
+        return true
     }
 
     private fun bagianStruk() {

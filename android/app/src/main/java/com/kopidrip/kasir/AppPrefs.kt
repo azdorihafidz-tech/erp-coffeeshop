@@ -12,7 +12,10 @@ class AppPrefs(context: Context) {
     private val sp = context.getSharedPreferences("kopidrip_kasir", Context.MODE_PRIVATE)
 
     companion object {
-        const val URL_GOLIVE = "https://kopidripsidikalang.com/erp"
+        const val URL_GOLIVE = "https://erp.kopidripsidikalang.com"
+
+        /** Alamat go-live di v1.0.3 (salah — 404). Dialihkan otomatis ke URL_GOLIVE. */
+        private const val URL_GOLIVE_LAMA = "https://kopidripsidikalang.com/erp"
         const val URL_DEMO = "https://erpdrip.azwacore.com"
         const val HALAMAN_AWAL = "/penjualan/pos"
 
@@ -22,7 +25,10 @@ class AppPrefs(context: Context) {
 
     /** Alamat ERP tanpa garis miring di akhir. */
     var baseUrl: String
-        get() = (sp.getString("base_url", URL_GOLIVE) ?: URL_GOLIVE).trimEnd('/')
+        get() {
+            val url = (sp.getString("base_url", URL_GOLIVE) ?: URL_GOLIVE).trimEnd('/')
+            return if (url == URL_GOLIVE_LAMA) URL_GOLIVE else url
+        }
         set(v) = sp.edit().putString("base_url", v.trim().trimEnd('/')).apply()
 
     var strukMac: String?
