@@ -1145,7 +1145,8 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] Build GitHub #1 & #2 sukses (compile pertama langsung lolos)
 - [ ] A3 pasang di Redmi Pad, pair IWARE C58BT + Blueprint ECO80BT, uji di demo; ubah ukuran label 40×30 — uji v1.0.3: pasang + pair + tes struk/laci/label **berhasil**; buka ERP gagal karena (1) alamat go-live di APK salah (`kopidripsidikalang.com/erp` = 404 — alamat benar **`https://erp.kopidripsidikalang.com`**; `/erp/public` juga jalan), (2) pilihan Demo baru tersimpan kalau tombol Simpan ditekan. Difix di v1.0.4: alamat benar (nilai lama dialihkan otomatis), Go-live/Demo langsung tersimpan saat dipilih. **v1.0.4 diuji Owner di demo (2026-11-03): BERHASIL**
 - [ ] A4 perbaikan hasil uji, lalu pakai di go-live
-- [x] Label cup TSPL: nama toko (Pengaturan Umum) utuh di stiker 40 mm (2026-11-03) — Owner masih perlu kirim foto hasil cetak untuk dirapikan lebih lanjut
+- [x] Label cup TSPL: nama toko (Pengaturan Umum) utuh di stiker 40 mm (2026-11-03)
+- [ ] Foto Owner (2026-11-03): **Blueprint ECO80BT mencetak perintah TSPL sebagai teks → printer ini ESC/POS, bukan TSPL**. Builder ESC/POS label diperbaiki (lebar baris dari lebar stiker: 40 mm = 25 huruf; tinggi per stiker dihitung presisi lewat `ESC J` = tinggi + celah 2 mm, bukan form feed). Owner: ganti Bahasa Printer Label ke ESC/POS di aplikasi lalu uji & kirim foto
 
 ### 12.16 Identitas Usaha / Multi-Usaha (2026-11-03, lihat 4.44)
 - [x] Tahap 1 ERP: nama/logo/tagline/telepon dari Pengaturan Umum, ikon PWA otomatis, ~45 file diganti, 9 test PASS

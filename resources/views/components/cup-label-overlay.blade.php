@@ -200,20 +200,38 @@
         return new TextEncoder().encode(out);
     }
 
+    // Printer ESC/POS (printer struk/label yang tidak mengerti TSPL, mis. Blueprint
+    // ECO80BT). Lebar baris mengikuti lebar stiker (font A = 12 dot ≈ 1,5 mm),
+    // tinggi tiap stiker dihitung dalam dot lalu sisa dimajukan dengan ESC J
+    // supaya stiker berikutnya mulai di posisi yang sama (tinggi + celah 2 mm).
     function buildEscpos() {
-        var ESC = 0x1B, cols = 32, bytes = [];
+        var ESC = 0x1B, bytes = [];
+        var SP = 24;                                             // jarak baris = tinggi huruf font A
+        var cols = Math.max(16, Math.floor((state.ukuran.lebar - 2) * 8 / 12));
+        var pitch = Math.round((state.ukuran.tinggi + 2) * 8);   // dot per stiker (+ celah 2 mm)
+        var maksBaris = Math.max(4, Math.floor((pitch - 32) / SP));
         var enc = new TextEncoder();
         var push = function (arr) { for (var i = 0; i < arr.length; i++) bytes.push(arr[i]); };
-        var line = function (t) { push(enc.encode(ascii(t) + '\n')); };
+
         state.labels.forEach(function (l) {
-            push([ESC, 0x40, ESC, 0x61, 0x00]);
-            var kanan = '#' + l.nomor + ' ' + l.ke + '/' + l.dari;
-            var head = ascii(l.toko.toUpperCase()).slice(0, cols - kanan.length - 1);
-            line(head + ' '.repeat(Math.max(1, cols - head.length - kanan.length)) + kanan);
-            push([ESC, 0x45, 0x01]); wrap(l.nama, cols).forEach(line); push([ESC, 0x45, 0x00]);
-            bodyLines(l).forEach(function (b) { wrap(b, cols).forEach(line); });
+            var baris = 0;
+            var line = function (t) { if (baris < maksBaris) { push(enc.encode(ascii(t).slice(0, cols) + '\n')); baris++; } };
+
+            push([ESC, 0x40, ESC, 0x61, 0x00, ESC, 0x33, SP]);   // reset, rata kiri, jarak baris
+            line(l.toko.toUpperCase());
+            var kanan = l.ke + '/' + l.dari, kiri = '#' + l.nomor;
+            push([ESC, 0x45, 0x01]);
+            line(kiri + ' '.repeat(Math.max(1, cols - kiri.length - kanan.length)) + kanan);
+            wrap(l.nama, cols).slice(0, 2).forEach(line);
+            push([ESC, 0x45, 0x00]);
+            // Sisakan 1 baris terakhir untuk tipe pesanan + jam
+            var badan = [];
+            bodyLines(l).forEach(function (b) { badan = badan.concat(wrap(b, cols)); });
+            badan.slice(0, Math.max(0, maksBaris - baris - 1)).forEach(line);
             line(l.info);
-            push([0x0C]); // form feed: maju ke stiker berikutnya (mode label)
+
+            var sisa = pitch - baris * SP;                       // maju tepat ke stiker berikutnya
+            while (sisa > 0) { var n = Math.min(255, sisa); push([ESC, 0x4A, n]); sisa -= n; }
         });
         return new Uint8Array(bytes);
     }
