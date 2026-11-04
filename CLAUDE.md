@@ -1179,7 +1179,8 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] `.cpanel.yml` DEPLOYPATH diganti `$PWD` + pengaman (2026-10-19) — repo di-pull ke 2 folder: demo `erpdrip.azwacore.com`, go-live `kopidripsidikalang.com/erp`
 - [x] Deploy 4.39–4.41 di demo & go-live (2026-10-19) via script satu-link, UPDATE BERHASIL di keduanya (demo sekaligus dapat migration Unit Beli 2026-10-02 yang tertinggal); script dihapus dari repo
 - [ ] Go-live: kas masih 0 — buat Kas Tunai/Transfer/QRIS sebelum POS dipakai
-- [ ] Deploy 4.42 + 4.44 di demo & go-live via **`public/deploy-identitas-usaha.php`** (`?confirm=YES-IDENTITAS&tahap=simulasi` → backup → `tahap=jalankan`) — script 442 digabung ke sini; hapus script dari repo setelah dijalankan di keduanya. **Demo SELESAI (2026-11-04)**: program terbaru + import data demo ramping (4.46), simulasi "tidak ada migration baru", 3 order demo terbaca. **Go-live belum.**
+- [x] Deploy 4.42 + 4.44 di demo & go-live via **`public/deploy-identitas-usaha.php`** (`?confirm=YES-IDENTITAS&tahap=simulasi` → backup → `tahap=jalankan`) — script 442 digabung ke sini; hapus script dari repo setelah dijalankan di keduanya. **Demo SELESAI (2026-11-04)**: program terbaru + import data demo ramping (4.46), simulasi "tidak ada migration baru", 3 order demo terbaca. **Go-live SELESAI (2026-11-04)**: simulasi "tidak ada migration baru", hak akses lengkap, logo lama (disk public, `/img/`) tetap tampil. Script dihapus dari repo; file baru hilang dari server setelah Update from Remote berikutnya.
+- [ ] Go-live: upload ulang logo di Pengaturan Umum supaya ikon aplikasi/PWA dibuat dari logo (sekarang ikon bawaan)
 
 ### 12.15 APK Kopi Drip Kasir (2026-11-03, lihat 4.43)
 - [x] A1 kode APK + workflow GitHub + keystore (di luar repo), A2 integrasi ERP (struk/label/laci) + test
