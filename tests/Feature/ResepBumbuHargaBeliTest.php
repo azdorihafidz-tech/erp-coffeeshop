@@ -70,6 +70,26 @@ class ResepBumbuHargaBeliTest extends TestCase
         $this->assertCount(1, $data['bahan']);
     }
 
+    /**
+     * Bug 2026-11-04: di halaman Edit, baris resep lama dimuat sebelum const/let
+     * yang dipakai perhitungannya dibuat → ReferenceError, subtotal kosong dan
+     * hanya 1 baris termuat (menyimpan form menghapus baris sisanya).
+     */
+    public function test_edit_produk_baris_resep_lama_dimuat_setelah_semua_deklarasi(): void
+    {
+        $owner = $this->buatUser('owner');
+        $produk = Item::where('tipe', 'produk_jual')->firstOrFail();
+
+        $html = $this->actingAs($owner)->get(route('master.produk-jual.edit', $produk))->assertOk()->getContent();
+
+        $muat = strrpos($html, 'RESEP_AWAL.forEach(r => tambahBarisResep(r));');
+        $this->assertNotFalse($muat);
+        foreach (['let linkedRowSeq', 'const linkedSubtotalTimeout', 'const BUMBU_PUSAT_DETAIL_URL_BASE', 'let bumbuTerpilih'] as $deklarasi) {
+            $this->assertLessThan($muat, strpos($html, $deklarasi), "$deklarasi harus dibuat sebelum baris resep lama dimuat");
+        }
+        $this->assertSame(1, substr_count($html, 'RESEP_AWAL.forEach('));
+    }
+
     public function test_form_tidak_lagi_menampilkan_pilihan_mode_harga(): void
     {
         $owner = $this->buatUser('owner');

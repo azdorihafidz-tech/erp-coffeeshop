@@ -360,7 +360,7 @@ function tambahBarisResep(data) {
     document.getElementById('bodyResep').appendChild(tr);
     hitungPreviewBaris(tr);
 }
-RESEP_AWAL.forEach(r => tambahBarisResep(r));
+// Baris resep lama (halaman Edit) dimuat di AKHIR skrip — lihat bawah.
 
 function hapusBarisResep(btn) {
     btn.closest('tr').remove();
@@ -372,11 +372,14 @@ function hapusBarisResep(btn) {
 // dgn pemotongan stok POS (ResepBumbuItem::konversiKeSatuanStok) — dulu 9 g
 // dikalikan langsung dgn harga per kg sehingga HPP tampil ratusan kali lipat.
 // 2026-11-03: ikut satuan stok bahan (bahan stok gram + takaran gram = apa adanya).
-const FAKTOR_SATUAN = [
-    { mg: 0.001, g: 1, gr: 1, gram: 1, ons: 100, kg: 1000, kilogram: 1000 },
-    { ml: 1, cc: 1, l: 1000, lt: 1000, ltr: 1000, liter: 1000 },
-];
+// Faktor sengaja di DALAM fungsi: fungsi ini sudah dipanggil saat baris resep
+// lama dimuat (RESEP_AWAL.forEach di atas) — const di luar belum terinisialisasi
+// saat itu (ReferenceError → halaman Edit berhenti, subtotal kosong).
 function konversiKeSatuanStok(qty, satuan, satuanStok) {
+    const FAKTOR_SATUAN = [
+        { mg: 0.001, g: 1, gr: 1, gram: 1, ons: 100, kg: 1000, kilogram: 1000 },
+        { ml: 1, cc: 1, l: 1000, lt: 1000, ltr: 1000, liter: 1000 },
+    ];
     const s = (satuan || '').toLowerCase().trim();
     const st = (satuanStok || '').toLowerCase().trim();
     for (const f of FAKTOR_SATUAN) {
@@ -666,6 +669,12 @@ function regenerateKombinasi() {
     });
 }
 if (document.getElementById('punyaVarian').checked) regenerateKombinasi();
+
+// Bug fix 2026-11-04: dulu dipanggil di tengah skrip, sebelum const/let yang
+// dipakainya (FAKTOR_SATUAN, linkedRowSeq, linkedSubtotalTimeout) dibuat →
+// ReferenceError di halaman Edit: subtotal kosong & baris resep sisanya tidak
+// termuat. Dipanggil terakhir supaya semua deklarasi sudah siap.
+RESEP_AWAL.forEach(r => tambahBarisResep(r));
 
 function previewFoto(input) {
     if (!input.files || !input.files[0]) return;

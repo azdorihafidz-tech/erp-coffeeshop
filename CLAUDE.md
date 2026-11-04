@@ -769,6 +769,8 @@ Owner: di komposisi Produk Jual, bahan bersatuan **gram** subtotalnya tidak tamp
 - Harga beli bahan 0: subtotal tampil "Rp 0" merah + "Harga beli bahan belum diisi" (dulu "-").
 - Test: `ResepBumbuHargaBeliTest` +2 (13 kombinasi konversi, bahan stok gram: kalkulator, total Bumbu Pusat, kebutuhan stok). 3 test Tahap7 lama memakai data tidak konsisten (bahan stok "gram" tapi harga dianggap per kg) → datanya diubah ke kg, maksud test tetap. Regresi **43 kegagalan lama identik, 0 baru**. Tanpa migration.
 
+**Bug turunan (2026-11-04, ditemukan Owner)**: di halaman **Edit** Produk Jual, subtotal kosong. `RESEP_AWAL.forEach` (memuat baris resep lama) dipanggil di tengah skrip, sebelum `const FAKTOR_SATUAN` (perbaikan di atas) dibuat → `ReferenceError`, skrip berhenti. Akibatnya hanya 1 baris resep termuat, dan **menyimpan form akan menghapus baris sisanya**. Halaman Tambah tidak kena karena belum ada baris lama. `let linkedRowSeq`/`const linkedSubtotalTimeout` ternyata punya masalah sama sejak lama (produk dengan baris Bumbu Pusat). Fix: faktor dipindah ke dalam fungsi, dan `RESEP_AWAL.forEach` dipanggil di **akhir** skrip. Diverifikasi di Chrome headless: versi lama 1/5 baris + ReferenceError, versi baru 5/5 baris dengan subtotal benar (gram Rp150, kg Rp1.440, liter Rp2.700, harga 0 merah). DB dev: 0 resep tersimpan sejak 3 Nov (tidak ada data rusak). Test baru: urutan deklarasi vs pemuatan baris resep. Regresi 43 lama identik.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
