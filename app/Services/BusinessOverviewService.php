@@ -159,7 +159,7 @@ class BusinessOverviewService
     private function hitungTransaksiSummary(Carbon $mulai, Carbon $akhir, ?int $cabangId): array
     {
         $query = Order::withoutGlobalScopes()
-            ->where('status', '!=', \App\Enums\StatusOrder::Dibatalkan)
+            ->terhitung()
             ->whereBetween('tanggal_order', [$mulai->toDateString(), $akhir->toDateString()]);
         if ($cabangId) {
             $query->where('cabang_id', $cabangId);
@@ -193,7 +193,7 @@ class BusinessOverviewService
     {
         $adaJasaGiling = DB::table('orders')
             ->where('tipe_order', 'jasa_giling')
-            ->where('status', '!=', 'dibatalkan')
+            ->whereNotIn('orders.status', Order::STATUS_TIDAK_DIHITUNG)
             ->whereBetween('tanggal_order', [$mulai->toDateString(), $akhir->toDateString()])
             ->whereNull('deleted_at')
             ->when($cabangId, fn ($q) => $q->where('cabang_id', $cabangId))
@@ -203,7 +203,7 @@ class BusinessOverviewService
         $query = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.tipe_order', $adaJasaGiling ? 'jasa_giling' : 'penjualan')
-            ->where('orders.status', '!=', 'dibatalkan')
+            ->whereNotIn('orders.status', Order::STATUS_TIDAK_DIHITUNG)
             ->whereBetween('orders.tanggal_order', [$mulai->toDateString(), $akhir->toDateString()])
             ->whereNull('orders.deleted_at')
             ->whereNull('order_items.deleted_at');

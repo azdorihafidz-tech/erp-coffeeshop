@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Enums\StatusOrder;
 use App\Models\ChartOfAccount;
 use App\Models\KategoriTransaksi as KategoriTransaksiModel;
@@ -253,7 +254,7 @@ class LabaRugiFormalService
     {
         $query = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->where('orders.status', '!=', StatusOrder::Dibatalkan->value)
+            ->whereNotIn('orders.status', Order::STATUS_TIDAK_DIHITUNG)
             ->whereBetween('orders.tanggal_order', [$mulai->toDateString(), $akhir->toDateString()])
             ->whereNull('orders.deleted_at')
             ->whereNull('order_items.deleted_at');

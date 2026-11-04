@@ -42,6 +42,37 @@ class Order extends Model
         return 'order/penjualan';
     }
 
+    /**
+     * Status order yang TIDAK dihitung sebagai penjualan di laporan/dashboard:
+     * Pending = Bill Tersimpan belum dibayar (belum memotong stok & kas),
+     * Dibatalkan = stok & kas sudah dikembalikan.
+     */
+    public const STATUS_TIDAK_DIHITUNG = [StatusOrder::Pending->value, StatusOrder::Dibatalkan->value];
+
+    /**
+     * Penjualan yang benar-benar terjadi: belum dihapus, bukan Pending/Dibatalkan.
+     * WAJIB dipakai di query laporan/dashboard — terutama yang memakai
+     * withoutGlobalScopes(), karena itu ikut mematikan filter SoftDeletes.
+     */
+    public function scopeTerhitung($query)
+    {
+        return $query->whereNull('orders.deleted_at')
+            ->whereNotIn('orders.status', self::STATUS_TIDAK_DIHITUNG);
+    }
+
+    /** Versi untuk query builder DB::table() yang join/memakai tabel `orders`. */
+    public static function filterTerhitung($query)
+    {
+        return $query->whereNull('orders.deleted_at')
+            ->whereNotIn('orders.status', self::STATUS_TIDAK_DIHITUNG);
+    }
+
+    /** Order yang boleh dihapus: hanya yang tidak pernah/tidak lagi memotong stok & kas. */
+    public function bolehDihapus(): bool
+    {
+        return in_array($this->status, [StatusOrder::Dibatalkan, StatusOrder::Pending], true);
+    }
+
     protected $fillable = [
         'cabang_id',
         'nomor_order',

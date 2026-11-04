@@ -817,6 +817,18 @@ Hasil uji:
 
 **Cek DB lokal (salinan go-live, 2026-11-04)**: 1 cabang (CAP1), 10 user, 168 barang (67 produk jual, 44 dengan resep), 0 order, 0 migration tertunda. **Kas hanya 1 (Tunai "kas kopi drip")** — pembayaran Transfer/QRIS di POS butuh kas dengan `default_untuk` transfer/qris.
 
+### 4.48 🟢 Laporan Hanya Menghitung Penjualan Sah + Batalkan Dulu, Baru Hapus (2026-11-04)
+
+Owner minta poin yang sudah dikerjakan di sesi lain diterapkan juga di sini. Hasil cek: belum ada di erp-coffeeshop, dan masalahnya lebih luas dari 3 laporan.
+
+- **Aturan bersama di `Order`**: `scopeTerhitung()` (Eloquent) dan `Order::STATUS_TIDAK_DIHITUNG` (`pending`, `dibatalkan`) untuk `DB::table()`. Order dihitung hanya kalau belum dihapus dan bukan Pending (Bill Tersimpan belum dibayar) atau Dibatalkan — sama dengan `ClosingService` (4.39, sudah benar sejak awal). **ATURAN: query laporan/dashboard WAJIB memakai `->terhitung()`**, terutama yang memakai `withoutGlobalScopes()` — itu ikut mematikan filter SoftDeletes, sehingga order terhapus terhitung.
+- **Diterapkan ke 18 file**: Laba Rugi (produksi & formal), Konsumsi Bahan, Setoran Harian (service + rekap export), Setoran Kasir (hitung otomatis), Dashboard Pusat & Cabang (+ "Order Terbaru" tidak lagi menampilkan order terhapus), Laporan Penjualan (+ produk terlaris, ranking kasir, grafik), BEP (laporan, auto-fill, kalkulasi, otomatis), Analytics, Jam Ramai, Ringkasan Bisnis, Temuan, Loyalty, Profil. Sebelumnya hanya membuang Dibatalkan; **order terhapus & Bill Tersimpan ikut terhitung** di yang memakai `withoutGlobalScopes()`/`DB::table()`.
+- **Hapus order** (`PenjualanController::destroy`): ditolak kalau status bukan Dibatalkan/Pending (`Order::bolehDihapus()`), **berlaku juga untuk Owner** (keputusan Owner). Alasannya: `deleteOrderCascade` hanya soft-delete order + transaksi keuangan — **stok & `kas.saldo_sekarang` tidak dikembalikan**. Pesan: "Batalkan dulu…".
+- **Riwayat Order**: tombol **Batalkan** (desktop & HP) untuk order Selesai, memakai route `penjualan.batalkan` yang sama dengan Detail Order (modal alasan; stok & kas kembali). Aturan lama tetap: selain Owner hanya order hari ini (tombol abu-abu + keterangan). Tombol **Hapus** hanya untuk Dibatalkan & Bill Tersimpan.
+- **Catatan hak akses (tidak diubah)**: bawaan `order.batalkan` = Owner, Admin Pusat, Manajer Cabang; `order.delete` = Owner, Admin Pusat. **Kasir tidak bisa membatalkan** kecuali diberi hak lewat Role & Hak Akses.
+- **Temuan, tidak diubah**: menghapus **Pelanggan** (`deletePelangganCascade`) ikut soft-delete semua order pelanggan itu tanpa mengembalikan stok/kas — sekarang order itu hilang dari semua laporan. Perlu keputusan Owner (mis. tolak hapus pelanggan yang punya order terbayar).
+- Panduan `riwayat-order` diperbarui. Test `OrderHapusBatalkanTest` 6/6 PASS (laporan abaikan order terhapus/pending/batal, Laporan Penjualan HTTP, hapus terbayar ditolak termasuk Owner, hapus batal/pending boleh, batalkan → stok & kas kembali → baru bisa hapus, tombol Riwayat sesuai status). Regresi **43 kegagalan lama identik, 0 baru**. Smoke HTTP owner 23 halaman laporan/dashboard/riwayat 200, log bersih. Tanpa migration — deploy cukup tarik program + Update Database (reseed panduan).
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1216,6 +1228,12 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [ ] Owner: deploy (lihat 12.14), upload logo di Pengaturan Umum demo & go-live, pasang APK baru di tablet → di Pengaturan ketik `erpdrip.azwacore.com` lalu Hubungkan
 - [ ] **Tahap 2 (DITUNDA atas keputusan Owner)**: Setup Awal untuk usaha baru (akun Owner sendiri, bukan `admin@kopidrip.com`), pilihan data awal kosong vs contoh, modul bisa dimatikan. Sampai Tahap 2 dikerjakan, instalasi baru tetap memakai seeder Kopi Drip (nama, menu, cabang) — ganti identitas lewat Pengaturan Umum
 - [ ] Opsional nanti: warna tema per usaha (keputusan Owner: nama & logo dulu)
+
+### 12.17 Laporan & Hapus Order (2026-11-04, lihat 4.48)
+- [x] Laporan/dashboard hanya hitung order sah, Hapus hanya untuk Dibatalkan/Bill Tersimpan, tombol Batalkan di Riwayat, 6 test PASS
+- [ ] Owner: deploy (Update from Remote → Deploy → menu Update Database untuk panduan) di demo & go-live
+- [ ] Keputusan Owner: kasir boleh Batalkan order hari ini? (sekarang tidak, bawaan hak akses)
+- [ ] Keputusan Owner: hapus Pelanggan yang punya order terbayar (sekarang ikut menyembunyikan order tanpa mengembalikan stok/kas)
 
 ---
 

@@ -24,7 +24,7 @@ class ProfileController extends Controller
         // Statistik order jika user adalah kasir
         if (class_exists(\App\Models\Order::class)) {
             $totalOrder = \App\Models\Order::withoutGlobalScopes()
-                ->where('kasir_id', $user->id)->count();
+                ->where('kasir_id', $user->id)->terhitung()->count();
         }
 
         return view('profile.edit', compact('user', 'totalOrder'));

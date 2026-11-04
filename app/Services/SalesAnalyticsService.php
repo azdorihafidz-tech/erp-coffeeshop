@@ -188,7 +188,7 @@ class SalesAnalyticsService
     private function baseQuery(?int $cabangId, ?Carbon $start, ?Carbon $end): Builder
     {
         $q = Order::withoutGlobalScopes()
-            ->where('status', '!=', StatusOrder::Dibatalkan);
+            ->terhitung();
         if ($cabangId) {
             $q->where('cabang_id', $cabangId);
         }

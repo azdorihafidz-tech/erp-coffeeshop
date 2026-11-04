@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Enums\StatusOrder;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -97,7 +98,7 @@ class LaporanKonsumsiBahanService
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->leftJoin('items', 'items.id', '=', 'order_items.item_id')
             ->whereBetween('orders.tanggal_order', [$start->toDateString(), $end->toDateString()])
-            ->where('orders.status', '!=', StatusOrder::Dibatalkan->value);
+            ->whereNull('orders.deleted_at')->whereNotIn('orders.status', Order::STATUS_TIDAK_DIHITUNG);
 
         if ($cabangId) {
             $query->where('orders.cabang_id', $cabangId);
@@ -179,7 +180,7 @@ class LaporanKonsumsiBahanService
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->join('items', 'items.id', '=', 'order_items.item_id')
             ->whereBetween('orders.tanggal_order', [$start->toDateString(), $end->toDateString()])
-            ->where('orders.status', '!=', StatusOrder::Dibatalkan->value)
+            ->whereNull('orders.deleted_at')->whereNotIn('orders.status', Order::STATUS_TIDAK_DIHITUNG)
             ->whereNotNull('order_items.item_id');
 
         if ($cabangId) {

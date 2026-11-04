@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Enums\TipeTransaksiKeuangan;
 use App\Models\Asset;
 use App\Models\AssetDepreciation;
@@ -316,7 +317,7 @@ class BepController extends Controller
                 ->where('orders.cabang_id', $cabangId)
                 ->whereYear('orders.tanggal_order', (int) $tahun)
                 ->whereMonth('orders.tanggal_order', (int) $bulan)
-                ->where('orders.status', '!=', 'dibatalkan')
+                ->whereNotIn('orders.status', Order::STATUS_TIDAK_DIHITUNG)
                 ->whereNull('orders.deleted_at')
                 ->whereNull('order_items.deleted_at')
                 ->whereNotNull('order_items.item_id')

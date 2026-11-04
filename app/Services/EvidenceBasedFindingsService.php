@@ -140,7 +140,7 @@ class EvidenceBasedFindingsService
         $query = DB::table('orders')
             ->join('users', 'orders.kasir_id', '=', 'users.id')
             ->whereNull('orders.deleted_at')
-            ->where('orders.status', '!=', 'dibatalkan')
+            ->whereNotIn('orders.status', Order::STATUS_TIDAK_DIHITUNG)
             ->whereBetween('orders.tanggal_order', [$mulai->toDateString(), $akhir->toDateString()]);
         if ($cabangId) {
             $query->where('orders.cabang_id', $cabangId);

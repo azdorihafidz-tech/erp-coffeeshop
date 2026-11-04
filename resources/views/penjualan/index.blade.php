@@ -3,6 +3,7 @@
 @section('title', 'Riwayat Penjualan')
 
 @section('content')
+@php $isOwner = auth()->user()->role === \App\Enums\RoleUser::Owner; @endphp
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
     <h5 class="mb-0 fw-bold"><i class="bi bi-cart3 me-2 text-success"></i>Riwayat Penjualan</h5>
     <div class="d-flex gap-2 align-items-center">
@@ -104,11 +105,22 @@
                                 </a>
                                 @endif
                                 @endcan
+                                @can('order.batalkan')
+                                @if($o->status === \App\Enums\StatusOrder::Selesai)
+                                @php $bisaBatal = $isOwner || $o->created_at?->isToday(); @endphp
+                                <button type="button" class="btn btn-outline-danger" title="{{ $bisaBatal ? 'Batalkan (stok & kas dikembalikan)' : 'Order dari hari sebelumnya, hanya Owner yang bisa membatalkan' }}"
+                                    @if($bisaBatal) onclick="bukaBatalkan('{{ addslashes($o->nomor_order) }}', '{{ route('penjualan.batalkan', $o) }}', {{ $o->created_at?->isToday() ? 'false' : 'true' }})" @else disabled @endif>
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                                @endif
+                                @endcan
                                 @can('order.delete')
+                                @if($o->bolehDihapus())
                                 <button type="button" class="btn btn-outline-danger" title="Hapus"
                                     onclick="confirmHapus('{{ addslashes($o->nomor_order) }}', '{{ route('penjualan.destroy', $o->id) }}')">
                                     <i class="bi bi-trash"></i>
                                 </button>
+                                @endif
                                 @endcan
                             </div>
                         </td>
@@ -163,11 +175,22 @@
                 </a>
                 @endif
                 @endcan
+                @can('order.batalkan')
+                @if($o->status === \App\Enums\StatusOrder::Selesai)
+                @php $bisaBatal = $isOwner || $o->created_at?->isToday(); @endphp
+                <button type="button" class="btn btn-sm btn-outline-danger" title="{{ $bisaBatal ? 'Batalkan (stok & kas dikembalikan)' : 'Order dari hari sebelumnya, hanya Owner yang bisa membatalkan' }}"
+                    @if($bisaBatal) onclick="bukaBatalkan('{{ addslashes($o->nomor_order) }}', '{{ route('penjualan.batalkan', $o) }}', {{ $o->created_at?->isToday() ? 'false' : 'true' }})" @else disabled @endif>
+                    <i class="bi bi-x-circle"></i> Batalkan
+                </button>
+                @endif
+                @endcan
                 @can('order.delete')
-                <button type="button" class="btn btn-sm btn-outline-danger"
+                @if($o->bolehDihapus())
+                <button type="button" class="btn btn-sm btn-outline-danger" title="Hapus"
                     onclick="confirmHapus('{{ addslashes($o->nomor_order) }}', '{{ route('penjualan.destroy', $o->id) }}')">
                     <i class="bi bi-trash"></i>
                 </button>
+                @endif
                 @endcan
             </div>
         </div>
@@ -183,8 +206,58 @@
 
 @include('components.cascade-delete-modal', ['entity' => 'Order', 'childList' => ['Detail item / produk dalam order ini']])
 
+@can('order.batalkan')
+{{-- Modal Batalkan Order (dipakai semua baris) — proses sama dengan tombol Batalkan di Detail Order --}}
+<div class="modal fade" id="modalBatalkanRiwayat" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+        <div class="modal-content">
+            <form method="POST" id="formBatalkanRiwayat">
+                @csrf
+                <div class="modal-header">
+                    <h6 class="modal-title mb-0"><i class="bi bi-x-circle me-2 text-danger"></i>Batalkan Order <span id="batalkanNomor"></span></h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning small py-2 d-none" id="batalkanInfoOwner">
+                        <i class="bi bi-shield-check me-1"></i>Order ini dari hari sebelumnya. Sebagai Owner, pembatalan tetap diizinkan dan akan dicatat di audit log.
+                    </div>
+                    <p class="small text-muted">Stok bahan dan kas akan dikembalikan otomatis. Setelah dibatalkan, order baru bisa dihapus bila perlu.</p>
+                    <div class="mb-3">
+                        <label class="form-label">Kategori Alasan <span class="text-danger">*</span></label>
+                        <select name="alasan_pembatalan_kategori" class="form-select" required>
+                            <option value="">-- Pilih Alasan --</option>
+                            <option value="Pengurangan Item">Pengurangan Item</option>
+                            <option value="Salah Input Kasir">Salah Input Kasir</option>
+                            <option value="Pelanggan Ganti Menu">Pelanggan Ganti Menu</option>
+                            <option value="Pelanggan Batal Datang">Pelanggan Batal Datang</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Detail Tambahan (opsional)</label>
+                        <textarea name="alasan_pembatalan_detail" class="form-control" rows="2" maxlength="500"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                    <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-circle me-1"></i>Ya, Batalkan Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endcan
+
 @push('scripts')
 <script>
+function bukaBatalkan(nomor, url, hariSebelumnya) {
+    const form = document.getElementById('formBatalkanRiwayat');
+    form.action = url;
+    form.reset();
+    document.getElementById('batalkanNomor').textContent = nomor;
+    document.getElementById('batalkanInfoOwner').classList.toggle('d-none', !hariSebelumnya);
+    new bootstrap.Modal(document.getElementById('modalBatalkanRiwayat')).show();
+}
 function confirmHapus(nama, deleteUrl) {
     document.getElementById('cascadeModalEntityName').textContent = nama;
     document.getElementById('cascadeModalForm').action = deleteUrl;

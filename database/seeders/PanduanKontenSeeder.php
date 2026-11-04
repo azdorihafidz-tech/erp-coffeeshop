@@ -444,13 +444,16 @@ Melihat dan mengelola seluruh riwayat transaksi penjualan yang sudah dicatat di 
    - **Ikon mata** (Detail) — lihat detail lengkap order & item
    - **Ikon printer** (Struk) — cetak ulang struk pembayaran
    - **Ikon pensil** (Edit) — ubah data order *(hanya tersedia selama status belum Selesai/Dibatalkan)*
-   - **Ikon tempat sampah** (Hapus) — hapus order *(membutuhkan konfirmasi, pengaruhi data keuangan)*
+   - **Ikon silang** (Batalkan) — batalkan order yang sudah dibayar: pilih alasan, lalu **stok bahan & kas dikembalikan otomatis** *(selain Owner hanya untuk order hari ini; order hari sebelumnya hanya Owner. Bawaan: Owner, Admin Pusat, Manajer Cabang — kasir perlu diberi hak akses **Batalkan Order** di menu Role & Hak Akses)*
+   - **Ikon tempat sampah** (Hapus) — hanya muncul untuk order **Dibatalkan** atau **Bill Tersimpan yang belum dibayar** (status Menunggu)
 5. Untuk membuat transaksi baru, klik tombol **Buka POS**
 
 ## Catatan Penting
 
 - Order dengan status **Selesai** atau **Dibatalkan** tidak bisa diedit kecuali oleh Owner
-- Menghapus order akan **menghapus entri keuangan terkait secara otomatis** (cascade)
+- **Order yang sudah dibayar tidak bisa langsung dihapus** (berlaku juga untuk Owner). Hapus hanya menyembunyikan order — stok & kas TIDAK dikembalikan. Urutannya: **Batalkan dulu** (stok & kas kembali) → baru **Hapus** bila perlu
+- Laporan (Laba Rugi, Setoran Harian, Konsumsi Bahan, Laporan Penjualan, Dashboard) hanya menghitung order yang sudah dibayar — order Dibatalkan, Dihapus, dan Bill Tersimpan yang belum dibayar tidak ikut dihitung
+- Order yang dihapus masih bisa dipulihkan di menu **Data Terhapus**
 - Filter tanggal hanya berlaku untuk range yang diisi — bisa diisi satu sisi saja
 
 ## Troubleshooting
@@ -458,6 +461,8 @@ Melihat dan mengelola seluruh riwayat transaksi penjualan yang sudah dicatat di 
 - **Order tidak muncul?** Pastikan filter Status diset ke "Semua", dan cek filter tanggal tidak terlalu sempit
 - **Tombol Edit tidak ada?** Order sudah berstatus Selesai atau Dibatalkan; hubungi Owner untuk koreksi
 - **Struk tidak muncul?** Klik tombol Struk lagi — bisa jadi browser memblokir pop-up baru
+- **Tombol Hapus tidak ada?** Order sudah dibayar — klik **Batalkan** dulu, setelah itu tombol Hapus muncul
+- **Tombol Batalkan abu-abu?** Order dari hari sebelumnya — hanya Owner yang bisa membatalkan
 MARKDOWN]);
 
         Panduan::where('slug', 'pelanggan')->update(['konten' => <<<'MARKDOWN'

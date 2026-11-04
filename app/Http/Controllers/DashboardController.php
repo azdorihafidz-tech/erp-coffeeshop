@@ -83,14 +83,14 @@ class DashboardController extends Controller
         $omzetHariIni = Order::withoutGlobalScopes()
             ->where('cabang_id', $cabangId)
             ->whereDate('tanggal_order', $today)
-            ->where('status', '!=', StatusOrder::Dibatalkan)
+            ->terhitung()
             ->sum('total_bayar');
 
         // Jumlah order hari ini
         $jumlahOrderHariIni = Order::withoutGlobalScopes()
             ->where('cabang_id', $cabangId)
             ->whereDate('tanggal_order', $today)
-            ->where('status', '!=', StatusOrder::Dibatalkan)
+            ->terhitung()
             ->count();
 
         // Tahap 6 D'mentai — 'orderJasaGilingHariIni' (hardcode tipe_order=
@@ -101,7 +101,7 @@ class DashboardController extends Controller
         $orderPerTipeTransaksi = Order::withoutGlobalScopes()
             ->where('cabang_id', $cabangId)
             ->whereDate('tanggal_order', $today)
-            ->where('status', '!=', StatusOrder::Dibatalkan)
+            ->terhitung()
             ->selectRaw('tipe_transaksi, COUNT(*) as jumlah')
             ->groupBy('tipe_transaksi')
             ->pluck('jumlah', 'tipe_transaksi');
@@ -115,6 +115,7 @@ class DashboardController extends Controller
         // Order terbaru
         $orderTerbaru = Order::withoutGlobalScopes()
             ->with(['pelanggan'])
+            ->whereNull('orders.deleted_at')
             ->where('cabang_id', $cabangId)
             ->orderByDesc('created_at')
             ->limit(5)
@@ -124,7 +125,7 @@ class DashboardController extends Controller
         $omzetBulanIni = Order::withoutGlobalScopes()
             ->where('cabang_id', $cabangId)
             ->where('tanggal_order', 'like', $bulanIni . '%')
-            ->where('status', '!=', StatusOrder::Dibatalkan)
+            ->terhitung()
             ->sum('total_bayar');
 
         // Karyawan aktif
@@ -142,7 +143,7 @@ class DashboardController extends Controller
             $grafik7HariData[] = (float) Order::withoutGlobalScopes()
                 ->where('cabang_id', $cabangId)
                 ->whereDate('tanggal_order', $tgl)
-                ->where('status', '!=', StatusOrder::Dibatalkan)
+                ->terhitung()
                 ->sum('total_bayar');
         }
 
@@ -272,7 +273,7 @@ class DashboardController extends Controller
         if (auth()->user()->can('dashboard.owner.view')) {
             $totalOmzetHariIni = (float) Order::withoutGlobalScopes()
                 ->whereDate('tanggal_order', $today)
-                ->where('status', '!=', StatusOrder::Dibatalkan)
+                ->terhitung()
                 ->sum('total_bayar');
 
             // "Uang belum disetor" = setoran yang sudah disubmit tapi belum
@@ -308,7 +309,7 @@ class DashboardController extends Controller
                 $grafik7HariLabels[] = $tgl->format('d/m');
                 $grafik7HariData[] = (float) Order::withoutGlobalScopes()
                     ->whereDate('tanggal_order', $tgl)
-                    ->where('status', '!=', StatusOrder::Dibatalkan)
+                    ->terhitung()
                     ->sum('total_bayar');
             }
 
@@ -322,13 +323,13 @@ class DashboardController extends Controller
         // Total omzet bulan ini semua cabang
         $totalOmzetBulanIni = Order::withoutGlobalScopes()
             ->where('tanggal_order', 'like', $bulanIni . '%')
-            ->where('status', '!=', StatusOrder::Dibatalkan)
+            ->terhitung()
             ->sum('total_bayar');
 
         // Total order bulan ini
         $totalOrderBulanIni = Order::withoutGlobalScopes()
             ->where('tanggal_order', 'like', $bulanIni . '%')
-            ->where('status', '!=', StatusOrder::Dibatalkan)
+            ->terhitung()
             ->count();
 
         // Total karyawan aktif
@@ -357,7 +358,7 @@ class DashboardController extends Controller
             $omzet = (float) Order::withoutGlobalScopes()
                 ->where('cabang_id', $cb->id)
                 ->where('tanggal_order', 'like', $bulanIni . '%')
-                ->where('status', '!=', StatusOrder::Dibatalkan)
+                ->terhitung()
                 ->sum('total_bayar');
             $grafikPerCabangLabels[] = $cb->nama_cabang;
             $grafikPerCabangData[] = $omzet;
@@ -384,7 +385,7 @@ class DashboardController extends Controller
                 $dataPerBulan[] = (float) Order::withoutGlobalScopes()
                     ->where('cabang_id', $cb->id)
                     ->where('tanggal_order', 'like', $bln . '%')
-                    ->where('status', '!=', StatusOrder::Dibatalkan)
+                    ->terhitung()
                     ->sum('total_bayar');
             }
             $grafikBulananDatasets[] = [

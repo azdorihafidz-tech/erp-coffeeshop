@@ -904,6 +904,14 @@ class PenjualanController extends Controller
     {
         abort_unless(auth()->user()->can('order.delete'), 403, 'Anda tidak memiliki akses untuk menghapus order.');
 
+        // Hapus hanya menyembunyikan order — stok & kas TIDAK dikembalikan.
+        // Order yang sudah dibayar wajib Dibatalkan dulu (pembatalan yang
+        // mengembalikan stok & kas). Berlaku untuk semua peran termasuk Owner.
+        if (!$order->bolehDihapus()) {
+            return back()->with('error', "Order <strong>{$order->nomor_order}</strong> sudah dibayar, jadi tidak bisa langsung dihapus. "
+                . 'Klik <strong>Batalkan</strong> dulu supaya stok dan kas dikembalikan, baru order bisa dihapus.');
+        }
+
         try {
             $nomor   = $order->nomor_order;
             $deleted = $cascadeService->deleteOrderCascade($order);

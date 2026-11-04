@@ -36,7 +36,7 @@ class LaporanPenjualanController extends Controller
         $query = Order::withoutGlobalScopes()
             ->with(['cabang', 'pelanggan'])
             ->whereBetween('tanggal_order', [$dari->toDateString(), $sampai->toDateString()])
-            ->where('status', '!=', StatusOrder::Dibatalkan);
+            ->terhitung();
 
         // Filter cabang
         $cabangId = $request->cabang_id;
@@ -116,7 +116,7 @@ class LaporanPenjualanController extends Controller
             ->selectRaw('item_id, nama_item, SUM(qty) as total_qty, SUM(total_harga) as total_omzet')
             ->whereHas('order', function ($q) use ($dari, $sampai, $cabangId, $user) {
                 $q->whereBetween('tanggal_order', [$dari->toDateString(), $sampai->toDateString()])
-                  ->where('status', '!=', StatusOrder::Dibatalkan);
+                  ->terhitung();
                 if ($cabangId) {
                     $q->where('cabang_id', $cabangId);
                 } elseif (!$user->canAccessAllBranches()) {
@@ -136,7 +136,7 @@ class LaporanPenjualanController extends Controller
                 ->join('users', 'orders.kasir_id', '=', 'users.id')
                 ->leftJoin('cabangs', 'orders.cabang_id', '=', 'cabangs.id')
                 ->whereBetween('orders.tanggal_order', [$dari->toDateString(), $sampai->toDateString()])
-                ->where('orders.status', '!=', StatusOrder::Dibatalkan);
+                ->terhitung();
             if ($cabangId) {
                 $rankingKasirQuery->where('orders.cabang_id', $cabangId);
             } elseif (!$user->canAccessAllBranches()) {
@@ -163,7 +163,7 @@ class LaporanPenjualanController extends Controller
                 $grafikLabels[] = $d->format('d/m');
                 $grafikData[] = (float) Order::withoutGlobalScopes()
                     ->where('tanggal_order', $tgl)
-                    ->where('status', '!=', StatusOrder::Dibatalkan)
+                    ->terhitung()
                     ->when($cabangId, fn($q) => $q->where('cabang_id', $cabangId))
                     ->when(!$user->canAccessAllBranches() && !$cabangId, function ($q) use ($user) {
                         $activeCabangId = session('active_cabang_id') ?? $user->defaultCabangId();
@@ -179,7 +179,7 @@ class LaporanPenjualanController extends Controller
                 $grafikLabels[] = $current->translatedFormat('M Y');
                 $grafikData[] = (float) Order::withoutGlobalScopes()
                     ->where('tanggal_order', 'like', $bulan . '%')
-                    ->where('status', '!=', StatusOrder::Dibatalkan)
+                    ->terhitung()
                     ->when($cabangId, fn($q) => $q->where('cabang_id', $cabangId))
                     ->when(!$user->canAccessAllBranches() && !$cabangId, function ($q) use ($user) {
                         $activeCabangId = session('active_cabang_id') ?? $user->defaultCabangId();
