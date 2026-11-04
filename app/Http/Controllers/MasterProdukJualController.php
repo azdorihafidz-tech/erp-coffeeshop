@@ -60,7 +60,7 @@ class MasterProdukJualController extends Controller
         $categories  = ItemCategory::orderBy('nama_kategori')->get();
         $cabangList  = Cabang::aktif()->orderBy('nama_cabang')->get();
         $bahanOptions = Item::whereIn('tipe', ['bahan_baku', 'kemasan', 'tambahan_gratis'])
-            ->aktif()->orderBy('nama_item')->get();
+            ->with('category')->aktif()->orderBy('nama_item')->get();
 
         return view('master.produk-jual.create', compact('categories', 'cabangList', 'bahanOptions'));
     }
@@ -110,7 +110,7 @@ class MasterProdukJualController extends Controller
         $categories   = ItemCategory::orderBy('nama_kategori')->get();
         $cabangList   = Cabang::aktif()->orderBy('nama_cabang')->get();
         $bahanOptions = Item::whereIn('tipe', ['bahan_baku', 'kemasan', 'tambahan_gratis'])
-            ->aktif()->orderBy('nama_item')->get();
+            ->with('category')->aktif()->orderBy('nama_item')->get();
 
         return view('master.produk-jual.edit', [
             'item' => $produkJual, 'categories' => $categories,

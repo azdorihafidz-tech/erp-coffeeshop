@@ -3631,7 +3631,7 @@ Mengelola produk yang benar-benar dijual di POS (kopi, manual brew, makanan, roa
    - **Tipe** — **Produk Jual** (tampil di grid utama POS) atau **Produk Tambahan** (add-on berbayar, mis. Saus Extra)
    - Isi Kode Item, Nama, Kategori, Satuan, **Harga Jual** (default)
 3. **Komposisi / Resep** (opsional — lewati kalau produk tidak butuh potong bahan otomatis):
-   - Klik **Tambah Bahan**, pilih dari daftar Bahan Baku/Kemasan
+   - Klik **Tambah Bahan**, lalu klik kotak **Bahan** dan **ketik** nama, kode, atau kategori bahan (contoh: `susu`, `cup 16`, `KMS`) — daftar langsung tersaring. Boleh beberapa kata; semua kata harus cocok. Pilih bahannya, **satuan & harga beli** terisi otomatis
    - Isi **Qty/unit** = kebutuhan bahan itu untuk **1 unit** produk ini (contoh: 1 gelas Kopi Susu butuh 200 ml Susu UHT → isi qty 200)
    - Centang **Wajib** kalau bahan itu harus ada (kalau habis, produk otomatis ter-disable di POS)
    - Gunakan **Simulasi Produksi** (di bagian bawah, cuma muncul saat Edit) untuk cek total HPP kalau produksi sekian pcs

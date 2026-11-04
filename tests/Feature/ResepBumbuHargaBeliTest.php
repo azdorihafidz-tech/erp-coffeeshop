@@ -90,6 +90,21 @@ class ResepBumbuHargaBeliTest extends TestCase
         $this->assertSame(1, substr_count($html, 'RESEP_AWAL.forEach('));
     }
 
+    /** 2026-11-04: dropdown Bahan di komposisi bisa dicari (nama / kode / kategori). */
+    public function test_dropdown_bahan_komposisi_bisa_dicari(): void
+    {
+        $owner = $this->buatUser('owner');
+        $bahan = $this->bahan(hargaBeli: 1800, satuan: 'pcs');
+
+        $res = $this->actingAs($owner)->get(route('master.produk-jual.create'))->assertOk()
+            ->assertSee('function pasangCariBahan', false)
+            ->assertSee('Bahan tidak ditemukan', false);
+
+        $opsi = collect($res->viewData('bahanOptions'));
+        $this->assertTrue($opsi->contains('id', $bahan->id));
+        $this->assertStringContainsString('"kode":"' . $bahan->kode_item . '"', $res->getContent());
+    }
+
     public function test_form_tidak_lagi_menampilkan_pilihan_mode_harga(): void
     {
         $owner = $this->buatUser('owner');

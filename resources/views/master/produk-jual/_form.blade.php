@@ -23,6 +23,8 @@
     $bahanOptionsJs = $bahanOptions->map(fn($b) => [
         'id' => $b->id, 'nama' => $b->nama_item, 'satuan' => $b->satuan,
         'harga' => (float) ($b->harga_beli_terakhir ?? 0),
+        // Untuk pencarian dropdown Bahan (nama / kode / kategori)
+        'kode' => $b->kode_item, 'kategori' => $b->category?->nama_kategori,
     ])->values();
 @endphp
 
@@ -344,7 +346,7 @@ function tambahBarisResep(data) {
         return;
     }
     const idx = resepIdx++;
-    const opsi = BAHAN_OPTIONS.map(b => `<option value="${b.id}" data-satuan="${b.satuan}" data-harga="${b.harga}" ${data.item_id==b.id?'selected':''}>${b.nama}</option>`).join('');
+    const opsi = BAHAN_OPTIONS.map(b => `<option value="${b.id}" data-satuan="${b.satuan}" data-harga="${b.harga}" data-kode="${escAttr(b.kode)}" data-kategori="${escAttr(b.kategori)}" ${data.item_id==b.id?'selected':''}>${b.nama}</option>`).join('');
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><select name="resep[${idx}][item_id]" class="form-select form-select-sm" onchange="onBahanResepBerubah(this)">
@@ -358,7 +360,51 @@ function tambahBarisResep(data) {
         <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="hapusBarisResep(this)"><i class="bi bi-x"></i></button></td>
     `;
     document.getElementById('bodyResep').appendChild(tr);
+    pasangCariBahan(tr.querySelector('select[name*="[item_id]"]'));
     hitungPreviewBaris(tr);
+}
+
+function escAttr(v) {
+    return String(v ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+// 2026-11-04: dropdown Bahan bisa dicari (nama / kode / kategori) — pola sama
+// dgn cari pelanggan di POS. Select2 memicu event 'change', jadi
+// onchange="onBahanResepBerubah(this)" tetap jalan. Kalau jQuery/Select2 gagal
+// dimuat (CDN down), dropdown biasa tetap bisa dipakai.
+function pasangCariBahan(select) {
+    try {
+        if (!select || typeof $ === 'undefined' || !$.fn || !$.fn.select2) return;
+        const label = opt => {
+            const k = [opt.dataset.kode, opt.dataset.kategori, opt.dataset.satuan].filter(Boolean).join(' · ');
+            return $('<div>').append($('<div>').text(opt.text))
+                .append(k ? $('<small class="text-muted">').text(k) : '');
+        };
+        $(select).select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownAutoWidth: true,
+            placeholder: 'Ketik nama / kode bahan...',
+            language: {
+                noResults: () => 'Bahan tidak ditemukan',
+                searching: () => 'Mencari...',
+            },
+            templateResult: d => (d.element && d.element.value) ? label(d.element) : d.text,
+            matcher: (params, d) => {
+                const term = $.trim(params.term || '').toLowerCase();
+                if (term === '') return d;
+                if (!d.element || !d.element.value) return null;
+                const teks = [d.text, d.element.dataset.kode, d.element.dataset.kategori].join(' ').toLowerCase();
+                // Semua kata harus ada (mis. "susu uht" atau "kms cup")
+                return term.split(/\s+/).every(w => teks.includes(w)) ? d : null;
+            },
+        });
+        // Langsung fokus ke kotak pencarian saat dropdown dibuka
+        $(select).on('select2:open', () => {
+            const box = document.querySelector('.select2-container--open .select2-search__field');
+            if (box) box.focus();
+        });
+    } catch (e) { /* fallback: dropdown biasa */ }
 }
 // Baris resep lama (halaman Edit) dimuat di AKHIR skrip — lihat bawah.
 

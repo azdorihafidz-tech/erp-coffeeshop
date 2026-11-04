@@ -800,6 +800,23 @@ Owner: data demo terlalu banyak sehingga membingungkan orang yang mencoba. **Go-
   - Log bersih. File SQL di-import ulang ke DB percobaan: 113 tabel, karakter "—" utuh.
 - **Temuan**: `PembelianPenjualanSeeder` masih membuat supplier/pelanggan bernama warisan (PT Daging Segar Nusantara, Warung Makan Bu Sari, dst.). Seeder tidak diubah, hanya data demo yang diganti.
 
+### 4.47 🟢 Cari Bahan di Komposisi Produk Jual (2026-11-04)
+
+Owner: daftar bahan di komposisi Produk Jual panjang (go-live 100 bahan/kemasan), susah dicari. Dropdown **Bahan** tiap baris komposisi sekarang memakai **Select2** dengan pola yang sama dengan pencarian pelanggan di POS:
+- Bisa dicari dengan nama, kode, atau kategori. Beberapa kata harus cocok semua, mis. `cup 16`.
+- Hasil menampilkan kode · kategori · satuan.
+- Kotak cari langsung fokus.
+- Kalau CDN gagal, tetap memakai dropdown biasa.
+- `onchange` tetap jalan, jadi satuan dan harga beli terisi otomatis.
+
+`bahanOptions` sekarang eager-load `category`, dan data JS membawa `kode` + `kategori`. Panduan `produk-jual` langkah Komposisi ditambah cara mencari.
+
+Hasil uji:
+- Chrome headless (Select2 asli dari CDN): baris lama termuat 2/2 dengan subtotal benar. Ketik "cup 16" → 1 hasil "Cup 16 oz · KMS-002 · Kemasan · pcs". Memilihnya mengisi satuan pcs dan harga Rp1.800, total ikut. "zzzz" → "Bahan tidak ditemukan".
+- Test baru `test_dropdown_bahan_komposisi_bisa_dicari`. Regresi 43 lama identik. Tanpa migration.
+
+**Cek DB lokal (salinan go-live, 2026-11-04)**: 1 cabang (CAP1), 10 user, 168 barang (67 produk jual, 44 dengan resep), 0 order, 0 migration tertunda. **Kas hanya 1 (Tunai "kas kopi drip")** — pembayaran Transfer/QRIS di POS butuh kas dengan `default_untuk` transfer/qris.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
