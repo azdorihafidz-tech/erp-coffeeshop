@@ -771,6 +771,35 @@ Owner: di komposisi Produk Jual, bahan bersatuan **gram** subtotalnya tidak tamp
 
 **Bug turunan (2026-11-04, ditemukan Owner)**: di halaman **Edit** Produk Jual, subtotal kosong. `RESEP_AWAL.forEach` (memuat baris resep lama) dipanggil di tengah skrip, sebelum `const FAKTOR_SATUAN` (perbaikan di atas) dibuat → `ReferenceError`, skrip berhenti. Akibatnya hanya 1 baris resep termuat, dan **menyimpan form akan menghapus baris sisanya**. Halaman Tambah tidak kena karena belum ada baris lama. `let linkedRowSeq`/`const linkedSubtotalTimeout` ternyata punya masalah sama sejak lama (produk dengan baris Bumbu Pusat). Fix: faktor dipindah ke dalam fungsi, dan `RESEP_AWAL.forEach` dipanggil di **akhir** skrip. Diverifikasi di Chrome headless: versi lama 1/5 baris + ReferenceError, versi baru 5/5 baris dengan subtotal benar (gram Rp150, kg Rp1.440, liter Rp2.700, harga 0 merah). DB dev: 0 resep tersimpan sejak 3 Nov (tidak ada data rusak). Test baru: urutan deklarasi vs pemuatan baris resep. Regresi 43 lama identik.
 
+### 4.46 🟢 Data Demo Ramping untuk erpdrip.azwacore.com (2026-11-04)
+
+Owner: data demo terlalu banyak sehingga membingungkan orang yang mencoba. **Go-live = `erp.kopidripsidikalang.com` (TIDAK disentuh)**, **demo = `erpdrip.azwacore.com`**. Data demo dibuat lokal lalu di-import Owner lewat phpMyAdmin. Nanti DB lokal diisi Owner dengan salinan data go-live.
+
+- **Database lokal terpisah `erp_coffeeshop_demo`** (salinan `erp_coffeeshop`, lalu dirampingkan). DB `erp_coffeeshop` tidak diubah. Skrip `D:\kopidrip-demo-data\buat-data-demo.php` (di luar repo) menolak jalan kalau DB yang terhubung bukan `erp_coffeeshop_demo`. Hasilnya `D:\kopidrip-demo-data\demo-kopidrip-2026-11-04.sql` (tanpa CREATE DATABASE/USE/DEFINER).
+- **Isi data demo** (pilihan Owner):
+  - Lokasi: 3 (GP001, OUT001, RST001).
+  - User: 6, satu per peran, password `password`. Owner & Admin Pusat default ke OUT001.
+  - Menu: 8 (Espresso, Cappuccino, V60, Cokelat Panas, Air Mineral, Croissant, Nasi Goreng, Pack 250 g) + 11 bahan/rantai roastery.
+  - Lain-lain: 4 meja, 2 karyawan (absensi & gaji Maret), 2 petani, 2 supplier dan 2 pelanggan (nama warisan Dimsum/Berkah Mulyo diganti nama coffee shop).
+  - Logo dikosongkan (file logo tidak ada di server, upload ulang).
+- **Transaksi dibuat ulang lewat service** (bukan insert manual), setelah semua transaksi/stok/log/riwayat dikosongkan:
+  - 2 PO;
+  - beli buah 1 diterima + 1 draft;
+  - processing washed;
+  - roasting 2 batch (beli & in-house);
+  - grinding;
+  - packing 5 pack;
+  - 2 transfer ke OUT001;
+  - stok awal 3 menu tanpa resep;
+  - 3 penjualan (2 OUT001 oleh kasir, 1 retail Roastery).
+- **Verifikasi**:
+  - Stok sama dengan batch FIFO di 22/22 baris.
+  - Kartu stok cocok 22/22 (aturan transfer = keluar di asal, sama dengan 4.39).
+  - HPP order terisi; kas Tunai/QRIS bertambah sesuai penjualan.
+  - Server sementara port 8003 dengan DB demo: 189 halaman GET tanpa parameter sebagai Owner → 179×200 + 10×302, 0 error. Halaman detail 200, Kasir hanya melihat Outlet 1.
+  - Log bersih. File SQL di-import ulang ke DB percobaan: 113 tabel, karakter "—" utuh.
+- **Temuan**: `PembelianPenjualanSeeder` masih membuat supplier/pelanggan bernama warisan (PT Daging Segar Nusantara, Warung Makan Bu Sari, dst.). Seeder tidak diubah, hanya data demo yang diganti.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
