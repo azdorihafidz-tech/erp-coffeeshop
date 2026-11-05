@@ -1198,6 +1198,31 @@ class TooltipKontenSeeder extends Seeder
             Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'pengaturan', 'urutan' => $i + 1, 'aktif' => true]));
         }
 
+        // 4.49 (porting erp-dimsum 4.46) — Laporan Transaksi / Produk / Kategori (menu Penjualan).
+        $laporanKasir = [
+            ['key' => 'laporan_transaksi_kasir.pendapatan', 'title' => 'Pendapatan',
+             'content' => 'Uang yang dibayar pelanggan: sudah dikurangi diskon, termasuk service charge dan take away fee. Transaksi dibatalkan, dihapus, atau bill belum dibayar tidak dihitung.'],
+            ['key' => 'laporan_transaksi_kasir.keuntungan', 'title' => 'Keuntungan',
+             'content' => 'Pendapatan dikurangi modal bahan (HPP) setiap order. Gaji, sewa, dan biaya operasional lain tidak ikut dikurangi.'],
+            ['key' => 'laporan_transaksi_kasir.rentang', 'title' => 'Rentang tanggal',
+             'content' => 'Pilih tanggal awal dan akhir lalu klik Tampilkan. Rentang sampai 3 bulan tampil per hari, lebih panjang tampil per bulan. Klik bulan/hari untuk rincian.'],
+            ['key' => 'laporan_transaksi_kasir.tingkat', 'title' => 'Klik untuk rincian',
+             'content' => 'Klik batang grafik atau baris tabel untuk turun: tahun → bulan → hari → transaksi → struk. Tombol Kembali naik satu tingkat.'],
+            ['key' => 'laporan_transaksi_kasir.internal', 'title' => 'Penjualan Internal Roastery',
+             'content' => 'Biji kopi yang dijual Roastery ke outlet sendiri. Di Semua Cabang tidak dihitung supaya pendapatan tidak dobel (outlet juga menjual minumannya). Pilih cabang Roastery di pojok kanan atas untuk melihatnya.'],
+            ['key' => 'laporan_produk_kasir.pendapatan', 'title' => 'Pendapatan produk',
+             'content' => 'Penjualan produk dikurangi bagian diskon order. Belum termasuk service charge & take away fee (ditampilkan terpisah di bawah tabel).'],
+            ['key' => 'laporan_produk_kasir.penjualan', 'title' => 'Penjualan',
+             'content' => 'Harga × qty di keranjang, sebelum diskon order.'],
+            ['key' => 'laporan_produk_kasir.diskon', 'title' => 'Diskon',
+             'content' => 'Diskon order dibagi ke setiap produk di order itu sesuai porsi harganya.'],
+            ['key' => 'laporan_kategori_kasir.rincian', 'title' => 'Rincian per kategori',
+             'content' => 'Angka kategori = jumlah semua produk di kategori itu. Klik baris kategori untuk melihat produknya; produk tanpa kategori masuk "Tanpa kategori".'],
+        ];
+        foreach ($laporanKasir as $i => $d) {
+            Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'penjualan', 'urutan' => 70 + $i, 'aktif' => true]));
+        }
+
         // Tooltip lama (firstOrCreate di atas tidak menimpa) yang masih menyebut
         // nama Kopi Drip → penanda, ditampilkan sesuai Pengaturan Umum.
         Tooltip::where('content', 'like', '%Kopi Drip%')->get()->each(function (Tooltip $t) {

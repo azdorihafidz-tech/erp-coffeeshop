@@ -829,6 +829,26 @@ Owner minta poin yang sudah dikerjakan di sesi lain diterapkan juga di sini. Has
 - **Temuan, tidak diubah**: menghapus **Pelanggan** (`deletePelangganCascade`) ikut soft-delete semua order pelanggan itu tanpa mengembalikan stok/kas — sekarang order itu hilang dari semua laporan. Perlu keputusan Owner (mis. tolak hapus pelanggan yang punya order terbayar).
 - Panduan `riwayat-order` diperbarui. Test `OrderHapusBatalkanTest` 6/6 PASS (laporan abaikan order terhapus/pending/batal, Laporan Penjualan HTTP, hapus terbayar ditolak termasuk Owner, hapus batal/pending boleh, batalkan → stok & kas kembali → baru bisa hapus, tombol Riwayat sesuai status). Regresi **43 kegagalan lama identik, 0 baru**. Smoke HTTP owner 23 halaman laporan/dashboard/riwayat 200, log bersih. Tanpa migration — deploy cukup tarik program + Update Database (reseed panduan).
 
+### 4.49 🟢 Laporan Transaksi / Produk / Kategori di Menu Penjualan — Porting dari erp-dimsum 4.46 (2026-11-05)
+
+Owner minta 3 laporan di sidebar **Penjualan** yang bisa dibuka kasir, sama seperti dimsum (`D:\xampp\htdocs\erp-dimsum\PORTING_KE_COFFEESHOP.md`, commit dimsum `089d1e7`..`3b711b2`; folder dimsum hanya dibaca). **Keuntungan tidak boleh terlihat kasir**, diatur lewat centangan. Laporan Penjualan lama (`laporan.penjualan`) tetap ada. Nama kelas SENGAJA sama dengan dimsum supaya perbaikan berikutnya mudah di-porting.
+
+- **Tahap 0 — pengaman (temuan audit, disetujui Owner)**:
+  - `App\Support\CabangLaporan` (`id()`, `bolehAkses()`): Owner/Admin Pusat ikut cabang aktif header (null = Semua Cabang); role cabang **selalu** cabangnya sendiri walau sesi/URL menunjuk cabang lain; -1 = tidak punya cabang.
+  - **Detail order / struk / struk modal / edit**: dulu TANPA cek apa pun (siapa pun login bisa membuka order cabang lain lewat URL). Sekarang `PenjualanController::pastikanBolehLihat()` = salah satu izin `IZIN_LIHAT_ORDER` (semua menu yang memang membuka struk: POS, Riwayat, Layout Meja, Antrian, Kas, laporan, Pelanggan, Laporan Transaksi — dicek di data go-live: tidak ada role yang kehilangan akses) + cabang sendiri, atau order Internal Roastery yang `outlet_tujuan_id`-nya cabang sendiri.
+  - **Laporan Penjualan lama**: role cabang bisa mengintip cabang lain lewat `?cabang_id=` — sekarang diabaikan; dropdown hanya cabang miliknya, "Semua Cabang" hanya untuk Owner/Admin Pusat.
+  - **Update Database**: dulu setiap kali dijalankan mencentang ulang semua `PERMISSION_BARU` → centangan yang dicabut Owner kembali tercentang. Sekarang role bawaan **hanya dicentangkan saat izin itu pertama kali dibuat**; halaman menampilkan status "Baru — akan dicentangkan" / "Sudah terpasang".
+- **Izin** (PermissionSeeder + RolePermissionSeeder + `UpdateDatabaseService::PERMISSION_BARU`): `penjualan.laporan_transaksi.view`, `penjualan.laporan_produk.view`, `penjualan.laporan_kategori.view` → Admin Pusat, Manajer Cabang, Kasir, Operator Produksi (= role yang bisa membuka Riwayat Order); `penjualan.laporan.keuntungan` → Admin Pusat, Manajer Cabang (Owner selalu).
+- **Laporan Transaksi** (`penjualan.laporan.transaksi`, `LaporanTransaksiKasirService`): tahun → bulan → hari → transaksi → struk, rentang tanggal (< 92 hari per hari), grafik batang/garis. Pendapatan = `orders.total_bayar`, keuntungan = − Σ `order_items.hpp`.
+- **Laporan Produk** (`penjualan.laporan.produk`) & **Kategori** (`penjualan.laporan.kategori`), `LaporanBarangKasirService`: diskon order dibagi per porsi harga; service charge + take away fee baris terpisah → **Σ produk + biaya tambahan = Laporan Transaksi**. Beda dimsum: produk dikelompokkan per **`item_id`** (barang coffeeshop global, dimsum per cabang).
+- **Keuntungan**: controller MEMBUANG `hpp`/`keuntungan`/`margin` sebelum view/export kalau tidak berhak (bukan sekadar disembunyikan), urut keuntungan ditolak, JS grafik keuntungan dibungkus `@if($lihatUntung)`.
+- **Khusus coffeeshop — penjualan Internal Roastery → outlet**: di **Semua Cabang** tidak dihitung (`LaporanTransaksiKasirService::tanpaInternal()`, sama dengan Closing Konsolidasi) supaya pendapatan tidak dobel; nilainya ditulis di bawah tabel/Excel/PDF (`internalTidakDihitung()`). Di cabang Roastery sendiri tetap tampil (pelanggan "Internal → Outlet").
+- Warna dimsum (oranye) → hijau `#2D6A4F`; seri Keuntungan di grafik = amber supaya beda dari Pendapatan. Sidebar: Laporan Transaksi / Laporan Produk / Laporan Kategori (di bawah Riwayat Order).
+- Panduan `laporan-transaksi-kasir`, `laporan-produk-kasir`, `laporan-kategori-kasir` (PanduanKontenSeeder) + 9 tooltip `laporan_*_kasir.*` (TooltipKontenSeeder), tombol Cara Pakai di 3 halaman.
+- **Test**: `AksesOrderCabangTest` 6, `LaporanTransaksiKasirTest` 19, `LaporanProdukKasirTest` 11, `LaporanKategoriKasirTest` 7, `LaporanPenjualanKasirAlurNyataTest` 2 (transaksi nyata lewat `buatOrder` + `BillService::closeBill`: diskon, service charge, take away fee, bill terbuka tidak dihitung → 3 laporan cocok; PDF kasir tanpa Keuntungan/Modal/Margin). `UpdateDatabaseTest` disesuaikan dengan aturan baru. Gladi Update Database di DB dev (salinan go-live): 14 centangan baru, jalan kedua 0. Smoke test di DB dev (rollback): owner & kasir nyata, 3 halaman + export 200, sidebar tampil, kasir tanpa kebocoran, grafik dirender Chrome tanpa error JS.
+- **Bahasa tanggal**: `APP_LOCALE=en` → laporan ini memakai nama hari/bulan Indonesia sendiri (`LaporanTransaksiKasirService::tanggal()`), sama dengan dimsum.
+- **Deploy (BELUM — tunggu persetujuan Owner)**: tanpa migration. Update from Remote → Deploy → menu **Update Database** (PermissionSeeder + panduan + tooltip + centang izin baru + cache). Diskon per produk di POS tidak dibuat (sama dengan keputusan dimsum 12.16).
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1234,6 +1254,12 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [ ] Owner: deploy (Update from Remote → Deploy → menu Update Database untuk panduan) di demo & go-live
 - [ ] Keputusan Owner: kasir boleh Batalkan order hari ini? (sekarang tidak, bawaan hak akses)
 - [ ] Keputusan Owner: hapus Pelanggan yang punya order terbayar (sekarang ikut menyembunyikan order tanpa mengembalikan stok/kas)
+
+### 12.18 Laporan Transaksi / Produk / Kategori (2026-11-05, lihat 4.49)
+- [x] Tahap 0 pengaman (akses struk per cabang, Laporan Penjualan lama, Update Database tidak mencentang ulang), Tahap 1–3 tiga laporan, Tahap 4 panduan/tooltip/test — commit lokal
+- [ ] Owner: setujui push + deploy (Update from Remote → Deploy → Update Database) di demo lalu go-live
+- [ ] Owner: cek di browser dengan akun kasir (keuntungan tidak tampil) & manajer/admin pusat (tampil); atur centangan lain di Role & Hak Akses kalau perlu
+- [ ] Opsional: diskon per produk di POS (ditunda, sama dengan dimsum 12.16)
 
 ---
 

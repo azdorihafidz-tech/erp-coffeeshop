@@ -79,6 +79,155 @@ class PanduanKontenSeeder extends Seeder
         $this->labelCupUpdate();
         // Update Database production (2026-10-19)
         $this->updateDatabaseUpdate();
+        // Laporan di menu Penjualan (4.49)
+        $this->laporanPenjualanKasirUpdate();
+    }
+
+    /**
+     * 4.49 (porting erp-dimsum 4.46) — Laporan Transaksi / Produk / Kategori
+     * di menu Penjualan (bisa dibuka kasir, keuntungan diatur centangan).
+     */
+    private function laporanPenjualanKasirUpdate(): void
+    {
+        $catatanBersama = <<<'MARKDOWN'
+- Data mengikuti **cabang yang dipilih di pojok kanan atas**. Kasir dan Manajer Cabang selalu melihat cabangnya sendiri. **Semua Cabang** menggabungkan semua cabang.
+- Di **Semua Cabang**, penjualan **Internal Roastery ke outlet** tidak dihitung supaya tidak dobel (biji kopi dijual Roastery ke outlet, lalu outlet menjual minumannya). Nilainya ditulis di bawah tabel. Pilih cabang Roastery untuk melihatnya.
+- Transaksi yang **dibatalkan**, **dihapus**, atau **bill tersimpan yang belum dibayar** tidak dihitung. Bill meja yang masih terbuka juga belum dihitung sampai dibayar.
+MARKDOWN;
+
+        Panduan::updateOrCreate(['slug' => 'laporan-transaksi-kasir'], [
+            'judul'  => 'Laporan Transaksi (menu Penjualan)',
+            'konten' => <<<MARKDOWN
+## Tentang
+Melihat jumlah transaksi dan pendapatan — per tahun, per bulan, per hari, sampai ke setiap transaksi dan struknya. Menu ini ada di bagian **Penjualan** dan bisa dibuka kasir.
+
+## Cara Pakai
+
+### 1. Pilih periode
+- **Hari ini** → daftar transaksi hari ini + grafik per jam.
+- **Bulan ini** → rincian per hari di bulan ini.
+- **Tahun ini** → rincian per bulan di tahun ini.
+- **Selama ini** → rincian per tahun sejak transaksi pertama.
+
+Untuk periode lain, isi **Dari tanggal** dan **Sampai tanggal** lalu klik **Tampilkan**. Rentang sampai 3 bulan tampil per hari; lebih panjang tampil per bulan (klik bulannya untuk melihat per hari). Tanggal yang sama → langsung daftar transaksi hari itu.
+
+### 2. Klik untuk melihat lebih rinci
+Klik **batang grafik** atau **baris tabel** untuk turun satu tingkat: **Tahun → Bulan → Hari → Daftar transaksi → Struk**. Contoh: **Tahun ini** → klik **Oktober** → klik **15 Oktober** → klik salah satu transaksi → struknya tampil (bisa dicetak ulang).
+
+### 3. Kembali
+Tombol **Kembali** naik satu tingkat. Jejak halaman di sebelahnya (mis. **Selama ini › 2026 › Oktober › 15 Oktober**) bisa diklik untuk lompat ke tingkat mana pun.
+
+### 4. Export
+**Export Excel** dan **Export PDF** menyimpan isi halaman yang sedang dibuka.
+
+### Grafik
+Tombol ikon di pojok kanan atas grafik mengganti tampilan **batang** atau **garis** (diingat di perangkat ini). Label **Tertinggi** dan **Rata-rata** merangkum periode yang dibuka.
+
+## Arti angka
+- **Jumlah Transaksi** — banyaknya order yang sudah dibayar.
+- **Pendapatan** — uang yang dibayar pelanggan, sudah dikurangi diskon dan sudah termasuk service charge serta take away fee.
+- **Keuntungan** — pendapatan dikurangi modal bahan (HPP) setiap order. Gaji, sewa, dan biaya operasional lain tidak ikut dikurangi (lihat Laporan Keuangan / Laba Rugi Formal).
+
+## Peringatan
+- Kotak, kolom, dan grafik **Keuntungan** hanya tampil untuk role yang punya centangan **Lihat Keuntungan di Laporan Penjualan** (bawaan: Admin Pusat dan Manajer Cabang; Owner selalu bisa). Kasir hanya melihat jumlah transaksi dan pendapatan — termasuk di file Excel/PDF.
+{$catatanBersama}
+- Jam transaksi = jam order dibuat di POS.
+
+## Troubleshooting
+- **Menu tidak ada di sidebar?** Minta Owner mencentang **Lihat Laporan Transaksi (menu Penjualan)** di Role & Hak Akses.
+- **Angka beda dengan Laporan Laba Rugi?** Laba Rugi menghitung omzet dari harga barang sebelum diskon order dan tanpa service charge/take away fee; laporan ini memakai uang yang benar-benar dibayar pelanggan.
+- **Transaksi tidak muncul?** Cek cabang di pojok kanan atas dan pastikan transaksinya sudah dibayar.
+MARKDOWN,
+            'modul'  => 'penjualan',
+            'urutan' => 70,
+            'aktif'  => true,
+        ]);
+
+        Panduan::updateOrCreate(['slug' => 'laporan-produk-kasir'], [
+            'judul'  => 'Laporan Penjualan Produk (menu Penjualan)',
+            'konten' => <<<MARKDOWN
+## Tentang
+Melihat produk apa saja yang terjual, berapa banyak (qty), dan berapa pendapatannya — per produk. Cocok untuk mengetahui menu terlaris. Menu ini ada di bagian **Penjualan** dan bisa dibuka kasir.
+
+## Cara Pakai
+
+### 1. Pilih periode
+Tombol **Hari ini / Bulan ini / Tahun ini / Selama ini**, atau isi **Dari tanggal** dan **Sampai tanggal** lalu klik **Tampilkan**.
+
+### 2. Saring (opsional)
+- **Kategori** — tampilkan produk dari satu kategori saja (mis. Kopi, Manual Brew, Makanan).
+- **Cari produk** — ketik nama atau kode produk.
+- Klik nama kategori di bawah nama produk untuk langsung menyaring kategori itu. **Hapus filter** mengembalikan semua produk.
+
+### 3. Grafik & tabel
+- Grafik **10 Produk Teratas** bisa diurutkan menurut **Qty** atau **Pendapatan** (dan **Keuntungan** untuk yang berhak).
+- Klik judul kolom **Produk**, **Qty**, **Pendapatan** (atau **Untung**) untuk mengurutkan.
+- Produk yang terjual dalam beberapa varian punya tombol **N varian** — klik untuk rinciannya.
+
+### 4. Export
+**Export Excel** / **Export PDF** menyimpan isi halaman sesuai periode dan filter yang dipilih.
+
+## Arti kolom
+- **Qty** — jumlah yang terjual.
+- **Penjualan** — harga × qty di keranjang (sebelum diskon order).
+- **Diskon** — diskon order dibagi ke setiap produk di order itu sesuai porsi harganya. Contoh: order Rp 100.000 berisi A Rp 60.000 dan B Rp 40.000, diskon Rp 10.000 → A kena Rp 6.000, B kena Rp 4.000.
+- **Pendapatan** — penjualan − diskon.
+- **Modal / Untung / Margin** — hanya untuk role yang punya centangan **Lihat Keuntungan di Laporan Penjualan**. Untung = pendapatan − modal bahan (HPP).
+
+## Peringatan
+- **Service charge & take away fee** bukan milik produk mana pun, jadi tampil sebagai baris sendiri di bawah tabel. Total pendapatan produk + baris itu = pendapatan di **Laporan Transaksi**. Saat filter aktif, baris ini tidak ditampilkan.
+- Di **Semua Cabang**, produk yang sama dari semua cabang digabung jadi 1 baris.
+{$catatanBersama}
+
+## Troubleshooting
+- **Menu tidak ada di sidebar?** Minta Owner mencentang **Lihat Laporan Penjualan Produk (menu Penjualan)** di Role & Hak Akses.
+- **Kolom Untung tidak ada?** Role Anda tidak punya centangan melihat keuntungan.
+MARKDOWN,
+            'modul'  => 'penjualan',
+            'urutan' => 71,
+            'aktif'  => true,
+        ]);
+
+        Panduan::updateOrCreate(['slug' => 'laporan-kategori-kasir'], [
+            'judul'  => 'Laporan Penjualan Kategori (menu Penjualan)',
+            'konten' => <<<MARKDOWN
+## Tentang
+Melihat penjualan per **kategori** (mis. Kopi, Manual Brew, Non-Kopi, Makanan): qty, pendapatan, dan porsinya dari total — lalu produk apa saja di dalam setiap kategori. Menu ini ada di bagian **Penjualan** dan bisa dibuka kasir.
+
+## Cara Pakai
+
+### 1. Pilih periode
+Tombol **Hari ini / Bulan ini / Tahun ini / Selama ini**, atau isi **Dari tanggal** dan **Sampai tanggal** lalu klik **Tampilkan**.
+
+### 2. Grafik porsi
+Grafik donat menunjukkan bagian setiap kategori. Tombol di pojok kanan atas grafik mengganti ukurannya: **Pendapatan**, **Qty** (dan **Keuntungan** untuk yang berhak).
+
+### 3. Produk di dalam kategori
+Klik baris kategori di tabel → muncul produk-produknya. Klik lagi untuk menutup. Tautan **Buka kategori ini di Laporan Produk** membuka Laporan Produk yang sudah tersaring ke kategori itu.
+
+### 4. Urutkan & export
+Klik judul kolom untuk mengurutkan. **Export Excel** / **Export PDF** menyimpan kategori beserta produk di dalamnya.
+
+## Arti kolom
+- **Produk** — banyaknya jenis produk yang terjual di kategori itu.
+- **Penjualan / Diskon / Pendapatan** — sama seperti Laporan Produk.
+- **Porsi** — bagian pendapatan kategori dari total pendapatan produk.
+- **Modal / Untung / Margin** — hanya untuk role yang punya centangan **Lihat Keuntungan di Laporan Penjualan**.
+
+## Peringatan
+- Angka setiap kategori = jumlah semua produk di kategori itu, jadi selalu sama dengan Laporan Produk.
+- Produk yang belum diberi kategori dikumpulkan di **Tanpa kategori**.
+- **Service charge & take away fee** tampil sebagai baris sendiri; total kategori + baris itu = pendapatan di **Laporan Transaksi**.
+{$catatanBersama}
+
+## Troubleshooting
+- **Menu tidak ada di sidebar?** Minta Owner mencentang **Lihat Laporan Penjualan Kategori (menu Penjualan)** di Role & Hak Akses.
+- **Produk masuk kategori yang salah?** Ganti kategorinya di menu Produk Jual — laporan langsung mengikuti (termasuk penjualan lama).
+MARKDOWN,
+            'modul'  => 'penjualan',
+            'urutan' => 72,
+            'aktif'  => true,
+        ]);
     }
 
     private function updateDatabaseUpdate(): void
