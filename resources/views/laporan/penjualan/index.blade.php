@@ -36,7 +36,9 @@
         <div class="col-12 col-sm-6 col-md-3">
             <label class="form-label form-label-sm mb-1">Cabang</label>
             <select name="cabang_id" class="form-select form-select-sm">
+                @if(auth()->user()->canAccessAllBranches())
                 <option value="">Semua Cabang</option>
+                @endif
                 @foreach($cabangs as $cab)
                 <option value="{{ $cab->id }}" {{ request('cabang_id') == $cab->id ? 'selected' : '' }}>{{ $cab->nama_cabang }}</option>
                 @endforeach

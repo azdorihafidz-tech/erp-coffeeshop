@@ -28,12 +28,14 @@
             <h6 class="fw-semibold mt-3">Konten yang diperbarui</h6>
             <p class="small mb-2">{{ implode(', ', $seeders) }} (permission, panduan Cara Pakai, tooltip).</p>
 
-            <h6 class="fw-semibold mt-3">Hak akses fitur baru (ditambah kalau belum ada)</h6>
+            <h6 class="fw-semibold mt-3">Hak akses fitur baru</h6>
+            <p class="small text-muted mb-2">Role bawaan hanya dicentangkan saat izin itu pertama kali dibuat. Izin yang sudah terpasang tidak diubah lagi — atur lewat menu Role &amp; Hak Akses.</p>
             <table class="table table-sm small">
-                <thead class="table-light"><tr><th>Permission</th><th>Role</th></tr></thead>
+                <thead class="table-light"><tr><th>Permission</th><th>Role bawaan</th><th>Status</th></tr></thead>
                 <tbody>
                     @foreach($permissionBaru as $perm => $roles)
-                    <tr><td><code>{{ $perm }}</code></td><td>{{ implode(', ', $roles) }}</td></tr>
+                    <tr><td><code>{{ $perm }}</code></td><td>{{ implode(', ', $roles) }}</td>
+                        <td>@if(isset($permissionAda[$perm]))<span class="text-muted">Sudah terpasang</span>@else<span class="text-success fw-semibold">Baru — akan dicentangkan</span>@endif</td></tr>
                     @endforeach
                 </tbody>
             </table>

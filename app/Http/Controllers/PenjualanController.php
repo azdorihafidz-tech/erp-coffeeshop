@@ -24,6 +24,7 @@ use App\Services\BillService;
 use App\Services\CascadeDeleteService;
 use App\Services\NotificationService;
 use App\Services\PenjualanService;
+use App\Support\CabangLaporan;
 use Illuminate\Http\Request;
 
 class PenjualanController extends Controller
@@ -600,9 +601,36 @@ class PenjualanController extends Controller
         return view('penjualan.index', compact('orders', 'statuses', 'tipes'));
     }
 
+    /**
+     * Pengaman detail order & struk (4.49). Sebelumnya siapa pun yang login
+     * bisa membuka order cabang mana pun lewat URL. Izin = salah satu menu
+     * yang memang membuka struk/detail order (POS, Riwayat, Layout Meja,
+     * Antrian, Kas, laporan, Pelanggan, Laporan Transaksi). Cabang: role
+     * cabang hanya order cabangnya sendiri, atau order Internal dari Roastery
+     * yang ditujukan ke cabangnya.
+     */
+    public const IZIN_LIHAT_ORDER = [
+        'order.view', 'order.create', 'order.edit', 'kasir.layout-meja.view', 'kasir.queue.view',
+        'kasir.bill.print', 'keuangan.view', 'laporan.view', 'antrian.lihat', 'antrian.kelola',
+        'kitchen.display.view', 'pelanggan.view', 'setoran_kasir.view', 'laporan.setoran_harian.view',
+        'laporan.konsumsi_bahan.view', 'laporan.laba_rugi.view', 'penjualan.laporan_transaksi.view',
+    ];
+
+    private function pastikanBolehLihat(Order $order): void
+    {
+        abort_unless(auth()->user()->canAny(self::IZIN_LIHAT_ORDER), 403);
+        abort_unless(
+            CabangLaporan::bolehAkses($order->cabang_id)
+                || ($order->outlet_tujuan_id && CabangLaporan::bolehAkses($order->outlet_tujuan_id)),
+            403,
+            'Order ini milik cabang lain.'
+        );
+    }
+
     public function show(Order $order)
     {
-        $order->load(['cabang', 'kasir', 'pelanggan', 'items.item', 'dikerjakanOleh', 'parentOrder', 'childOrders']);
+        $this->pastikanBolehLihat($order);
+        $order->load(['cabang', 'kasir','pelanggan', 'items.item', 'dikerjakanOleh', 'parentOrder', 'childOrders']);
 
         $isOwner = auth()->user()->role === \App\Enums\RoleUser::Owner;
 
@@ -647,6 +675,7 @@ class PenjualanController extends Controller
 
     public function struk(Order $order)
     {
+        $this->pastikanBolehLihat($order);
         $order->load(['cabang', 'items.item']);
         $showItemPrice = $this->shouldShowItemPrice($order);
         return view('penjualan.struk', compact('order', 'showItemPrice'));
@@ -654,6 +683,7 @@ class PenjualanController extends Controller
 
     public function strukModal(Order $order)
     {
+        $this->pastikanBolehLihat($order);
         $order->load(['cabang', 'items.item']);
         $copies = (int) request('copies', 1);
         $copies = in_array($copies, [1, 2]) ? $copies : 1;
@@ -700,6 +730,7 @@ class PenjualanController extends Controller
     public function edit(Order $order)
     {
         abort_unless(auth()->user()->can('order.edit'), 403);
+        abort_unless(CabangLaporan::bolehAkses($order->cabang_id), 403, 'Order ini milik cabang lain.');
 
         $isOwner = auth()->user()->role === \App\Enums\RoleUser::Owner;
         if (!$isOwner && in_array($order->status, [StatusOrder::Selesai, StatusOrder::Dibatalkan])) {
@@ -716,6 +747,7 @@ class PenjualanController extends Controller
     public function update(Request $request, Order $order)
     {
         abort_unless(auth()->user()->can('order.edit'), 403);
+        abort_unless(CabangLaporan::bolehAkses($order->cabang_id), 403, 'Order ini milik cabang lain.');
 
         $isOwner = auth()->user()->role === \App\Enums\RoleUser::Owner;
         if (!$isOwner && in_array($order->status, [StatusOrder::Selesai, StatusOrder::Dibatalkan])) {

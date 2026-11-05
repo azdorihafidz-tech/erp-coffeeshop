@@ -46,6 +46,7 @@ class UpdateDatabaseController extends Controller
             'pending'        => $this->service->migrationBelumJalan(),
             'seeders'        => UpdateDatabaseService::SEEDERS,
             'permissionBaru' => UpdateDatabaseService::PERMISSION_BARU,
+            'permissionAda'  => \App\Models\Permission::pluck('id', 'name'),
         ];
     }
 }

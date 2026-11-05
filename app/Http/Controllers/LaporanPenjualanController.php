@@ -8,6 +8,7 @@ use App\Models\Cabang;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\SalesAnalyticsService;
+use App\Support\CabangLaporan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -39,7 +40,12 @@ class LaporanPenjualanController extends Controller
             ->terhitung();
 
         // Filter cabang
-        $cabangId = $request->cabang_id;
+        $cabangId = $request->cabang_id ? (int) $request->cabang_id : null;
+        // 4.49 — role cabang tidak boleh melihat cabang lain lewat ?cabang_id=
+        // (dulu bisa). Pilihan cabang lain diganti cabang miliknya sendiri.
+        if (!$user->canAccessAllBranches()) {
+            $cabangId = ($cabangId && CabangLaporan::bolehAkses($cabangId)) ? $cabangId : CabangLaporan::id();
+        }
         if ($cabangId) {
             $query->where('cabang_id', $cabangId);
         } elseif (!$user->canAccessAllBranches()) {
@@ -190,7 +196,7 @@ class LaporanPenjualanController extends Controller
             }
         }
 
-        $cabangs = Cabang::aktif()->get();
+        $cabangs = $user->canAccessAllBranches() ? Cabang::aktif()->get() : $user->cabangs()->aktif()->get();
 
         return view('laporan.penjualan.index', compact(
             'orders',

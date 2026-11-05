@@ -27,13 +27,15 @@ class UpdateDatabaseTest extends TestCase
 
     public function test_tambah_hak_akses_baru_tanpa_reset_hak_akses_lama(): void
     {
-        $label = Permission::where('name', 'label_cup.print')->value('id');
         $closingView = Permission::where('name', 'closing.view')->value('id');
         $orderView = Permission::where('name', 'order.view')->value('id');
 
-        // Kondisi production: permission baru belum ter-mapping ke kasir,
-        // Owner pernah memberi kasir closing.view & mencabut order.view manual.
-        DB::table('role_permissions')->where('role', 'kasir')->where('permission_id', $label)->delete();
+        // Kondisi production: permission baru belum ada sama sekali (dibuat
+        // oleh PermissionSeeder saat update), Owner pernah memberi kasir
+        // closing.view & mencabut order.view manual.
+        $lama = Permission::where('name', 'label_cup.print')->value('id');
+        DB::table('role_permissions')->where('permission_id', $lama)->delete();
+        DB::table('permissions')->where('id', $lama)->delete();
         DB::table('role_permissions')->insertOrIgnore(['role' => 'kasir', 'permission_id' => $closingView]);
         DB::table('role_permissions')->where('role', 'kasir')->where('permission_id', $orderView)->delete();
         $jumlahTransaksi = DB::table('transaksi_keuangans')->count();
@@ -41,6 +43,8 @@ class UpdateDatabaseTest extends TestCase
         $this->actingAs($this->buatUser('owner'))->post(route('update-database.execute'))
             ->assertOk()->assertSee('UPDATE BERHASIL');
 
+        $label = Permission::where('name', 'label_cup.print')->value('id');
+        $this->assertNotNull($label, 'PermissionSeeder harus membuat permission baru');
         $kasir = fn ($pid) => DB::table('role_permissions')->where('role', 'kasir')->where('permission_id', $pid)->exists();
         $this->assertTrue($kasir($label), 'Permission baru harus ditambahkan');
         $this->assertTrue($kasir($closingView), 'Hak akses tambahan Owner tidak boleh dihapus');

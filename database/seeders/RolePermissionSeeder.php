@@ -32,6 +32,7 @@ class RolePermissionSeeder extends Seeder
             'kasir.layout-meja.view', 'kasir.queue.view', 'kasir.queue.approve', 'kasir.queue.reject',
             'kasir.meja.tandai-terisi', 'kasir.bill.tambah-item', 'kasir.bill.transfer', 'kasir.bill.bayar', 'kasir.bill.print',
             'label_cup.print', // Sprint Label Cup (2026-10-19)
+            'penjualan.laporan_transaksi.view', 'penjualan.laporan_produk.view', 'penjualan.laporan_kategori.view', 'penjualan.laporan.keuntungan', // 4.49
             'jenis-olahan.view', 'jenis-olahan.manage',
             'pembelian.view', 'pembelian.create', 'pembelian.approve', 'pembelian.delete',
             'pembelian.kirim-supplier', 'pembelian.terima',
@@ -139,6 +140,7 @@ class RolePermissionSeeder extends Seeder
             'kasir.layout-meja.view', 'kasir.queue.view', 'kasir.queue.approve', 'kasir.queue.reject',
             'kasir.meja.tandai-terisi', 'kasir.bill.tambah-item', 'kasir.bill.transfer', 'kasir.bill.bayar', 'kasir.bill.print',
             'label_cup.print', // Sprint Label Cup (2026-10-19)
+            'penjualan.laporan_transaksi.view', 'penjualan.laporan_produk.view', 'penjualan.laporan_kategori.view', 'penjualan.laporan.keuntungan', // 4.49
             'pembelian.view', 'pembelian.create',
             'keuangan.view', 'keuangan.create', 'keuangan.edit', 'keuangan.delete', 'laporan.view',
             'keuangan.kas_view', 'keuangan.kas_create', 'keuangan.kas_edit', 'keuangan.kas_delete',
@@ -187,6 +189,7 @@ class RolePermissionSeeder extends Seeder
             'kasir.layout-meja.view', 'kasir.queue.view', 'kasir.queue.approve', 'kasir.queue.reject',
             'kasir.meja.tandai-terisi', 'kasir.bill.tambah-item', 'kasir.bill.transfer', 'kasir.bill.bayar', 'kasir.bill.print',
             'label_cup.print', // Sprint Label Cup (2026-10-19)
+            'penjualan.laporan_transaksi.view', 'penjualan.laporan_produk.view', 'penjualan.laporan_kategori.view', // 4.49
             'keuangan.view', 'keuangan.kas_view',
             'setoran.view', 'setoran.create', 'setoran.batal',
             'absensi.view',
@@ -208,6 +211,7 @@ class RolePermissionSeeder extends Seeder
         'operator_produksi' => [
             'label_cup.print', // Sprint Label Cup — barista cetak ulang label gelas
             'order.view',
+            'penjualan.laporan_transaksi.view', 'penjualan.laporan_produk.view', 'penjualan.laporan_kategori.view', // 4.49
             'pelanggan.view', 'pelanggan.create',
             'karyawan.view',
             'stok.view', 'stok.request',

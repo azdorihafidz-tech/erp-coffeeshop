@@ -39,6 +39,11 @@ class PermissionSeeder extends Seeder
             ['name' => 'order.bill_tersimpan.batalkan', 'display_name' => 'Batalkan Bill Tersimpan (POS)', 'group' => 'penjualan'],
             // Sprint Label Cup (2026-10-19) — cetak label stiker gelas minuman
             ['name' => 'label_cup.print', 'display_name' => 'Cetak Label Cup (stiker gelas)', 'group' => 'penjualan'],
+            // 4.49 — Laporan di menu Penjualan (bisa dibuka kasir)
+            ['name' => 'penjualan.laporan_transaksi.view', 'display_name' => 'Lihat Laporan Transaksi (menu Penjualan)', 'group' => 'penjualan'],
+            ['name' => 'penjualan.laporan_produk.view',    'display_name' => 'Lihat Laporan Penjualan Produk (menu Penjualan)', 'group' => 'penjualan'],
+            ['name' => 'penjualan.laporan_kategori.view',  'display_name' => 'Lihat Laporan Penjualan Kategori (menu Penjualan)', 'group' => 'penjualan'],
+            ['name' => 'penjualan.laporan.keuntungan',     'display_name' => 'Lihat Keuntungan di Laporan Penjualan (Transaksi/Produk/Kategori)', 'group' => 'penjualan'],
 
             // Pelanggan
             ['name' => 'pelanggan.view',   'display_name' => 'Lihat Pelanggan',   'group' => 'pelanggan'],

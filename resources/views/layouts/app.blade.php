@@ -554,7 +554,7 @@
         </a>
 
         <!-- PENJUALAN -->
-        @canany(['order.view', 'order.create', 'kasir.layout-meja.view', 'kasir.queue.view'])
+        @canany(['order.view', 'order.create', 'kasir.layout-meja.view', 'kasir.queue.view', 'penjualan.laporan_transaksi.view', 'penjualan.laporan_produk.view', 'penjualan.laporan_kategori.view'])
         <div class="nav-section-title">Penjualan</div>
         @can('order.create')
         <a href="{{ route('penjualan.pos') }}"
@@ -596,6 +596,14 @@
             <span>Riwayat Order</span>
         </a>
         @endcan
+        @can('penjualan.laporan_transaksi.view')
+        <a href="{{ route('penjualan.laporan.transaksi') }}"
+           class="nav-link {{ request()->routeIs('penjualan.laporan.transaksi') ? 'active' : '' }}">
+            <i class="bi bi-receipt-cutoff"></i>
+            <span>Laporan Transaksi</span>
+        </a>
+        @endcan
+        {{-- SIDEBAR-LAPORAN-PRODUK-449 --}}
         @can('pelanggan.view')
         <a href="{{ route('pelanggan.index') }}"
            class="nav-link {{ request()->routeIs('pelanggan.*') ? 'active' : '' }}">

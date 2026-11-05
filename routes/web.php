@@ -469,6 +469,9 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
         Route::post('batch/{batch}/pack', [\App\Http\Controllers\RoastingBatchController::class, 'pack'])->name('batch.pack');
     });
     Route::post('/penjualan', [PenjualanController::class, 'store'])->name('penjualan.store');
+    // 4.49 — Laporan di menu Penjualan (bisa dibuka kasir). Izin dicek di controller.
+    // Wajib di atas Route::get('/penjualan/{order}').
+    Route::get('/penjualan/laporan/transaksi', [\App\Http\Controllers\LaporanTransaksiKasirController::class, 'index'])->name('penjualan.laporan.transaksi');
     Route::get('/penjualan', [PenjualanController::class, 'index'])->name('penjualan.index');
     // Wajib di atas Route::get('/penjualan/{order}') — kalau di bawah, "cek-pengganti"
     // akan ketangkep sebagai {order} (string) duluan lalu 404 di route model binding.

@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\DB;
  * Sprint berikutnya yang menambah permission WAJIB menambahkannya ke
  * PERMISSION_BARU (RolePermissionSeeder tidak dipakai di production
  * karena menghapus & mengisi ulang semua hak akses role).
+ *
+ * 4.49: role bawaan HANYA dicentangkan saat permission itu baru pertama kali
+ * dibuat (belum ada di tabel permissions sebelum update). Permission yang
+ * sudah ada tidak disentuh lagi — centangan yang dicabut Owner di Role & Hak
+ * Akses tidak kembali tercentang di update berikutnya.
  */
 class UpdateDatabaseService
 {
@@ -27,6 +32,11 @@ class UpdateDatabaseService
         'closing.export'      => ['admin_pusat', 'manajer_cabang'],
         // Sprint Label Cup (4.40)
         'label_cup.print'     => ['admin_pusat', 'manajer_cabang', 'kasir', 'operator_produksi'],
+        // Laporan di menu Penjualan (4.49) — role yang bisa membuka Riwayat Order
+        'penjualan.laporan_transaksi.view' => ['admin_pusat', 'manajer_cabang', 'kasir', 'operator_produksi'],
+        'penjualan.laporan_produk.view'    => ['admin_pusat', 'manajer_cabang', 'kasir', 'operator_produksi'],
+        'penjualan.laporan_kategori.view'  => ['admin_pusat', 'manajer_cabang', 'kasir', 'operator_produksi'],
+        'penjualan.laporan.keuntungan'     => ['admin_pusat', 'manajer_cabang'],
     ];
 
     public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder'];
@@ -40,12 +50,11 @@ class UpdateDatabaseService
         $permMap = $this->permMap();
         $akanDitambah = [];
         foreach (self::PERMISSION_BARU as $nama => $roles) {
+            if (isset($permMap[$nama])) {
+                continue; // sudah ada → centangan diatur Owner, tidak disentuh
+            }
             foreach ($roles as $role) {
-                $pid = $permMap[$nama] ?? null;
-                $ada = $pid && DB::table('role_permissions')->where('role', $role)->where('permission_id', $pid)->exists();
-                if (!$ada) {
-                    $akanDitambah[] = "{$nama} → {$role}" . ($pid ? '' : ' (permission dibuat dulu oleh PermissionSeeder)');
-                }
+                $akanDitambah[] = "{$nama} → {$role}";
             }
         }
 
@@ -70,6 +79,10 @@ class UpdateDatabaseService
             Artisan::call('migrate', ['--force' => true]);
             $log(trim(Artisan::output()) ?: 'Tidak ada migration baru.', 'ok');
 
+            // Permission yang sudah ada SEBELUM seeder = sudah pernah dipasang
+            // (centangannya milik Owner). Hanya yang baru dibuat yang dicentangkan.
+            $sudahAda = $this->permMap();
+
             $log('Step 2/4: seeder konten (idempotent)');
             foreach (self::SEEDERS as $seeder) {
                 Artisan::call('db:seed', ['--class' => $seeder, '--force' => true]);
@@ -80,6 +93,9 @@ class UpdateDatabaseService
             $permMap = $this->permMap();
             $ditambah = 0;
             foreach (self::PERMISSION_BARU as $nama => $roles) {
+                if (isset($sudahAda[$nama])) {
+                    continue;
+                }
                 if (!isset($permMap[$nama])) {
                     $log("Permission {$nama} tidak ditemukan — dilewati.", 'err');
                     continue;
