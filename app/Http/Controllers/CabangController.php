@@ -175,6 +175,14 @@ class CabangController extends Controller
         if ($request->boolean('label_cup_form')) {
             $data['label_cup_kategori'] = array_values($request->input('label_cup_kategori', []));
         }
+        // Geser label (2026-11-06): kosong = 0; kolom belum ada (Update Database belum jalan) = abaikan
+        foreach (['label_cup_geser_x', 'label_cup_geser_y'] as $k) {
+            if (! \Illuminate\Support\Facades\Schema::hasColumn('cabangs', $k)) {
+                unset($data[$k]);
+            } elseif (array_key_exists($k, $data)) {
+                $data[$k] = (float) ($data[$k] ?? 0);
+            }
+        }
 
         $oldKepalaCabangId = $cabang->kepala_cabang_id;
         $cabang->update($data);

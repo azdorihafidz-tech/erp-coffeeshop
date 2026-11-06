@@ -49,6 +49,9 @@ class CabangRequest extends FormRequest
             'label_cup_kategori.*'    => ['string', 'max:20'],
             'label_cup_lebar_mm'      => ['sometimes', 'integer', 'min:25', 'max:120'],
             'label_cup_tinggi_mm'     => ['sometimes', 'integer', 'min:15', 'max:120'],
+            // Geser posisi label (mm) — printer/gulungan stiker bisa menggeser isi beberapa mm
+            'label_cup_geser_x'       => ['sometimes', 'nullable', 'numeric', 'min:-10', 'max:10'],
+            'label_cup_geser_y'       => ['sometimes', 'nullable', 'numeric', 'min:-10', 'max:10'],
         ];
     }
 

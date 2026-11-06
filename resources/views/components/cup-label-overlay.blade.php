@@ -38,10 +38,11 @@
             <details class="mt-3 border rounded px-2 py-1" id="cupLabelPosisi">
                 <summary class="small fw-semibold">⚙️ Atur posisi label (perangkat ini) <x-tooltip key="label_cup.posisi" /></summary>
                 <div class="row g-2 mt-1 small">
-                    <div class="col-6"><label class="form-label mb-0">Geser kiri/kanan (mm)</label>
+                    <div class="col-12 text-muted" id="cupLabelGeserCabang"></div>
+                    <div class="col-6"><label class="form-label mb-0">Tambahan geser kiri/kanan (mm)</label>
                         <input type="number" step="0.5" min="-10" max="10" class="form-control form-control-sm" id="cupLabelGeserX" onchange="window.cupLabelSimpanPosisi()">
                         <div class="text-muted">+ ke kanan, − ke kiri</div></div>
-                    <div class="col-6"><label class="form-label mb-0">Geser atas/bawah (mm)</label>
+                    <div class="col-6"><label class="form-label mb-0">Tambahan geser atas/bawah (mm)</label>
                         <input type="number" step="0.5" min="-10" max="10" class="form-control form-control-sm" id="cupLabelGeserY" onchange="window.cupLabelSimpanPosisi()">
                         <div class="text-muted">+ ke bawah, − ke atas</div></div>
                     <div class="col-12"><label class="form-label mb-0">Cara cetak</label>
@@ -192,9 +193,11 @@
     };
 
     function isiPosisiUi() {
-        var p = posisi();
+        var p = posisiPerangkat();
         if (!el('cupLabelGeserX')) return;
         el('cupLabelGeserX').value = p.gx; el('cupLabelGeserY').value = p.gy; el('cupLabelPutar').checked = p.arah === 0;
+        var tot = posisi();
+        el('cupLabelGeserCabang').textContent = 'Geser dari pengaturan cabang: ' + tot.cx + ' / ' + tot.cy + ' mm (ubah di Cabang → Edit → Label Cup). Kolom di bawah = tambahan khusus perangkat ini, biasanya 0.';
         el('cupLabelMode').value = ls(KEY_MODE) === 'teks' ? 'teks' : 'gambar';
         el('cupLabelBalik').checked = ls(KEY_BALIK) === '1';
     }
@@ -247,13 +250,20 @@
     // sehingga nomor rata kanan menabrak nama toko. Sekarang: tidak ada teks rata
     // kanan, lebar huruf dihitung longgar, margin kiri 4 mm, plus geser manual.
     var KEY_GESER_X = 'labelCupGeserX', KEY_GESER_Y = 'labelCupGeserY', KEY_PUTAR = 'labelCupPutar';
-    function posisi() {
+    // Geser yang diisi DI PERANGKAT INI saja (localStorage)
+    function posisiPerangkat() {
         var gx = parseFloat(ls(KEY_GESER_X)), gy = parseFloat(ls(KEY_GESER_Y));
         return {
             gx: isFinite(gx) ? Math.max(-10, Math.min(10, gx)) : 0,
             gy: isFinite(gy) ? Math.max(-10, Math.min(10, gy)) : 0,
             arah: ls(KEY_PUTAR) === '0' ? 0 : 1,
         };
+    }
+    // Geser total = setelan cabang (Cabang → Edit → Label Cup, berlaku semua perangkat) + perangkat ini
+    function posisi() {
+        var p = posisiPerangkat(), c = (state && state.geser) ? state.geser : { x: 0, y: 0 };
+        var batas = function (v) { return Math.max(-15, Math.min(15, Math.round(v * 2) / 2)); };
+        return { gx: batas(p.gx + (parseFloat(c.x) || 0)), gy: batas(p.gy + (parseFloat(c.y) || 0)), arah: p.arah, cx: parseFloat(c.x) || 0, cy: parseFloat(c.y) || 0 };
     }
     // Lebar huruf TERBESAR yang pernah ditemui per font TSPL (dot), supaya teks
     // tidak keluar stiker walau printer memakai huruf lebih lebar dari standar.
@@ -278,9 +288,12 @@
         cv.width = W; cv.height = H;
         var g = cv.getContext('2d');
         g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
-        g.translate(ox || 0, oy || 0);                       // geser posisi (mm × 8)
-        g.fillStyle = '#000'; g.textBaseline = 'top';
         var M = 24, kanan = W - M, lebar = kanan - M;        // margin 3 mm kiri & kanan
+        // Geser ke kiri/atas dibatasi supaya huruf tidak keluar dari gambar (printer tidak bisa
+        // mencetak di kiri titik nolnya): sisakan minimal 2 titik.
+        ox = Math.max(2 - M, ox || 0); oy = Math.max(-8, oy || 0);
+        g.translate(ox, oy);                                 // geser posisi (mm × 8)
+        g.fillStyle = '#000'; g.textBaseline = 'top';
         var F = 'Arial, Helvetica, sans-serif';
         var font = function (px, tebal) { g.font = (tebal ? 'bold ' : '') + px + 'px ' + F; };
         var potong = function (t, maks) {
@@ -310,7 +323,8 @@
         // Urutan gelas (1/2) di kotak hitam TEPAT di sebelah nomor — dulu rata kanan & terpotong di tepi (foto Owner)
         font(30, true); var nomor = potong('#' + l.nomor, lebar - 70), wNo = g.measureText(nomor).width; g.fillText(nomor, M, y);
         font(17, true); var wKd = g.measureText(kd).width, bx = M + wNo + 10;
-        g.fillRect(bx, y + 4, wKd + 12, 24); g.fillStyle = '#fff'; g.fillText(kd, bx + 6, y + 8); g.fillStyle = '#000';
+        // Kotak garis tepi + angka hitam (blok hitam + angka putih jadi hitam semua di printer thermal — foto Owner)
+        g.lineWidth = 2; g.strokeRect(bx + 1, y + 4, wKd + 12, 24); g.fillText(kd, bx + 7, y + 8);
         y += 33; g.fillRect(M, y, lebar, 2); y += 6;
 
         // Batas bawah: baris info (15 px) + nama pelanggan (bila ada)
@@ -416,7 +430,7 @@
         cmds.push('BOX ' + c(ox) + ',' + c(oy) + ',' + c(dotsW - 1 + ox) + ',' + c(dotsH - 1 + oy) + ',3');
         cmds.push('BOX ' + c(24 + ox) + ',' + c(16 + oy) + ',' + c(dotsW - 24 + ox) + ',' + c(dotsH - 16 + oy) + ',1'); // batas tulisan
         cmds.push('TEXT ' + c(40 + ox) + ',' + c(24 + oy) + ',"2",0,1,1,' + q('LABEL UJI ' + w + 'x' + h));
-        cmds.push('TEXT ' + c(40 + ox) + ',' + c(56 + oy) + ',"1",0,1,1,' + q('Geser X ' + p.gx + ' mm, Y ' + p.gy + ' mm'));
+        cmds.push('TEXT ' + c(40 + ox) + ',' + c(56 + oy) + ',"1",0,1,1,' + q('Geser X ' + p.gx + ' Y ' + p.gy + ' (cabang ' + p.cx + '/' + p.cy + ')'));
         cmds.push('TEXT ' + c(40 + ox) + ',' + c(80 + oy) + ',"1",0,1,1,' + q('Bingkai tebal = tepi stiker'));
         cmds.push('TEXT ' + c(40 + ox) + ',' + c(104 + oy) + ',"1",0,1,1,' + q('ABCDEFGHIJKLMNOPQRSTUVWXYZ'));
         cmds.push('PRINT 1,1');

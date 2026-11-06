@@ -499,7 +499,9 @@ Di keranjang POS tiap item punya kolom **Catatan item** — isi misalnya *Large,
 - Label dibatasi maksimal 100 stiker per cetak
 
 ## Label terpotong / tidak pas di stiker
-Setiap printer & gulungan stiker posisinya sedikit berbeda. Di jendela Label Cup buka **⚙️ Atur posisi label (perangkat ini)**:
+Setiap printer & gulungan stiker posisinya sedikit berbeda. **Cara paling mudah (sekali untuk semua HP/tablet):** buka **Cabang → Edit → Label Cup** lalu isi **Geser kiri/kanan (mm)** — kiri terlalu lebar & kanan terpotong → angka minus (mis. **−3,5**), kanan terlalu lebar → plus. Simpan, lalu cetak lagi.
+
+Kalau satu perangkat masih sedikit meleset, di jendela Label Cup buka **⚙️ Atur posisi label (perangkat ini)** — angkanya **ditambahkan** ke setelan cabang:
 1. Klik **🧪 Cetak Label Uji** — tercetak bingkai tebal yang seharusnya pas di tepi stiker.
 2. Bingkai/huruf terpotong di **kiri** → isi **Geser kiri/kanan** dengan angka plus (mis. 2 = geser 2 mm ke kanan); terpotong di **kanan** → angka minus.
 3. Terlalu ke **atas/bawah** → isi **Geser atas/bawah** (plus = ke bawah).

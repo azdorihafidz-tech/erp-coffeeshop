@@ -273,6 +273,17 @@ class CupLabelTest extends TestCase
 
         $this->actingAs($owner)->put(route('cabang.update', $this->cabang), $base)->assertRedirect();
         $this->assertSame([], $this->cabang->fresh()->label_cup_kategori);
+
+        // Geser label per cabang (2026-11-06): tersimpan, ikut ke JSON label, kosong = 0, batas ±10
+        $this->actingAs($owner)->put(route('cabang.update', $this->cabang), $base + ['label_cup_kategori' => ['KPI'], 'label_cup_geser_x' => '-3.5', 'label_cup_geser_y' => '1'])->assertRedirect();
+        $c = $this->cabang->fresh();
+        $this->assertSame(-3.5, $c->label_cup_geser_x);
+        $this->assertSame(1.0, $c->label_cup_geser_y);
+        $this->assertSame(['x' => -3.5, 'y' => 1.0], $this->svc->untukOrder($this->order([[$this->kopi, 1, null, null]]))['geser']);
+        $this->actingAs($owner)->get(route('cabang.edit', $this->cabang))->assertOk()->assertSee('Geser kiri/kanan (mm)')->assertSee('value="-3.5"', false);
+        $this->actingAs($owner)->put(route('cabang.update', $this->cabang), $base + ['label_cup_geser_x' => '', 'label_cup_geser_y' => ''])->assertRedirect();
+        $this->assertSame(0.0, $this->cabang->fresh()->label_cup_geser_x);
+        $this->actingAs($owner)->put(route('cabang.update', $this->cabang), $base + ['label_cup_geser_x' => '20'])->assertSessionHasErrors('label_cup_geser_x');
     }
 
     public function test_pos_dan_detail_order_render_dengan_overlay(): void

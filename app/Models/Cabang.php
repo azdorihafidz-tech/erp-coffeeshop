@@ -51,6 +51,8 @@ class Cabang extends Model
         'label_cup_kategori',
         'label_cup_lebar_mm',
         'label_cup_tinggi_mm',
+        'label_cup_geser_x',
+        'label_cup_geser_y',
     ];
 
     /** Kode kategori default yang dapat label cup bila belum diatur per cabang. */
@@ -78,6 +80,8 @@ class Cabang extends Model
             'label_cup_kategori'     => 'array',
             'label_cup_lebar_mm'     => 'integer',
             'label_cup_tinggi_mm'    => 'integer',
+            'label_cup_geser_x'      => 'float',
+            'label_cup_geser_y'      => 'float',
         ];
     }
 

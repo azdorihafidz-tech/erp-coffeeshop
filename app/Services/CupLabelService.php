@@ -137,6 +137,11 @@ class CupLabelService
                 'lebar'  => (int) ($cabang?->label_cup_lebar_mm ?: 50),
                 'tinggi' => (int) ($cabang?->label_cup_tinggi_mm ?: 30),
             ],
+            // Geser posisi per cabang (mm); perangkat bisa menambah sendiri di Atur posisi label
+            'geser' => [
+                'x' => (float) ($cabang?->label_cup_geser_x ?? 0),
+                'y' => (float) ($cabang?->label_cup_geser_y ?? 0),
+            ],
             'labels' => $aktif ? $labels : [],
         ];
     }

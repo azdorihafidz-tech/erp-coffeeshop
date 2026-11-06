@@ -1264,6 +1264,9 @@ class TooltipKontenSeeder extends Seeder
         Tooltip::updateOrCreate(['key' => 'label_cup.posisi'], ['title' => 'Atur posisi label', 'modul' => 'penjualan', 'urutan' => 60, 'aktif' => true,
             'content' => 'Kalau tulisan terpotong atau tidak pas di stiker: cetak label uji, lalu geser kiri/kanan atau atas/bawah dalam mm sampai bingkainya pas di tepi stiker. Disimpan di perangkat ini saja.']);
 
+        Tooltip::updateOrCreate(['key' => 'cabang.label_cup_geser'], ['title' => 'Geser posisi label', 'modul' => 'penjualan', 'urutan' => 61, 'aktif' => true,
+            'content' => 'Printer & gulungan stiker bisa menggeser isi label beberapa mm. Kiri terlalu lebar dan kanan terpotong → isi minus (mis. -3,5). Kanan terlalu lebar → plus. Berlaku untuk semua HP/tablet cabang ini.']);
+
         // Retur Cabang (2026-11-06)
         foreach ([
             ['key' => 'retur_cabang.uang_kembali', 'title' => 'Uang dikembalikan?',
