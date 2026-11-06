@@ -497,6 +497,16 @@ Di keranjang POS tiap item punya kolom **Catatan item** — isi misalnya *Large,
 - Cetak Bluetooth belum tentu cocok dengan semua merek printer — kalau hasilnya berantakan, coba ganti bahasa printer (TSPL ↔ ESC/POS) atau pakai Cetak Browser
 - Browser memblokir popup? Izinkan popup untuk alamat aplikasi agar Cetak Browser bisa membuka tab label
 - Label dibatasi maksimal 100 stiker per cetak
+
+## Label terpotong / tidak pas di stiker
+Setiap printer & gulungan stiker posisinya sedikit berbeda. Di jendela Label Cup buka **⚙️ Atur posisi label (perangkat ini)**:
+1. Klik **🧪 Cetak Label Uji** — tercetak bingkai tebal yang seharusnya pas di tepi stiker.
+2. Bingkai/huruf terpotong di **kiri** → isi **Geser kiri/kanan** dengan angka plus (mis. 2 = geser 2 mm ke kanan); terpotong di **kanan** → angka minus.
+3. Terlalu ke **atas/bawah** → isi **Geser atas/bawah** (plus = ke bawah).
+4. Tulisan terbalik → centang/hapus centang **Putar tulisan 180°**.
+5. Cetak uji lagi sampai pas. Pengaturan disimpan di perangkat itu saja (tablet, HP gerobak, atau PC masing-masing).
+
+Pastikan juga **ukuran stiker** di Cabang → Edit → Label Cup sama dengan stiker yang dipasang (mis. 40 × 30 mm).
 MARKDOWN,
             'modul'  => 'penjualan',
             'urutan' => 30,

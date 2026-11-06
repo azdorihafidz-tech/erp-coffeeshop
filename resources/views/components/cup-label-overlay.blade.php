@@ -35,6 +35,22 @@
                     <button type="button" class="btn btn-outline-secondary" onclick="window.cupLabelCetakBluetooth(false)">📶 Pilih Printer Bluetooth</button>
                 </div>
             </div>
+            <details class="mt-3 border rounded px-2 py-1" id="cupLabelPosisi">
+                <summary class="small fw-semibold">⚙️ Atur posisi label (perangkat ini) <x-tooltip key="label_cup.posisi" /></summary>
+                <div class="row g-2 mt-1 small">
+                    <div class="col-6"><label class="form-label mb-0">Geser kiri/kanan (mm)</label>
+                        <input type="number" step="0.5" min="-10" max="10" class="form-control form-control-sm" id="cupLabelGeserX" onchange="window.cupLabelSimpanPosisi()">
+                        <div class="text-muted">+ ke kanan, − ke kiri</div></div>
+                    <div class="col-6"><label class="form-label mb-0">Geser atas/bawah (mm)</label>
+                        <input type="number" step="0.5" min="-10" max="10" class="form-control form-control-sm" id="cupLabelGeserY" onchange="window.cupLabelSimpanPosisi()">
+                        <div class="text-muted">+ ke bawah, − ke atas</div></div>
+                    <div class="col-12"><div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="cupLabelPutar" onchange="window.cupLabelSimpanPosisi()">
+                        <label class="form-check-label" for="cupLabelPutar">Putar tulisan 180°</label></div></div>
+                    <div class="col-12 d-grid"><button type="button" class="btn btn-sm btn-outline-dark" onclick="window.cupLabelUji()">🧪 Cetak Label Uji (bingkai tepi stiker)</button></div>
+                    <div class="col-12 text-muted">Cetak label uji: bingkai tebal harus pas di tepi stiker. Kalau terpotong di kiri, isi Geser kiri/kanan dengan angka plus (mis. 2), lalu cetak uji lagi. Hanya untuk printer label (TSPL).</div>
+                </div>
+            </details>
             <div class="small mt-2" id="cupLabelStatus" style="white-space:pre-line"></div>
         </div>
         <div class="card-footer d-flex justify-content-between">
@@ -115,6 +131,7 @@
         } else {
             el('cupLabelBtnForget').style.display = 'none';
         }
+        isiPosisiUi();
         status('');
         el('cupLabelOverlay').style.display = 'flex';
         return new Promise(function (resolve) { resolver = resolve; });
@@ -153,6 +170,30 @@
         else status('Halaman label dibuka di tab baru — pilih printer label di dialog print.', 'success');
     };
 
+    function isiPosisiUi() {
+        var p = posisi();
+        if (!el('cupLabelGeserX')) return;
+        el('cupLabelGeserX').value = p.gx; el('cupLabelGeserY').value = p.gy; el('cupLabelPutar').checked = p.arah === 0;
+    }
+    window.cupLabelSimpanPosisi = function () {
+        var gx = parseFloat(el('cupLabelGeserX').value), gy = parseFloat(el('cupLabelGeserY').value);
+        ls(KEY_GESER_X, isFinite(gx) ? String(Math.max(-10, Math.min(10, gx))) : null);
+        ls(KEY_GESER_Y, isFinite(gy) ? String(Math.max(-10, Math.min(10, gy))) : null);
+        ls(KEY_PUTAR, el('cupLabelPutar').checked ? '0' : null);
+        isiPosisiUi();
+        status('Posisi label disimpan di perangkat ini.', 'muted');
+    };
+    window.cupLabelUji = async function () {
+        window.cupLabelSimpanPosisi();
+        if (window.KDApk && window.KDApk.ada()) {
+            if (window.KDApk.info().label_protokol === 'escpos') { status('Label uji hanya untuk printer label (TSPL). Ganti bahasa label di Pengaturan Printer Aplikasi.', 'warning'); return; }
+            try { await window.KDApk.cetak('label', buildTsplUji()); status('✓ Label uji terkirim — cek bingkainya.', 'success'); }
+            catch (e) { status('Gagal cetak label uji: ' + e.message, 'danger'); }
+            return;
+        }
+        return window.cupLabelCetakBluetooth(true, true);
+    };
+
     window.cupLabelLupakanPrinter = function () { ls(KEY_PRINTER, null); refreshPrinterUi(); status('Printer label dihapus.', 'muted'); };
 
     // ---- Builder data printer ----
@@ -173,31 +214,69 @@
         return out;
     }
 
+    // ---- Posisi label per perangkat (printer & gulungan stiker beda-beda) ----
+    // 2026-11-06: foto Owner (Blueprint ECO80BT, stiker 40×30): isi bergeser ±3 mm
+    // sehingga huruf awal terpotong, dan font "2" printer itu 16 titik (bukan 12)
+    // sehingga nomor rata kanan menabrak nama toko. Sekarang: tidak ada teks rata
+    // kanan, lebar huruf dihitung longgar, margin kiri 4 mm, plus geser manual.
+    var KEY_GESER_X = 'labelCupGeserX', KEY_GESER_Y = 'labelCupGeserY', KEY_PUTAR = 'labelCupPutar';
+    function posisi() {
+        var gx = parseFloat(ls(KEY_GESER_X)), gy = parseFloat(ls(KEY_GESER_Y));
+        return {
+            gx: isFinite(gx) ? Math.max(-10, Math.min(10, gx)) : 0,
+            gy: isFinite(gy) ? Math.max(-10, Math.min(10, gy)) : 0,
+            arah: ls(KEY_PUTAR) === '0' ? 0 : 1,
+        };
+    }
+    // Lebar huruf TERBESAR yang pernah ditemui per font TSPL (dot), supaya teks
+    // tidak keluar stiker walau printer memakai huruf lebih lebar dari standar.
+    var LEBAR_FONT = { '1': 10, '2': 16, '3': 16 }; // font 1 standar 8 (Blueprint terukur 8), font 2 Blueprint terukur 16
+
+    function tsplAwal(w, h, p) {
+        // Geser diterapkan langsung ke koordinat (bukan REFERENCE) — nilai minus aman di semua printer
+        return ['SIZE ' + w + ' mm,' + h + ' mm', 'GAP 2 mm,0 mm', 'DIRECTION ' + p.arah, 'REFERENCE 0,0', 'CLS'];
+    }
+    function q(t) { return '"' + ascii(t).replace(/"/g, "'") + '"'; }
+
     function buildTspl() {
-        var w = state.ukuran.lebar, h = state.ukuran.tinggi, dotsW = w * 8, dotsH = h * 8;
+        var w = state.ukuran.lebar, h = state.ukuran.tinggi, dotsW = w * 8, dotsH = h * 8, p = posisi();
+        var ox = Math.round(p.gx * 8), oy = Math.round(p.gy * 8);
+        var x = Math.max(0, 32 + ox), lebar = dotsW - 32 - 16;   // margin kiri 4 mm, kanan 2 mm
+        var muat = function (font) { return Math.max(4, Math.floor(lebar / LEBAR_FONT[font])); };
         var out = '';
         state.labels.forEach(function (l) {
-            var cmds = ['SIZE ' + w + ' mm,' + h + ' mm', 'GAP 2 mm,0 mm', 'DIRECTION 1', 'CLS'];
-            var y = 10, x = 12;
-            var colS = Math.floor((dotsW - 24) / 12), colB = Math.floor((dotsW - 24) / 16);
-            var kanan = '#' + l.nomor + ' ' + l.ke + '/' + l.dari;
-            var q = function (t) { return '"' + ascii(t).replace(/"/g, "'") + '"'; };
-            // Nama toko (Pengaturan Umum) pakai font kecil 8 dot supaya muat utuh
-            // di stiker 40 mm; nomor antrean font 12 dot rata kanan.
-            var xKanan = dotsW - 12 - kanan.length * 12;
-            var head = ascii(l.toko.toUpperCase()).slice(0, Math.max(0, Math.floor((xKanan - x - 8) / 8)));
-            cmds.push('TEXT ' + x + ',' + (y + 5) + ',"1",0,1,1,' + q(head));
-            cmds.push('TEXT ' + xKanan + ',' + y + ',"2",0,1,1,' + q(kanan));
-            y += 24; cmds.push('BAR ' + x + ',' + y + ',' + (dotsW - 24) + ',2'); y += 6;
-            wrap(l.nama, colB).slice(0, 2).forEach(function (t) { if (y + 26 < dotsH - 20) { cmds.push('TEXT ' + x + ',' + y + ',"3",0,1,1,' + q(t)); y += 28; } });
-            bodyLines(l).forEach(function (b) {
-                wrap(b, colS).forEach(function (t) { if (y + 22 < dotsH - 20) { cmds.push('TEXT ' + x + ',' + y + ',"2",0,1,1,' + q(t)); y += 22; } });
-            });
-            cmds.push('TEXT ' + x + ',' + (dotsH - 18) + ',"1",0,1,1,' + q(l.info));
+            var cmds = tsplAwal(w, h, p);
+            var y = Math.max(0, 12 + oy), batas = dotsH - 30 + oy; // baris terakhir untuk info
+            var tulis = function (font, t, tinggi) {
+                if (y + tinggi <= batas) { cmds.push('TEXT ' + x + ',' + y + ',"' + font + '",0,1,1,' + q(t)); y += tinggi; }
+            };
+            // Setiap elemen di barisnya sendiri — tidak ada yang bisa saling menabrak
+            tulis('1', ascii(l.toko.toUpperCase()).slice(0, muat('1')), 16);
+            tulis('2', ('#' + l.nomor + '  ' + l.ke + '/' + l.dari).slice(0, muat('2')), 24);
+            cmds.push('BAR ' + x + ',' + y + ',' + lebar + ',2'); y += 6;
+            wrap(l.nama, muat('3')).slice(0, 2).forEach(function (t) { tulis('3', t, 28); });
+            bodyLines(l).forEach(function (b) { wrap(b, muat('2')).forEach(function (t) { tulis('2', t, 22); }); });
+            cmds.push('TEXT ' + x + ',' + Math.max(0, dotsH - 22 + oy) + ',"1",0,1,1,' + q(ascii(l.info).slice(0, muat('1'))));
             cmds.push('PRINT 1,1');
             out += cmds.join('\r\n') + '\r\n';
         });
         return new TextEncoder().encode(out);
+    }
+
+    // Label uji: bingkai tepat di tepi stiker + tanda margin, untuk mengatur posisi.
+    function buildTsplUji() {
+        var w = (state && state.ukuran) ? state.ukuran.lebar : 40, h = (state && state.ukuran) ? state.ukuran.tinggi : 30;
+        var dotsW = w * 8, dotsH = h * 8, p = posisi();
+        var ox = Math.round(p.gx * 8), oy = Math.round(p.gy * 8), c = function (v) { return Math.max(0, v); };
+        var cmds = tsplAwal(w, h, p);
+        cmds.push('BOX ' + c(ox) + ',' + c(oy) + ',' + c(dotsW - 1 + ox) + ',' + c(dotsH - 1 + oy) + ',3');
+        cmds.push('BOX ' + c(32 + ox) + ',' + c(12 + oy) + ',' + c(dotsW - 16 + ox) + ',' + c(dotsH - 8 + oy) + ',1');
+        cmds.push('TEXT ' + c(40 + ox) + ',' + c(24 + oy) + ',"2",0,1,1,' + q('LABEL UJI ' + w + 'x' + h));
+        cmds.push('TEXT ' + c(40 + ox) + ',' + c(56 + oy) + ',"1",0,1,1,' + q('Geser X ' + p.gx + ' mm, Y ' + p.gy + ' mm'));
+        cmds.push('TEXT ' + c(40 + ox) + ',' + c(80 + oy) + ',"1",0,1,1,' + q('Bingkai tebal = tepi stiker'));
+        cmds.push('TEXT ' + c(40 + ox) + ',' + c(104 + oy) + ',"1",0,1,1,' + q('ABCDEFGHIJKLMNOPQRSTUVWXYZ'));
+        cmds.push('PRINT 1,1');
+        return new TextEncoder().encode(cmds.join('\r\n') + '\r\n');
     }
 
     // Printer ESC/POS (printer struk/label yang tidak mengerti TSPL, mis. Blueprint
@@ -257,9 +336,10 @@
         }
     }
 
-    window.cupLabelCetakBluetooth = async function (pakaiTersimpan) {
-        if (!state) return;
+    window.cupLabelCetakBluetooth = async function (pakaiTersimpan, uji) {
+        if (!state && !uji) return;
         var proto = el('cupLabelProtocol').value;
+        if (uji && proto !== 'tspl') { status('Label uji hanya untuk printer label (TSPL).', 'warning'); return; }
         ls(KEY_PROTOCOL, proto);
         var secure = location.protocol === 'https:' || ['localhost', '127.0.0.1'].indexOf(location.hostname) >= 0;
         if (!secure || !navigator.bluetooth) {
@@ -280,10 +360,10 @@
             server = await device.gatt.connect();
             var chr = await findChar(server);
             if (!chr) throw new Error('Service printer tidak ditemukan.');
-            await send(chr, proto === 'tspl' ? buildTspl() : buildEscpos());
+            await send(chr, uji ? buildTsplUji() : (proto === 'tspl' ? buildTspl() : buildEscpos()));
             ls(KEY_PRINTER, device.name || 'Printer');
             refreshPrinterUi();
-            status('✓ ' + state.labels.length + ' label terkirim ke "' + (device.name || 'Printer') + '".', 'success');
+            status(uji ? '✓ Label uji terkirim — cek bingkainya.' : '✓ ' + state.labels.length + ' label terkirim ke "' + (device.name || 'Printer') + '".', 'success');
         } catch (e) {
             status(e && e.name === 'NotFoundError' ? 'Pemilihan printer dibatalkan.' : 'Gagal cetak Bluetooth: ' + (e && e.message ? e.message : e), 'danger');
         } finally {

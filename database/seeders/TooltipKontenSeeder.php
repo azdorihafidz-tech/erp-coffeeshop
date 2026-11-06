@@ -1260,6 +1260,10 @@ class TooltipKontenSeeder extends Seeder
             Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['aktif' => true]));
         }
 
+        // Label Cup — atur posisi per perangkat (2026-11-06, foto Blueprint terpotong)
+        Tooltip::updateOrCreate(['key' => 'label_cup.posisi'], ['title' => 'Atur posisi label', 'modul' => 'penjualan', 'urutan' => 60, 'aktif' => true,
+            'content' => 'Kalau tulisan terpotong atau tidak pas di stiker: cetak label uji, lalu geser kiri/kanan atau atas/bawah dalam mm sampai bingkainya pas di tepi stiker. Disimpan di perangkat ini saja.']);
+
         // Retur Cabang (2026-11-06)
         foreach ([
             ['key' => 'retur_cabang.uang_kembali', 'title' => 'Uang dikembalikan?',
