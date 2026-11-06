@@ -118,6 +118,12 @@ class Item extends Model
         return $this->hasOne(ResepBumbu::class);
     }
 
+    /** Resep Produksi bahan setengah jadi (menu Produksi) — BUKAN komposisi POS. */
+    public function resepProduksi()
+    {
+        return $this->hasOne(ResepProduksi::class);
+    }
+
     /**
      * Tahap 2.5 D'mentai — ketersediaan produk_jual/produk_tambahan per
      * outlet. Config eksplisit di `item_cabang` (create/edit form Produk

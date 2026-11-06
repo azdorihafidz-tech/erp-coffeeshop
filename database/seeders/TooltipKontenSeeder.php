@@ -1223,6 +1223,27 @@ class TooltipKontenSeeder extends Seeder
             Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'penjualan', 'urutan' => 70 + $i, 'aktif' => true]));
         }
 
+        // Produksi bahan setengah jadi di gudang (2026-11-06)
+        $produksi = [
+            ['key' => 'produksi.barang_hasil', 'title' => 'Barang hasil',
+             'content' => 'Barang setengah jadi yang dibuat, mis. Saus Padang atau Cup Kopi Isi. Daftarkan dulu di Bahan Baku & Kemasan. Satu barang hanya punya satu resep produksi.'],
+            ['key' => 'produksi.qty_hasil_resep', 'title' => 'Hasil per resep',
+             'content' => 'Berapa yang jadi dari takaran bahan di bawah, dalam satuan barang hasil. Mis. takaran untuk 1 liter Saus Padang → isi 1. Saat produksi 5 liter, takaran dikali 5 otomatis.'],
+            ['key' => 'produksi.satuan_takaran', 'title' => 'Satuan takaran',
+             'content' => 'Boleh berbeda dengan satuan stok bahan: g/kg/ons dan ml/liter dikonversi otomatis (100 g dari bahan yang stoknya kg = 0,1 kg). Satuan lain (pcs, botol) dipotong apa adanya.'],
+            ['key' => 'produksi.qty_rencana', 'title' => 'Rencana dibuat',
+             'content' => 'Jumlah yang direncanakan, dalam satuan barang hasil. Bahan dipotong dari stok gudang sebanyak resep × rencana ini.'],
+            ['key' => 'produksi.qty_hasil', 'title' => 'Hasil nyata',
+             'content' => 'Jumlah yang benar-benar jadi setelah dimasak/dibuat. Angka ini yang menambah stok. Kalau lebih sedikit dari rencana, susutnya ikut dihitung ke modal per unit.'],
+            ['key' => 'produksi.modal', 'title' => 'Modal per unit',
+             'content' => 'Otomatis = total modal FIFO bahan yang terpakai ÷ hasil nyata. Bisa diisi manual kalau ada biaya lain (gas, tenaga) yang mau dimasukkan. Angka ini menjadi modal stok barang hasil.'],
+            ['key' => 'produksi.batalkan', 'title' => 'Batalkan produksi',
+             'content' => 'Stok hasil ditarik dan bahan dikembalikan ke gudang dengan modal semula. Hanya bisa kalau hasil produksi ini belum terpakai atau terkirim.'],
+        ];
+        foreach ($produksi as $i => $d) {
+            Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'stok', 'urutan' => 80 + $i, 'aktif' => true]));
+        }
+
         // Tooltip lama (firstOrCreate di atas tidak menimpa) yang masih menyebut
         // nama Kopi Drip → penanda, ditampilkan sesuai Pengaturan Umum.
         Tooltip::where('content', 'like', '%Kopi Drip%')->get()->each(function (Tooltip $t) {

@@ -33,6 +33,7 @@ class RolePermissionSeeder extends Seeder
             'kasir.meja.tandai-terisi', 'kasir.bill.tambah-item', 'kasir.bill.transfer', 'kasir.bill.bayar', 'kasir.bill.print',
             'label_cup.print', // Sprint Label Cup (2026-10-19)
             'penjualan.laporan_transaksi.view', 'penjualan.laporan_produk.view', 'penjualan.laporan_kategori.view', 'penjualan.laporan.keuntungan', // 4.49
+            'produksi.view', 'produksi.create', 'produksi.batalkan', 'produksi.resep.kelola', // Produksi (2026-11-06)
             'jenis-olahan.view', 'jenis-olahan.manage',
             'pembelian.view', 'pembelian.create', 'pembelian.approve', 'pembelian.delete',
             'pembelian.kirim-supplier', 'pembelian.terima',
@@ -100,6 +101,8 @@ class RolePermissionSeeder extends Seeder
             'grinding-batch.view', 'grinding-batch.create', 'grinding-batch.selesaikan', 'grinding-batch.batalkan',
             // Roastery V2 — Packing Batch (Minggu 5-6, 2026-09-30)
             'packing-batch.view', 'packing-batch.create', 'packing-batch.selesaikan', 'packing-batch.batalkan',
+            // Produksi bahan setengah jadi (2026-11-06)
+            'produksi.view', 'produksi.create', 'produksi.batalkan', 'produksi.resep.kelola',
             'karyawan.view',
             'stok.view', 'stok.adjustment', 'stok.transfer',
             'item.view', 'item.create', 'item.edit',
@@ -215,6 +218,7 @@ class RolePermissionSeeder extends Seeder
             'pelanggan.view', 'pelanggan.create',
             'karyawan.view',
             'stok.view', 'stok.request',
+            'produksi.view', 'produksi.create', // Produksi (2026-11-06)
             'item.view',
             'master.bahan_baku.view',
             'master.produk_jual.view',

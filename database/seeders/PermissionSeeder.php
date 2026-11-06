@@ -207,6 +207,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'packing-batch.selesaikan', 'display_name' => 'Selesaikan Packing Batch', 'group' => 'roastery'],
             ['name' => 'packing-batch.batalkan',   'display_name' => 'Batalkan Packing Batch',   'group' => 'roastery'],
 
+            // Produksi bahan setengah jadi di gudang (FASE_PRODUKSI_GEROBAK_DESIGN.md Tahap 1, 2026-11-06)
+            ['name' => 'produksi.view',         'display_name' => 'Lihat Produksi & Resep Produksi',  'group' => 'stok'],
+            ['name' => 'produksi.create',       'display_name' => 'Catat Produksi',                  'group' => 'stok'],
+            ['name' => 'produksi.batalkan',     'display_name' => 'Batalkan Produksi',               'group' => 'stok'],
+            ['name' => 'produksi.resep.kelola', 'display_name' => 'Kelola Resep Produksi',           'group' => 'stok'],
+
             // Audit retroaktif 3.8 (2026-09-24) — permission yang dipakai di sidebar/controller
             // sejak warisan Dimsum tapi TIDAK pernah dibuat (RolePermissionSeeder melewatinya diam-diam,
             // jadi hanya Owner via Gate::before yang bisa akses). Mapping default sudah ada di

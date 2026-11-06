@@ -81,6 +81,8 @@ class PanduanKontenSeeder extends Seeder
         $this->updateDatabaseUpdate();
         // Laporan di menu Penjualan (4.49)
         $this->laporanPenjualanKasirUpdate();
+        // Produksi bahan setengah jadi (2026-11-06)
+        $this->produksiUpdate();
     }
 
     /**
@@ -226,6 +228,67 @@ Klik judul kolom untuk mengurutkan. **Export Excel** / **Export PDF** menyimpan 
 MARKDOWN,
             'modul'  => 'penjualan',
             'urutan' => 72,
+            'aktif'  => true,
+        ]);
+    }
+
+    /**
+     * Produksi bahan setengah jadi di gudang (FASE_PRODUKSI_GEROBAK_DESIGN.md Tahap 1, 2026-11-06).
+     */
+    private function produksiUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'produksi'], [
+            'judul'  => 'Produksi Bahan Setengah Jadi',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+Mencatat barang yang **dibuat sendiri di gudang** dari bahan baku, lalu disimpan sebagai stok. Contoh: **Saus Padang** (dari tepung, gula, garam, cabai, saus pedas, saus tomat) atau **Cup Kopi Isi** (dari biji kopi, air, cup).
+
+Setelah diproduksi, barang ini dipakai seperti bahan biasa: dipasang di **komposisi Produk Jual** (mis. Sate Ayam memakai Saus Padang 30 ml) atau dikirim ke cabang lewat **Transfer Stok**.
+
+Produksi hanya bisa dicatat di cabang bertipe **Gudang Pusat**.
+
+## Cara Pakai
+
+### 1. Daftarkan barang hasilnya
+Buka **Bahan Baku & Kemasan** → Tambah, mis. "Saus Padang" dengan satuan **liter**. Cukup sekali.
+
+### 2. Buat Resep Produksi
+Menu **Produksi** → tab **Resep Produksi** → **Resep Baru**.
+- **Barang hasil**: Saus Padang.
+- **Hasil per resep**: berapa yang jadi dari takaran di bawah, mis. **1** liter.
+- **Bahan**: isi takaran untuk 1 resep, mis. Tepung 100 g, Gula 50 g, Garam 10 g, Cabai 200 g, Saus Pedas 150 ml, Saus Tomat 300 ml. Satuan takaran boleh berbeda dengan satuan stok (g untuk bahan yang stoknya kg) — sistem mengonversi otomatis.
+- **Perkiraan modal per unit** tampil di bawah tabel (dari Harga Beli Terakhir bahan).
+
+### 3. Catat produksi setiap kali memasak
+Tab **Riwayat Produksi** → **Catat Produksi** (atau tombol **Produksi** di daftar resep).
+1. Pilih **barang yang dibuat** dan isi **Rencana dibuat**, mis. 5 liter. Tabel di bawahnya menampilkan bahan yang akan dipotong dan stok gudang saat ini (baris merah = stok kurang).
+2. Isi **Hasil nyata** — yang benar-benar jadi, mis. 4,8 liter (otomatis sama dengan rencana sampai Anda mengubahnya).
+3. **Modal per unit** dihitung otomatis. Kalau perlu, nyalakan **Isi modal per unit secara manual**.
+4. Klik **Simpan Produksi**.
+
+Hasilnya: stok bahan baku gudang berkurang sesuai resep × rencana, stok barang hasil bertambah sebanyak hasil nyata, dan Harga Beli Terakhir barang hasil diperbarui.
+
+### 4. Batalkan produksi yang salah
+Buka detail produksi → isi alasan → **Batalkan Produksi**. Stok hasil ditarik dan bahan dikembalikan dengan modal semula.
+
+## Arti angka
+- **Biaya bahan** — modal FIFO bahan yang benar-benar terpakai saat disimpan (bisa sedikit berbeda dari perkiraan di form).
+- **Modal otomatis** — biaya bahan ÷ hasil nyata. Kalau hasil lebih sedikit dari rencana, modal per unit naik (susutnya ikut dihitung).
+- **Modal dipakai** — angka yang masuk ke stok: otomatis, atau angka manual (ditandai **M** / "diisi manual").
+
+## Peringatan
+- Produksi **ditolak** kalau salah satu bahan stoknya tidak cukup di gudang itu — pesannya menyebut bahan mana saja.
+- Produksi **tidak bisa dibatalkan** kalau sebagian hasilnya sudah terpakai atau dikirim (stok hasil di gudang lebih sedikit dari hasil produksi). Koreksi lewat **Penyesuaian Stok**.
+- Bahan yang **Harga Beli Terakhir**-nya kosong membuat modal hasil lebih rendah dari seharusnya. Isi harganya di Bahan Baku & Kemasan atau lewat PO.
+- Resep Produksi **berbeda** dengan komposisi Produk Jual: resep dipakai **saat memasak**, komposisi dipotong **saat menu terjual**.
+
+## Troubleshooting
+- **Tombol Catat Produksi tidak ada?** Belum ada cabang bertipe Gudang Pusat yang Anda kelola, atau Anda belum punya hak **Catat Produksi**.
+- **Barang hasil tidak muncul di pilihan resep?** Barang itu sudah punya resep (ubah resep yang ada), atau belum terdaftar di Bahan Baku & Kemasan.
+- **Menu tidak ada di sidebar?** Minta Owner mencentang **Lihat Produksi & Resep Produksi** di Role & Hak Akses.
+MARKDOWN,
+            'modul'  => 'stok',
+            'urutan' => 80,
             'aktif'  => true,
         ]);
     }

@@ -847,7 +847,24 @@ Owner minta 3 laporan di sidebar **Penjualan** yang bisa dibuka kasir, sama sepe
 - Panduan `laporan-transaksi-kasir`, `laporan-produk-kasir`, `laporan-kategori-kasir` (PanduanKontenSeeder) + 9 tooltip `laporan_*_kasir.*` (TooltipKontenSeeder), tombol Cara Pakai di 3 halaman.
 - **Test**: `AksesOrderCabangTest` 6, `LaporanTransaksiKasirTest` 19, `LaporanProdukKasirTest` 11, `LaporanKategoriKasirTest` 7, `LaporanPenjualanKasirAlurNyataTest` 2 (transaksi nyata lewat `buatOrder` + `BillService::closeBill`: diskon, service charge, take away fee, bill terbuka tidak dihitung → 3 laporan cocok; PDF kasir tanpa Keuntungan/Modal/Margin). `UpdateDatabaseTest` disesuaikan dengan aturan baru. Gladi Update Database di DB dev (salinan go-live): 14 centangan baru, jalan kedua 0. Smoke test di DB dev (rollback): owner & kasir nyata, 3 halaman + export 200, sidebar tampil, kasir tanpa kebocoran, grafik dirender Chrome tanpa error JS.
 - **Bahasa tanggal**: `APP_LOCALE=en` → laporan ini memakai nama hari/bulan Indonesia sendiri (`LaporanTransaksiKasirService::tanggal()`), sama dengan dimsum.
-- **Deploy (BELUM — tunggu persetujuan Owner)**: tanpa migration. Update from Remote → Deploy → menu **Update Database** (PermissionSeeder + panduan + tooltip + centang izin baru + cache). Diskon per produk di POS tidak dibuat (sama dengan keputusan dimsum 12.16).
+- **Deploy**: SELESAI di demo & go-live (dikonfirmasi Owner 2026-11-05). Tanpa migration, lewat Update Database. Diskon per produk di POS tidak dibuat (sama dengan keputusan dimsum 12.16).
+
+### 4.50 🟡 Produksi Bahan Setengah Jadi di Gudang — Tahap 1 (2026-11-06)
+
+Hasil diskusi Owner 2026-11-05 (rancangan lengkap + 13 keputusan: `FASE_PRODUKSI_GEROBAK_DESIGN.md`). Contoh Owner: **Saus Padang** dimasak dari bahan baku lalu dipakai di komposisi **Sate Ayam**; **Cup Kopi Isi** dibuat di gudang lalu dikirim ke **gerobak keliling** (cabang tersendiri) yang menjual "Kopi Susu Gula Aren (Gerobak)". Tahap 2 (Kirim ke Cabang lewat Produk Jual + tombol Terima, Roastery ikut) dan Tahap 3 (Retur) menyusul.
+
+- **Menu Stok & Gudang → Produksi** (`/produksi`, route `produksi.*`), 2 tab: **Riwayat Produksi** (catat/detail/batal) dan **Resep Produksi** (`/produksi/resep`).
+- **Resep Produksi** = tabel baru `resep_produksi` + `resep_produksi_items` (1 barang hasil = 1 resep, `qty_hasil` per resep, takaran + satuan bebas dikonversi `ResepBumbuItem::konversiKeSatuanStok`). **SENGAJA terpisah** dari `resep_bumbu` (komposisi Produk Jual): `Item::resep` dibaca POS/cek bisa dijual/Master Produk Jual sebagai "menu berkomposisi" → 0 perubahan logika POS. Relasi baru `Item::resepProduksi()`. Diatur di menu Produksi, form Master Bahan Baku tidak berubah. Barang hasil & bahan = tipe `bahan_baku`/`kemasan`/`tambahan_gratis` (`ProduksiService::TIPE_BARANG`).
+- **Catat produksi** (`ProduksiService::produksi`): hanya di cabang tipe **Gudang Pusat** yang boleh diakses user (`gudangUntuk()` + `CabangLaporan::bolehAkses`). Bahan dipotong = resep × rencana via `StokService::keluar()` (modal FIFO), hasil masuk sebanyak **hasil nyata** via `StokService::masuk()` dengan modal = biaya ÷ hasil nyata (`modal_otomatis`) atau **manual** (saklar). `harga_beli_terakhir` barang hasil diperbarui (pola Roastery). Stok kurang → ditolak, pesan menyebut semua bahan yang kurang. Movement `referensi_type='produksi'`.
+- **Batalkan** (wajib alasan): hanya kalau stok hasil di gudang ≥ hasil produksi itu; hasil ditarik (`keluar`, FIFO — bisa memakai batch hasil yang lebih lama bila ada) dan bahan dikembalikan dengan modal per unit saat produksi (`produksi_batal`).
+- Tabel `produksi_batches` (kode `PRD-YYYYMM-XXXX`) + `produksi_batch_items` (bahan + biaya FIFO). Migration `2026_11_06_100001_create_produksi_tables` (hanya tabel baru, bisa rollback).
+- Izin `produksi.view|create|batalkan|resep.kelola` (group stok): Admin Pusat & Admin Gudang semua, Operator Produksi view+create; Owner selalu. Ditambah ke `UpdateDatabaseService::PERMISSION_BARU`. Panduan slug `produksi`, 7 tooltip `produksi.*`, tombol Cara Pakai di semua halaman.
+- **Catatan go-live**: salinan DB go-live (2026-11-05) hanya punya 1 cabang tipe Cabang, **tanpa gudang** → menu Produksi menampilkan petunjuk "buat cabang tipe Gudang Pusat".
+- **Test** `ProduksiTest` 9/9 (107 assertion): resep + validasi (hasil = bahan sendiri, resep dobel), produksi g/ml → kg/liter + FIFO 75.000 ÷ 4,8 = 15.625/liter, modal manual, stok kurang (pesan & stok utuh), hanya gudang + hak akses (admin gudang lain, kasir 403, operator tidak bisa kelola resep/batal), batal (stok & nilai FIFO kembali, batal dua kali ditolak), batal ditolak bila hasil terpakai, **Saus Padang dipakai komposisi Sate Ayam → POS memotong Saus Padang (bukan tepung) & HPP = modal produksi**, halaman + menu. Smoke test di DB dev (salinan go-live, rollback): tanpa gudang → petunjuk; dengan gudang 5 → 4,8 liter @Rp15.625, semua halaman 200; Chrome headless: kalkulasi JS form produksi & resep benar, 0 error JS. Log bersih.
+- **Temuan infrastruktur test (diperbaiki, hanya kode test)**:
+  - (1) `UpdateDatabaseController`/`GoLiveResetController` memanggil `set_time_limit(300)`; dari test (`AksesOrderCabangTest`) batas itu berlaku untuk **sisa seluruh proses phpunit** → regresi penuh mati "Maximum execution time" di tengah. `tests/TestCase.php` kini `set_time_limit(0)` di setiap `setUp()`.
+  - (2) Test bawaan Laravel `Auth/*`, `ProfileTest`, `ExampleTest` memakai **`RefreshDatabase`** → `migrate:fresh` TANPA seed → DB test kosong dan semua test sesudahnya gagal (219 gagal). DB test dipulihkan dengan `migrate:fresh --seed --env=testing`. **Regresi WAJIB dengan `--exclude-filter='(AuthenticationTest|EmailVerificationTest|PasswordConfirmationTest|PasswordResetTest|PasswordUpdateTest|RegistrationTest|ExampleTest|ProfileTest)'`.**
+- **Baseline regresi baru** (DB test baru di-seed, 2026-11-06): **69 gagal / 424 lulus**. 65 di antaranya dibuktikan identik dengan `git stash` (tanpa perubahan Tahap 1). 4 sisanya ada di baseline lama. Sebagian besar test lama Tahap 2.5/5/6/7 yang bergantung data contoh era Dimsum. **0 kegagalan baru.**
 
 ---
 
@@ -1257,9 +1274,18 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 
 ### 12.18 Laporan Transaksi / Produk / Kategori (2026-11-05, lihat 4.49)
 - [x] Tahap 0 pengaman (akses struk per cabang, Laporan Penjualan lama, Update Database tidak mencentang ulang), Tahap 1–3 tiga laporan, Tahap 4 panduan/tooltip/test — commit lokal
-- [ ] Owner: setujui push + deploy (Update from Remote → Deploy → Update Database) di demo lalu go-live
+- [x] Push + deploy demo & go-live — dikonfirmasi Owner 2026-11-05
 - [ ] Owner: cek di browser dengan akun kasir (keuntungan tidak tampil) & manajer/admin pusat (tampil); atur centangan lain di Role & Hak Akses kalau perlu
 - [ ] Opsional: diskon per produk di POS (ditunda, sama dengan dimsum 12.16)
+
+### 12.19 Produksi + Kirim ke Cabang + Retur (2026-11-05/06, lihat 4.50, `FASE_PRODUKSI_GEROBAK_DESIGN.md`)
+- [x] Diskusi & rancangan (13 keputusan Owner) — commit `e796e5c`
+- [x] **Tahap 1** menu Produksi + Resep Produksi — commit lokal
+- [ ] **Tahap 2** Kirim ke Cabang dari POS gudang + halaman Barang Masuk (Terima/Tolak) + Roastery ikut Terima + aturan laporan
+- [ ] **Tahap 3** Retur cabang → gudang (uang kembali dipilih tiap retur)
+- [ ] **Tahap 4** panduan/tooltip lengkap + uji alur gudang → produksi → kirim → gerobak jual → retur → buang
+- [ ] Owner: push + deploy (ada migration — lewat menu Update Database)
+- [ ] Diskusi terpisah: POS offline untuk gerobak/angkringan
 
 ---
 

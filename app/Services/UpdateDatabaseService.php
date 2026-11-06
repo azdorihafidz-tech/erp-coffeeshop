@@ -37,6 +37,11 @@ class UpdateDatabaseService
         'penjualan.laporan_produk.view'    => ['admin_pusat', 'manajer_cabang', 'kasir', 'operator_produksi'],
         'penjualan.laporan_kategori.view'  => ['admin_pusat', 'manajer_cabang', 'kasir', 'operator_produksi'],
         'penjualan.laporan.keuntungan'     => ['admin_pusat', 'manajer_cabang'],
+        // Produksi bahan setengah jadi di gudang (2026-11-06)
+        'produksi.view'         => ['admin_pusat', 'admin_gudang', 'operator_produksi'],
+        'produksi.create'       => ['admin_pusat', 'admin_gudang', 'operator_produksi'],
+        'produksi.batalkan'     => ['admin_pusat', 'admin_gudang'],
+        'produksi.resep.kelola' => ['admin_pusat', 'admin_gudang'],
     ];
 
     public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder'];
