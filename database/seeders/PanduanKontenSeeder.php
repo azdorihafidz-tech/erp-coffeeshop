@@ -2876,6 +2876,13 @@ Produk yang punya **resep produksi** (diatur di menu Master Resep) otomatis memo
 - **Modal varian tidak muncul apa-apa?** Pastikan semua atribut sudah dipilih — kombinasi yang belum lengkap tidak akan menampilkan harga
 - **"Cabang belum punya Kas default"?** Hubungi Admin/Owner untuk aktifkan Kas kategori metode bayar itu di outlet ini
 - **Modal struk tidak muncul?** Klik tombol **Struk** di halaman Riwayat Penjualan sebagai gantinya
+
+## Memakai POS di HP (gerobak / kasir keliling)
+Di layar HP, POS otomatis memakai tampilan ringkas (tablet & PC tidak berubah):
+- Produk tampil **3 kolom** dengan gambar kecil; deretan kategori bisa digeser ke samping.
+- Kartu **Pelanggan** dilipat — ketuk judulnya kalau perlu mengisi nama/telepon.
+- **Bilah hitam di bawah layar** selalu menampilkan jumlah item & total. Ketuk **Keranjang** untuk melihat/mengubah item, **Bayar ▸** untuk langsung ke bagian pembayaran (di gudang mode Kirim ke Cabang: **Kirim ▸**).
+- Cetak struk & label tetap lewat aplikasi kasir Android atau Bluetooth seperti di tablet. Label terpotong? Lihat panduan **Label Cup → Label terpotong / tidak pas di stiker**.
 MARKDOWN
         ]);
     }
