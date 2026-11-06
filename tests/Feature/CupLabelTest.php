@@ -107,6 +107,20 @@ class CupLabelTest extends TestCase
         $this->assertSame('Budi', $l['pelanggan']);
         $this->assertStringStartsWith('Take Away · ', $l['info']);
         $this->assertSame(['lebar' => 50, 'tinggi' => 30], $hasil['ukuran']);
+        $this->assertNull($l['catatan_order']);
+    }
+
+    public function test_tanggal_di_sebelah_jam_dan_catatan_pesanan_ikut_label(): void
+    {
+        $order = $this->order([[$this->kopi, 1, 'Less ice', null]], ['catatan' => 'Antar ke mobil hitam']);
+        $l = $this->svc->untukOrder($order)['labels'][0];
+
+        $this->assertSame('Less ice', $l['catatan'], 'catatan item tetap');
+        $this->assertSame('Antar ke mobil hitam', $l['catatan_order'], 'catatan pesanan ikut');
+        $this->assertSame('Take Away · ' . $order->created_at->format('H:i') . ' ' . $order->created_at->format('d/m/Y'), $l['info']);
+
+        $this->actingAs($this->buatUser('owner'))->get(route('label-cup.order', ['order' => $order, 'format' => 'html']))
+            ->assertOk()->assertSee('Antar ke mobil hitam')->assertSee($order->created_at->format('d/m/Y'));
     }
 
     public function test_cabang_nonaktif_tidak_ada_label(): void

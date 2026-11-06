@@ -51,6 +51,7 @@ class CupLabelService
             'pelanggan' => $order->nama_pelanggan ?: $order->pelanggan?->nama_pelanggan,
             'tipe'      => $tipe,
             'jam'       => ($order->created_at ?? now())->format('H:i'),
+            'tanggal'   => ($order->created_at ?? now())->format('d/m/Y'),
             'catatan_order' => $order->catatan,
         ]);
     }
@@ -81,7 +82,8 @@ class CupLabelService
             'pelanggan' => $bill->customer_name,
             'tipe'      => 'Dine-in' . ($bill->meja ? ' · ' . $bill->meja->nama_meja : ''),
             'jam'       => now()->format('H:i'),
-            'catatan_order' => null,
+            'tanggal'   => now()->format('d/m/Y'),
+            'catatan_order' => $bill->catatan ?? null,
         ]);
     }
 
@@ -121,7 +123,10 @@ class CupLabelService
                     'opsi'      => $opsi,
                     'catatan'   => $r['catatan'] ? trim($r['catatan']) : null,
                     'pelanggan' => $info['pelanggan'] ? trim($info['pelanggan']) : null,
-                    'info'      => $info['tipe'] . ' · ' . $info['jam'],
+                    // Catatan pesanan (kolom Catatan di POS) ikut tercetak di setiap gelas (2026-11-06, Owner)
+                    'catatan_order' => trim((string) ($info['catatan_order'] ?? '')) ?: null,
+                    // Tanggal di sebelah jam (2026-11-06, Owner)
+                    'info'      => $info['tipe'] . ' · ' . $info['jam'] . ' ' . ($info['tanggal'] ?? ''),
                 ];
             }
         }

@@ -117,6 +117,7 @@
                 + '<div class="fw-bold mt-1">' + esc(l.nama) + '</div>'
                 + (l.opsi && l.opsi.length ? '<div>' + esc(l.opsi.join(' · ')) + '</div>' : '')
                 + (l.catatan ? '<div class="fst-italic">' + esc(l.catatan) + '</div>' : '')
+                + (l.catatan_order ? '<div class="fst-italic">' + esc(l.catatan_order) + '</div>' : '')
                 + (l.pelanggan ? '<div>a.n. ' + esc(l.pelanggan) + '</div>' : '')
                 + '<div class="text-muted">' + esc(l.info) + '</div></div>';
         }).join('');
@@ -235,6 +236,7 @@
         var out = [];
         if (l.opsi && l.opsi.length) out.push(l.opsi.join(' - '));
         if (l.catatan) out.push(l.catatan);
+        if (l.catatan_order) out.push(l.catatan_order);
         if (l.pelanggan) out.push('a.n. ' + l.pelanggan);
         return out;
     }
@@ -305,8 +307,10 @@
         // 1. Nama toko di paling atas (permintaan Owner), lalu nomor antrean besar + urutan gelas di kanan
         var y = 10, kd = l.ke + '/' + l.dari;
         font(14, true); g.fillText(potong(String(l.toko).toUpperCase(), lebar), M, y); y += 18;
-        font(18, true); var wKd = g.measureText(kd).width; g.fillText(kd, kanan - wKd, y + 8);
-        font(30, true); g.fillText(potong('#' + l.nomor, lebar - wKd - 10), M, y);
+        // Urutan gelas (1/2) di kotak hitam TEPAT di sebelah nomor — dulu rata kanan & terpotong di tepi (foto Owner)
+        font(30, true); var nomor = potong('#' + l.nomor, lebar - 70), wNo = g.measureText(nomor).width; g.fillText(nomor, M, y);
+        font(17, true); var wKd = g.measureText(kd).width, bx = M + wNo + 10;
+        g.fillRect(bx, y + 4, wKd + 12, 24); g.fillStyle = '#fff'; g.fillText(kd, bx + 6, y + 8); g.fillStyle = '#000';
         y += 33; g.fillRect(M, y, lebar, 2); y += 6;
 
         // Batas bawah: baris info (15 px) + nama pelanggan (bila ada)
@@ -323,6 +327,7 @@
         var badan = [];
         if (l.opsi && l.opsi.length) badan.push(l.opsi.join(' · '));
         if (l.catatan) badan.push(l.catatan);
+        if (l.catatan_order) badan.push(l.catatan_order);   // catatan pesanan (kolom Catatan di POS)
         badan.forEach(function (t) {
             bungkus(t, lebar, Math.floor((batas - y) / 20)).forEach(function (s) { g.fillText(s, M, y); y += 20; });
         });
