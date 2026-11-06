@@ -302,11 +302,12 @@
             return out;
         };
 
-        // 1. Nomor antrean besar + urutan gelas kecil di kanan
-        var y = 12, kd = l.ke + '/' + l.dari;
-        font(18, true); var wKd = g.measureText(kd).width; g.fillText(kd, kanan - wKd, y + 10);
-        font(34, true); g.fillText(potong('#' + l.nomor, lebar - wKd - 10), M, y);
-        y += 38; g.fillRect(M, y, lebar, 2); y += 7;
+        // 1. Nama toko di paling atas (permintaan Owner), lalu nomor antrean besar + urutan gelas di kanan
+        var y = 10, kd = l.ke + '/' + l.dari;
+        font(14, true); g.fillText(potong(String(l.toko).toUpperCase(), lebar), M, y); y += 18;
+        font(18, true); var wKd = g.measureText(kd).width; g.fillText(kd, kanan - wKd, y + 8);
+        font(30, true); g.fillText(potong('#' + l.nomor, lebar - wKd - 10), M, y);
+        y += 33; g.fillRect(M, y, lebar, 2); y += 6;
 
         // Batas bawah: baris info (15 px) + nama pelanggan (bila ada)
         var yInfo = H - 14 - 15, batas = yInfo - 4 - (l.pelanggan ? 24 : 0);
@@ -329,10 +330,8 @@
         // 4. Nama pelanggan (tebal)
         if (l.pelanggan) { font(20, true); g.fillText(potong(String(l.pelanggan).toUpperCase(), lebar), M, batas + 2); }
 
-        // 5. Baris bawah: tipe pesanan + jam (kiri), nama toko kecil (kanan)
-        font(13, false); var toko = potong(l.toko, lebar * 0.45), wToko = g.measureText(toko).width;
-        g.fillText(toko, kanan - wToko, yInfo + 2);
-        font(15, false); g.fillText(potong(l.info, lebar - wToko - 8), M, yInfo);
+        // 5. Baris bawah: tipe pesanan + jam
+        font(15, false); g.fillText(potong(l.info, lebar), M, yInfo);
         return cv;
     }
 
