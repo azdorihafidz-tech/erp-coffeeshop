@@ -129,6 +129,12 @@ class KirimanCabangController extends Controller
     /** Jumlah kiriman menunggu diterima untuk cabang aktif (badge sidebar). */
     public static function jumlahMenunggu(): int
     {
+        // Badge sidebar tampil di SEMUA halaman (termasuk halaman Update Database): harus aman
+        // saat program baru sudah terpasang tapi migration belum dijalankan (demo 2026-11-06 → 500).
+        static $siap = null;
+        if (! ($siap ??= \Illuminate\Support\Facades\Schema::hasColumn('orders', 'status_kirim'))) {
+            return 0;
+        }
         $cabangId = CabangLaporan::id();
 
         return Order::where('customer_type', 'internal')->where('status_kirim', 'menunggu')

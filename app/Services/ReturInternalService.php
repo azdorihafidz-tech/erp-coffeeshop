@@ -266,6 +266,11 @@ class ReturInternalService
     /** Retur menunggu diterima oleh pengirim di cabang aktif (badge sidebar). */
     public static function jumlahMenunggu(): int
     {
+        // Aman sebelum migration retur dijalankan (badge sidebar tampil di semua halaman)
+        static $siap = null;
+        if (! ($siap ??= \Illuminate\Support\Facades\Schema::hasTable('retur_internals'))) {
+            return 0;
+        }
         $cabangId = CabangLaporan::id();
 
         return ReturInternal::where('status', 'menunggu')->when($cabangId, fn ($q) => $q->where('ke_cabang_id', $cabangId))->count();
