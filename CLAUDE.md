@@ -1318,7 +1318,8 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] **Tahap 2** Kirim ke Cabang dari POS gudang + menu Kiriman Cabang (Terima sebagian/Tolak/Batal) + Roastery ikut Terima + aturan laporan (lihat 4.51)
 - [x] **Tahap 3** Retur cabang → gudang (uang kembali dipilih tiap retur, order koreksi minus) (lihat 4.51)
 - [x] **Tahap 4** panduan/tooltip + uji alur lengkap (`ProduksiKirimReturAlurTest`) + rollback migration (lihat 4.51)
-- [ ] Owner: push + deploy (3 migration — lewat menu Update Database), uji klik di demo: buat cabang Gudang Pusat + gerobak, Kas Tunai keduanya, Produk Jual "… (kirim ke cabang)"
+- [x] Push + deploy demo & go-live — dikonfirmasi Owner 2026-11-06 (termasuk perbaikan label cup & POS HP)
+- [ ] Owner: uji klik alur di demo: buat cabang Gudang Pusat + gerobak, Kas Tunai keduanya, Produk Jual "… (kirim ke cabang)"
 - [ ] Diskusi terpisah: POS offline untuk gerobak/angkringan
 
 ---
