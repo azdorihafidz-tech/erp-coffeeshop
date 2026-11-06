@@ -866,6 +866,32 @@ Hasil diskusi Owner 2026-11-05 (rancangan lengkap + 13 keputusan: `FASE_PRODUKSI
   - (2) Test bawaan Laravel `Auth/*`, `ProfileTest`, `ExampleTest` memakai **`RefreshDatabase`** → `migrate:fresh` TANPA seed → DB test kosong dan semua test sesudahnya gagal (219 gagal). DB test dipulihkan dengan `migrate:fresh --seed --env=testing`. **Regresi WAJIB dengan `--exclude-filter='(AuthenticationTest|EmailVerificationTest|PasswordConfirmationTest|PasswordResetTest|PasswordUpdateTest|RegistrationTest|ExampleTest|ProfileTest)'`.**
 - **Baseline regresi baru** (DB test baru di-seed, 2026-11-06): **69 gagal / 424 lulus**. 65 di antaranya dibuktikan identik dengan `git stash` (tanpa perubahan Tahap 1). 4 sisanya ada di baseline lama. Sebagian besar test lama Tahap 2.5/5/6/7 yang bergantung data contoh era Dimsum. **0 kegagalan baru.**
 
+### 4.51 🟢 Kirim ke Cabang + Retur Cabang — Tahap 2–4 (2026-11-06)
+
+Lanjutan 4.50 (`FASE_PRODUKSI_GEROBAK_DESIGN.md`). Gudang menjual Produk Jual ke cabang sendiri (mis. gerobak), harga boleh naik (gudang ambil untung) atau sama dengan modal (gudang = DC). **Satu usaha satu cara** — diatur lewat harga Produk Jual, bukan setting.
+
+**Tahap 2 — Kirim ke Cabang** (POS + menu Stok & Gudang → **Kiriman Cabang** `/kiriman`, route `kiriman.*`):
+- POS cabang tipe **Gudang Pusat atau Roastery**: Jenis Pembeli → **Kirim ke Cabang** + Cabang Tujuan. Bagian pembayaran & Save Bill disembunyikan, tombol jadi **KIRIM KE CABANG** (cabang JS terpisah di submit handler; alur bayar biasa tidak disentuh). Gudang kini muncul di layar Pilih Cabang POS. Save Bill internal ditolak (422).
+- `PenjualanService`: `customer_type = internal` → `validasiKirimCabang()` (penjual gudang/roastery; tujuan cabang tipe `cabang` aktif ≠ penjual; barang dari master; Kas Tunai aktif di kedua sisi), tanpa meja/antrian/service charge/take away fee. Saat charge: stok penjual keluar (rincian per bahan dicatat `potongStokUntukItem()` → `$rincianPotong` → tabel baru **`order_kiriman_items`**: qty_kirim, hpp_kirim, qty_terima, nilai_terima, qty_retur), **tanpa** pembayaran; order **`status = proses`** (enum lama yang tak pernah dipakai, label "Dikirim (menunggu diterima)") + `orders.status_kirim = menunggu`. **`Order::STATUS_TIDAK_DIHITUNG` kini termasuk `proses`** → semua laporan/dashboard/Closing otomatis tidak menghitung kiriman yang belum diterima (ClosingService yang dulu hardcode `['dibatalkan','pending']` ikut memakai konstanta).
+- Barang yang masuk ke cabang = **bahan di komposisi** Produk Jual × qty; Produk Jual **tanpa komposisi** yang punya stok sendiri (pack Roastery) dikirim sebagai barang itu sendiri (penyesuaian kecil dari rancangan yang menolaknya — supaya Roastery tetap jalan).
+- **`terimaKiriman()`** (cabang tujuan, izin `kiriman.terima`): jumlah sampai per baris (boleh kurang → sisa kembali ke stok penjual dengan modal semula `kiriman_kurang`; baris order & total ikut turun). Stok masuk cabang (modal = harga kiriman setelah diskon, dibagi per bahan menurut porsi modal), Kas Tunai cabang −, TK `order_internal`; pendapatan penjual via `prosesPembayaran()` (Kas Tunai penjual +); `tanggal_order` = tanggal Terima; status Selesai/diterima. Kas cabang boleh minus (peringatan di halaman).
+- **Tolak** (cabang) / **Batalkan Kiriman** (pengirim, izin `order.batalkan`, juga dari Detail Order) selama menunggu → stok kembali ke penjual dengan modal semula (`kiriman_batal`), tanpa uang. **Sudah diterima → tidak bisa dibatalkan (pakai Retur)**; kembalikan order kiriman ditolak; **Edit Order dikunci** untuk kiriman & koreksi retur (dulu bisa mengubah diskon/total sehingga tidak cocok dengan kas cabang tujuan).
+- **Roastery ikut alur Terima** (dulu stok & kas outlet langsung berubah). Data go-live 2026-11-05: 0 penjualan internal → tidak ada data lama terdampak; order internal lama (`status_kirim` NULL) tetap memakai jalur lama.
+- Migration `2026_11_06_200001` (+ `diterima_at/by`, `alasan_tolak`, index `(outlet_tujuan_id, status_kirim)`). **Temuan saat uji rollback**: MySQL diam-diam memakai index gabungan itu untuk FK `outlet_tujuan_id` → `down()` gagal; diperbaiki (pasang lagi index FK sebelum menghapus index gabungan). Siklus rollback 3 → migrate di DB test bersih.
+
+**Tahap 3 — Retur Cabang** (menu **Retur Cabang** `/retur-cabang`, route `retur-cabang.*`; tombol **Buat Retur** di kiriman yang diterima):
+- Tabel `retur_internals` + `retur_internal_items` (+ `orders.retur_internal_id`), `ReturInternalService`. Kirim retur (cabang, izin `retur.create`): stok cabang keluar FIFO (`retur_internal`), maks qty_terima − qty_retur. Terima (pengirim, izin `retur.terima`): stok masuk; **uang kembali = Ya** → modal asli pengirim + kas pengirim → kas cabang + **1 order koreksi bernilai minus** di pengirim (qty/total/HPP minus, `customer_type internal`, nama "Retur RTR-…") supaya pendapatan & keuntungan di semua laporan turun dan ikut dieliminasi di Semua Cabang; **Tidak** → stok masuk bernilai Rp0 (StockBatch harga 0, bukan fallback harga beli), tanpa uang. Tolak (pengirim) / Batalkan (cabang) selama menunggu → stok kembali ke cabang dengan modal FIFO semula. Order koreksi tidak bisa dibatalkan/diedit/dihapus.
+- **Temuan penting**: Laba Rugi Formal & Laporan Keuangan menjumlahkan transaksi keuangan per kategori **tanpa melihat tipe**. Karena itu uang retur dicatat sebagai **cermin minus** dari transaksi aslinya: pengirim = Pemasukan/Penjualan **−nilai** (ref `order` → order koreksi), cabang = Pengeluaran/Pembelian Bahan **−nilai** (ref `order_internal` → kiriman asal). Rumus saldo kas (pemasukan − pengeluaran) tetap benar (diuji).
+- Barang basi/rusak lalu dibuang lewat **Penyesuaian Stok** (menu lama).
+
+**Izin baru** (Permission/RolePermission/`UpdateDatabaseService::PERMISSION_BARU`): `kiriman.view` (Admin Pusat, Admin Gudang, Manajer, Kasir), `kiriman.terima` (Admin Pusat, Manajer, Kasir), `retur.view` (Admin Pusat, Admin Gudang, Manajer, Kasir), `retur.create` (Admin Pusat, Manajer, Kasir), `retur.terima` (Admin Pusat, Admin Gudang). Panduan `kiriman-cabang`, `retur-cabang`; tooltip `kiriman.*`, `retur_cabang.*`, `pos.customer_type`/`pos.outlet_tujuan` ditulis ulang. Sidebar Stok & Gudang: Kiriman Cabang & Retur Cabang dengan badge jumlah menunggu.
+
+**Test**: `KirimanCabangTest` 7 (130 assertion), `ReturCabangTest` 5 (87), **`ProduksiKirimReturAlurTest`** 1 (57) — alur Owner lewat HTTP: biji 200rb/kg + cup → Produksi 50 Cup Kopi Isi (modal 4.600) → kirim @5.000 → gerobak Terima → jual 10 Kopi Susu Gula Aren @15.000 (HPP 7.700/gelas) → retur 5 basi uang kembali → buang lewat Penyesuaian Stok; stok = batch FIFO di semua barang/lokasi, kas gudang 725rb / gerobak 425rb, Laporan Transaksi gudang 225.000 untung 18.000, gerobak 150.000 untung 73.000, Closing gudang omzet 225.000 HPP 207.000 beban buang 23.000, Closing gerobak pembelian internal 225.000 bukan beban, Konsolidasi mengeliminasi 225.000.
+- `PosPilihCabangTest` disesuaikan (aturan lama: gudang TIDAK boleh muncul di Pilih Cabang POS → sekarang gudang muncul, Head Office tidak).
+- **Regresi** (tanpa test RefreshDatabase): **69 gagal lama / 437 lulus, 0 baru** (dibanding baseline 4.50). 15 kelas terkait (Update Database, Closing, 3 laporan kasir, Label Cup, APK, Hapus/Batalkan order, dst.) 120/120 lulus.
+- **Gladi di DB dev (salinan go-live)**: rencana Update Database untuk kondisi go-live (izin belum ada) = **26 centangan** produksi/kiriman/retur; dipasang juga di dev. Smoke (rollback): halaman lama & baru 200 untuk owner + kasir asli (Closing kasir 403 = benar), POS cabang biasa tanpa pilihan Kirim, alur kirim → terima sebagian (9 dari 10) → retur → koreksi berjalan. Chrome headless 10 halaman tanpa error JS: mode Kirim menyembunyikan pembayaran/Save Bill/centang antrian, tombol "KIRIM KE CABANG", total Terima ikut jumlah sampai.
+- **Deploy**: 3 migration (`2026_11_06_100001/200001/300001`) lewat menu **Update Database** (migrate + seeder izin/panduan/tooltip + 26 centangan). Di go-live belum ada cabang Gudang Pusat → buat dulu bila ingin memakai.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1280,11 +1306,11 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 
 ### 12.19 Produksi + Kirim ke Cabang + Retur (2026-11-05/06, lihat 4.50, `FASE_PRODUKSI_GEROBAK_DESIGN.md`)
 - [x] Diskusi & rancangan (13 keputusan Owner) — commit `e796e5c`
-- [x] **Tahap 1** menu Produksi + Resep Produksi — commit lokal
-- [ ] **Tahap 2** Kirim ke Cabang dari POS gudang + halaman Barang Masuk (Terima/Tolak) + Roastery ikut Terima + aturan laporan
-- [ ] **Tahap 3** Retur cabang → gudang (uang kembali dipilih tiap retur)
-- [ ] **Tahap 4** panduan/tooltip lengkap + uji alur gudang → produksi → kirim → gerobak jual → retur → buang
-- [ ] Owner: push + deploy (ada migration — lewat menu Update Database)
+- [x] **Tahap 1** menu Produksi + Resep Produksi — commit `1139fe5`
+- [x] **Tahap 2** Kirim ke Cabang dari POS gudang + menu Kiriman Cabang (Terima sebagian/Tolak/Batal) + Roastery ikut Terima + aturan laporan (lihat 4.51)
+- [x] **Tahap 3** Retur cabang → gudang (uang kembali dipilih tiap retur, order koreksi minus) (lihat 4.51)
+- [x] **Tahap 4** panduan/tooltip + uji alur lengkap (`ProduksiKirimReturAlurTest`) + rollback migration (lihat 4.51)
+- [ ] Owner: push + deploy (3 migration — lewat menu Update Database), uji klik di demo: buat cabang Gudang Pusat + gerobak, Kas Tunai keduanya, Produk Jual "… (kirim ke cabang)"
 - [ ] Diskusi terpisah: POS offline untuk gerobak/angkringan
 
 ---

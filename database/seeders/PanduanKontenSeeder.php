@@ -83,6 +83,10 @@ class PanduanKontenSeeder extends Seeder
         $this->laporanPenjualanKasirUpdate();
         // Produksi bahan setengah jadi (2026-11-06)
         $this->produksiUpdate();
+        // Kiriman Cabang (2026-11-06)
+        $this->kirimanCabangUpdate();
+        // Retur Cabang (2026-11-06)
+        $this->returCabangUpdate();
     }
 
     /**
@@ -289,6 +293,124 @@ Buka detail produksi → isi alasan → **Batalkan Produksi**. Stok hasil ditari
 MARKDOWN,
             'modul'  => 'stok',
             'urutan' => 80,
+            'aktif'  => true,
+        ]);
+    }
+
+    /**
+     * Kiriman Cabang — gudang/roastery menjual ke cabang sendiri, cabang menekan Terima
+     * (FASE_PRODUKSI_GEROBAK_DESIGN.md Tahap 2, 2026-11-06).
+     */
+    private function kirimanCabangUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'kiriman-cabang'], [
+            'judul'  => 'Kiriman Cabang (Gudang → Cabang)',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+Gudang Pusat atau Roastery **menjual** barang ke cabang sendiri (mis. gerobak keliling), dengan harga yang boleh dinaikkan (gudang ambil untung) atau sama dengan modal (gudang hanya distribusi). Cabang tujuan mengecek barang lalu menekan **Terima**.
+
+| Saat | Yang terjadi |
+|---|---|
+| Gudang klik **Kirim ke Cabang** di POS | Stok gudang berkurang. Status: *Menunggu diterima*. Belum ada uang & belum dihitung di laporan. |
+| Cabang klik **Terima** | Stok masuk ke cabang (modal = harga kiriman), kas tunai cabang berkurang, kas tunai & pendapatan gudang bertambah (tanggal Terima). |
+| Cabang klik **Tolak** / gudang **Batalkan** | Semua barang kembali ke stok gudang dengan modal semula. Tidak ada uang yang berpindah. |
+
+## Persiapan (sekali per barang)
+1. Buat **Produk Jual** untuk barang yang mau dikirim, mis. "Cup Kopi Isi (kirim ke cabang)", harga Rp3.500 (atau sama dengan modal kalau gudang tidak ambil untung). Aktifkan **hanya di gudang**.
+2. Isi **komposisinya** dengan barang yang akan masuk ke stok cabang, mis. Cup Kopi Isi 1 pcs. Yang masuk ke cabang = bahan di komposisi × jumlah kiriman.
+3. Produk Jual **tanpa komposisi** yang punya stok sendiri (mis. pack biji kopi Roastery) dikirim sebagai barang itu sendiri.
+4. Gudang dan cabang tujuan wajib punya **Kas Tunai** aktif.
+
+## Cara Pakai
+
+### Mengirim (di gudang)
+1. Buka **POS** dengan cabang aktif = gudang.
+2. Pilih **Jenis Pembeli → Kirim ke Cabang**, lalu **Cabang Tujuan**.
+3. Masukkan barang seperti biasa, klik **KIRIM KE CABANG**. Bagian pembayaran disembunyikan karena uang baru berpindah saat cabang menerima.
+
+### Menerima (di cabang)
+1. Menu **Stok & Gudang → Kiriman Cabang** → tab **Barang Masuk** (angka merah = kiriman yang menunggu).
+2. Klik **Cek & Terima**. Cocokkan barang yang datang.
+3. Kalau ada yang kurang, ubah **Jumlah sampai** (mis. 48 dari 50). Sisanya otomatis kembali ke stok gudang dan total yang dibayar ikut turun.
+4. Klik **Terima**.
+
+Barang tidak jadi diterima (salah kirim, rusak semua)? Isi alasan lalu klik **Tolak**.
+
+### Membatalkan (di gudang)
+Selama belum diterima, buka kiriman di tab **Barang Keluar** → isi alasan → **Batalkan Kiriman**.
+
+## Laporan
+- Penjualan ke cabang dihitung sebagai pendapatan **gudang** sejak diterima. Kiriman yang belum diterima tidak dihitung di laporan mana pun.
+- Di **Semua Cabang** / Closing Konsolidasi, penjualan ke cabang sendiri tidak dihitung supaya tidak dobel (cabang juga menjual hasilnya ke pelanggan).
+
+## Peringatan
+- Kiriman yang **sudah diterima tidak bisa dibatalkan**. Barang basi, rusak, atau kelebihan → gunakan **Retur** dari cabang tujuan.
+- Kiriman ke cabang **tidak bisa disimpan sebagai Save Bill** — langsung klik Kirim.
+- Saldo kas tunai cabang boleh menjadi minus saat menerima (ada peringatan di halaman Terima).
+
+## Troubleshooting
+- **Pilihan Kirim ke Cabang tidak ada di POS?** Cabang aktif harus bertipe Gudang Pusat atau Roastery.
+- **"belum punya Kas Tunai aktif"** → buat Kas Tunai di menu Kas untuk cabang yang disebut.
+- **Menu Kiriman Cabang tidak ada?** Minta Owner mencentang **Lihat Kiriman Cabang** / **Terima / Tolak Kiriman dari Gudang** di Role & Hak Akses.
+MARKDOWN,
+            'modul'  => 'stok',
+            'urutan' => 81,
+            'aktif'  => true,
+        ]);
+    }
+
+    /**
+     * Retur Cabang → gudang/roastery (FASE_PRODUKSI_GEROBAK_DESIGN.md Tahap 3, 2026-11-06).
+     */
+    private function returCabangUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'retur-cabang'], [
+            'judul'  => 'Retur Cabang (Cabang → Gudang)',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+Mengembalikan barang dari **kiriman yang sudah diterima** ke gudang/roastery pengirimnya — misalnya Cup Kopi Isi yang **basi** di sore hari, barang **rusak**, atau **kelebihan kirim**. Setiap retur memilih: **uang dikembalikan** atau **tidak**.
+
+| | Uang dikembalikan = **Ya** | Uang dikembalikan = **Tidak** |
+|---|---|---|
+| Kas tunai cabang | bertambah senilai harga kiriman | tetap |
+| Kas tunai pengirim | berkurang | tetap |
+| Pendapatan & keuntungan pengirim | turun (ada order koreksi bernilai minus) | tetap |
+| Nilai stok yang masuk ke pengirim | modal asli pengirim | Rp0 |
+| Yang menanggung rugi | pengirim | cabang |
+
+## Cara Pakai
+
+### 1. Kirim retur (di cabang)
+1. **Kiriman Cabang → Barang Masuk → Diterima** → buka kirimannya → **Buat Retur**.
+2. Isi **Jumlah retur** per barang (maksimal yang diterima dan belum diretur).
+3. Pilih **Alasan** dan **Uang dikembalikan?**, isi catatan kalau perlu → **Kirim Retur**.
+4. Stok cabang langsung berkurang. Status: *Menunggu*.
+
+### 2. Terima retur (di gudang/roastery)
+1. Menu **Retur Cabang → Retur Masuk** (angka merah = menunggu) → **Cek & Terima**.
+2. Cek barangnya → **Terima Retur**. Stok masuk ke gudang, dan kalau uang dikembalikan, kas tunai gudang berkurang dan kas cabang bertambah.
+3. Barang **basi/rusak** lalu dibuang lewat **Stok Barang → Penyesuaian Stok** (alasan rusak/kedaluwarsa). Barang yang masih bagus (kelebihan kirim) tetap di stok dan bisa dikirim lagi.
+
+### 3. Tolak / batalkan
+- Gudang bisa **Tolak Retur** (isi alasan) → barang kembali ke stok cabang.
+- Cabang bisa **Batalkan Retur** selama belum diterima → barang kembali ke stok cabang.
+
+## Laporan
+- Retur dengan uang kembali tercatat sebagai **order koreksi** bernilai minus di gudang pada tanggal retur diterima (nama pelanggan "Retur RTR-…"). Laporan Transaksi, Produk, Kategori, Laba Rugi, dan Closing gudang ikut turun.
+- Di **Semua Cabang** / Konsolidasi, retur ikut dieliminasi bersama kirimannya (penjualan antar cabang sendiri).
+- Retur **tanpa** uang kembali: cabang kehilangan stok senilai modalnya (tercatat di kartu stok sebagai retur), sama seperti barang yang dibuang.
+
+## Peringatan
+- Order koreksi retur dibuat sistem — **tidak bisa dibatalkan, diedit, atau dihapus**.
+- Retur yang sudah diterima tidak bisa dibatalkan. Kalau salah, buat kiriman baru dari gudang.
+- Uang kembali butuh **Kas Tunai aktif** di gudang dan cabang.
+
+## Troubleshooting
+- **Tombol Buat Retur tidak ada?** Kiriman belum diterima, Anda bukan cabang penerimanya, atau belum punya hak **Buat / Batalkan Retur ke Gudang**.
+- **"maksimal …"** → jumlah retur melebihi barang yang diterima dikurangi retur sebelumnya.
+MARKDOWN,
+            'modul'  => 'stok',
+            'urutan' => 82,
             'aktif'  => true,
         ]);
     }

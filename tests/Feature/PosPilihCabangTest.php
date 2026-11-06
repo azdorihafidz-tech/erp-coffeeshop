@@ -20,16 +20,19 @@ class PosPilihCabangTest extends TestCase
     {
         $owner = $this->buatUser('owner');
         $outlet = Cabang::where('tipe', 'cabang')->where('is_active', true)->firstOrFail();
-        $gudang = Cabang::where('tipe', 'gudang_pusat')->first();
+        $gudang = Cabang::where('tipe', 'gudang_pusat')->where('is_active', true)->first();
+        $ho = Cabang::create(['nama_cabang' => 'HO Uji Pilih', 'kode_cabang' => 'HOP' . rand(1000, 9999), 'tipe' => 'head_office', 'is_active' => true]);
 
         $this->actingAs($owner)->withSession(['active_cabang_id' => null])
             ->get(route('penjualan.pos'))->assertOk()
             ->assertSee('Pilih cabang untuk berjualan')
             ->assertSee($outlet->nama_cabang)
-            // Hanya outlet & roastery (yang berjualan), bukan gudang pusat
+            // Outlet, roastery, dan gudang pusat (2026-11-06: gudang memakai POS untuk Kirim ke Cabang).
+            // Head Office tidak berjualan.
             ->assertViewHas('pilihanCabang', fn ($c) => $c->contains('id', $outlet->id)
-                && (!$gudang || !$c->contains('id', $gudang->id))
-                && $c->every(fn ($x) => in_array($x->tipe->value, ['cabang', 'roastery'], true)));
+                && (!$gudang || $c->contains('id', $gudang->id))
+                && ! $c->contains('id', $ho->id)
+                && $c->every(fn ($x) => in_array($x->tipe->value, ['cabang', 'roastery', 'gudang_pusat'], true)));
     }
 
     public function test_pilih_cabang_lalu_pos_terbuka_untuk_cabang_itu(): void

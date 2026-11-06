@@ -274,6 +274,26 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
     Route::post('/stock-transfer/{stockTransfer}/terima', [StockTransferController::class, 'terima'])->name('stock-transfer.terima');
     Route::post('/stock-transfer/{stockTransfer}/batalkan', [StockTransferController::class, 'batalkan'])->name('stock-transfer.batalkan');
 
+    // ===== KIRIMAN CABANG — gudang/roastery → cabang, Terima/Tolak (FASE_PRODUKSI_GEROBAK_DESIGN.md Tahap 2) =====
+    Route::prefix('kiriman')->name('kiriman.')->controller(\App\Http\Controllers\KirimanCabangController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{order}', 'show')->name('show');
+        Route::post('/{order}/terima', 'terima')->name('terima');
+        Route::post('/{order}/tolak', 'tolak')->name('tolak');
+        Route::post('/{order}/batalkan', 'batalkan')->name('batalkan');
+    });
+
+    // ===== RETUR CABANG → gudang/roastery (FASE_PRODUKSI_GEROBAK_DESIGN.md Tahap 3) =====
+    Route::prefix('retur-cabang')->name('retur-cabang.')->controller(\App\Http\Controllers\ReturInternalController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/buat/{order}', 'create')->name('create');
+        Route::post('/buat/{order}', 'store')->name('store');
+        Route::get('/{retur}', 'show')->name('show');
+        Route::post('/{retur}/terima', 'terima')->name('terima');
+        Route::post('/{retur}/tolak', 'tolak')->name('tolak');
+        Route::post('/{retur}/batalkan', 'batalkan')->name('batalkan');
+    });
+
     // ===== PRODUKSI bahan setengah jadi di gudang (FASE_PRODUKSI_GEROBAK_DESIGN.md Tahap 1) =====
     Route::prefix('produksi')->name('produksi.')->controller(\App\Http\Controllers\ProduksiController::class)->group(function () {
         Route::get('/resep', 'resepIndex')->name('resep.index');

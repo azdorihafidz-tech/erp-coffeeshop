@@ -47,7 +47,8 @@ class Order extends Model
      * Pending = Bill Tersimpan belum dibayar (belum memotong stok & kas),
      * Dibatalkan = stok & kas sudah dikembalikan.
      */
-    public const STATUS_TIDAK_DIHITUNG = [StatusOrder::Pending->value, StatusOrder::Dibatalkan->value];
+    // Proses = kiriman ke cabang yang belum diterima (Tahap 2 Kirim ke Cabang) — belum jadi penjualan.
+    public const STATUS_TIDAK_DIHITUNG = [StatusOrder::Pending->value, StatusOrder::Proses->value, StatusOrder::Dibatalkan->value];
 
     /**
      * Penjualan yang benar-benar terjadi: belum dihapus, bukan Pending/Dibatalkan.
@@ -70,6 +71,10 @@ class Order extends Model
     /** Order yang boleh dihapus: hanya yang tidak pernah/tidak lagi memotong stok & kas. */
     public function bolehDihapus(): bool
     {
+        if ($this->retur_internal_id !== null) {
+            return false; // order koreksi retur dibuat sistem
+        }
+
         return in_array($this->status, [StatusOrder::Dibatalkan, StatusOrder::Pending], true);
     }
 
@@ -85,6 +90,13 @@ class Order extends Model
         // Roastery V2 Minggu 6-7 — multi-kanal jual (retail/wholesale/internal)
         'customer_type',
         'outlet_tujuan_id',
+        // Kirim ke Cabang (FASE_PRODUKSI_GEROBAK Tahap 2) — penjualan internal menunggu Terima
+        'status_kirim',
+        'diterima_at',
+        'diterima_by',
+        'alasan_tolak',
+        // Retur cabang → gudang dengan uang kembali: order koreksi bernilai minus (Tahap 3)
+        'retur_internal_id',
         'tanggal_expired_frozen',
         'pelanggan_id',
         'nama_pelanggan',
@@ -143,6 +155,7 @@ class Order extends Model
             'waktu_selesai_kerja' => 'datetime',
             'waktu_disimpan'      => 'datetime',
             'waktu_diambil'       => 'datetime',
+            'diterima_at'         => 'datetime',
         ];
     }
 
@@ -166,6 +179,34 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /** Kirim ke Cabang — rincian barang yang keluar dari stok penjual / masuk ke cabang tujuan. */
+    public function kirimanItems()
+    {
+        return $this->hasMany(OrderKirimanItem::class);
+    }
+
+    /** Order koreksi retur (nilai minus) — dibuat sistem, tidak bisa dibatalkan/dihapus. */
+    public function returInternal()
+    {
+        return $this->belongsTo(ReturInternal::class);
+    }
+
+    public function isKoreksiRetur(): bool
+    {
+        return $this->retur_internal_id !== null;
+    }
+
+    public function diterimaOleh()
+    {
+        return $this->belongsTo(User::class, 'diterima_by');
+    }
+
+    /** Penjualan ke cabang sendiri lewat alur Kirim → Terima (bukan penjualan internal lama). */
+    public function isKirimanCabang(): bool
+    {
+        return $this->customer_type === 'internal' && $this->status_kirim !== null;
     }
 
     public function kasir()

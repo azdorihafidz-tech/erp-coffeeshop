@@ -1,6 +1,6 @@
 # Rancangan: Produksi Bahan Setengah Jadi + Kirim ke Cabang + Retur
 
-**Status**: 🚧 Disetujui Owner (2026-11-05, termasuk 4 usulan di bagian 10). Tahap 1 (Produksi) selesai 2026-11-06 — lihat CLAUDE.md 4.50. Tahap 2–4 menyusul.
+**Status**: 🟢 Disetujui Owner (2026-11-05, termasuk 4 usulan di bagian 10). Tahap 1–4 selesai 2026-11-06 — lihat CLAUDE.md 4.50 & 4.51 (penyesuaian dari rancangan dicatat di sana: Produk Jual tanpa komposisi tetap bisa dikirim sebagai barang itu sendiri; uang retur dicatat sebagai cermin minus).
 **Tanggal**: 2026-11-05
 **Hasil diskusi**: Owner + Claude, sesi 2026-11-05
 

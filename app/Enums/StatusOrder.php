@@ -13,7 +13,7 @@ enum StatusOrder: string
     {
         return match($this) {
             StatusOrder::Pending => 'Menunggu',
-            StatusOrder::Proses => 'Diproses',
+            StatusOrder::Proses => 'Dikirim (menunggu diterima)',
             StatusOrder::Selesai => 'Selesai',
             StatusOrder::Dibatalkan => 'Dibatalkan',
         };

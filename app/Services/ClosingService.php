@@ -111,7 +111,7 @@ class ClosingService
             ->whereNull('orders.deleted_at')
             ->whereIn('orders.cabang_id', $ids)
             ->whereBetween('orders.tanggal_order', [$mulai->toDateString(), $selesai->toDateString()])
-            ->whereNotIn('orders.status', ['dibatalkan', 'pending']);
+            ->whereNotIn('orders.status', \App\Models\Order::STATUS_TIDAK_DIHITUNG); // termasuk kiriman cabang yang belum diterima
     }
 
     private function hitungPenjualan(array $ids, Carbon $mulai, Carbon $selesai): array
@@ -278,7 +278,7 @@ class ClosingService
                     $beban[$label] = ($beban[$label] ?? 0) + $jumlah;
                 }
             } elseif ($gol === 'persediaan_aset' || $gol === 'pembelian_internal') {
-                $labelP = $gol === 'pembelian_internal' ? 'Pembelian Internal dari Roastery' : $label;
+                $labelP = $gol === 'pembelian_internal' ? 'Pembelian Internal (dari Gudang/Roastery)' : $label;
                 $arah = $r->tipe === 'pemasukan' ? -1 : 1;
                 $persediaan[$labelP] = ($persediaan[$labelP] ?? 0) + $arah * $jumlah;
                 if ($gol === 'pembelian_internal') {

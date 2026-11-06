@@ -52,7 +52,7 @@ class PenjualanController extends Controller
         if (!$cabangAktif) {
             $pilihanCabang = ($authUser->canAccessAllBranches() ? Cabang::query() : $authUser->cabangs())
                 ->where('cabangs.is_active', true)
-                ->whereIn('cabangs.tipe', ['cabang', 'roastery'])
+                ->whereIn('cabangs.tipe', ['cabang', 'roastery', 'gudang_pusat']) // gudang: Kirim ke Cabang
                 ->orderBy('cabangs.nama_cabang')
                 ->get();
 
@@ -129,9 +129,9 @@ class PenjualanController extends Controller
             ->orderByDesc('started_at')
             ->get();
 
-        // Roastery V2 Minggu 6-7 — daftar outlet Kopi Drip utk dropdown "Internal" (dobel-entry Q1)
-        $outletList = $cabangAktif?->tipe?->value === 'roastery'
-            ? Cabang::where('tipe', 'cabang')->orderBy('nama_cabang')->get()
+        // Roastery V2 Minggu 6-7 + Kirim ke Cabang (Tahap 2): cabang tujuan utk dropdown "Kirim ke Cabang"
+        $outletList = in_array($cabangAktif?->tipe?->value, ['roastery', 'gudang_pusat'], true)
+            ? Cabang::where('tipe', 'cabang')->where('is_active', true)->where('id', '!=', $cabangId)->orderBy('nama_cabang')->get()
             : collect();
 
         return view('penjualan.pos', compact(
@@ -277,7 +277,9 @@ class PenjualanController extends Controller
         // checkbox conditional di pos.blade.php. Di-echo balik supaya JS bisa
         // teruskan ke openStrukModal() -> query string struk-modal.
         $tampilHargaStruk = $request->boolean('tampil_harga_struk');
-        $pesan     = 'Order berhasil diproses! No: ' . $order->nomor_order;
+        $pesan     = $order->status === StatusOrder::Proses
+            ? 'Kiriman ' . $order->nomor_order . ' tercatat — menunggu diterima ' . ($order->outletTujuan?->nama_cabang ?? 'cabang tujuan') . '.'
+            : 'Order berhasil diproses! No: ' . $order->nomor_order;
 
         // Ajax (POS in-place) — tidak redirect supaya user gesture tetap
         // hidup untuk auto-print Bluetooth di halaman yang sama.
@@ -314,6 +316,12 @@ class PenjualanController extends Controller
         $cabangId = session('active_cabang_id') ?? $authUser->defaultCabangId();
         if ($tolak = $this->tolakTanpaCabang($cabangId)) {
             return $tolak;
+        }
+
+        // Kirim ke Cabang langsung diproses dengan tombol Kirim (tanpa Save Bill) — Save Bill
+        // tidak menyimpan cabang tujuan, jadi kiriman akan tercatat sebagai penjualan biasa.
+        if ($request->input('customer_type') === 'internal') {
+            return response()->json(['success' => false, 'message' => 'Kiriman ke cabang tidak bisa disimpan sebagai bill. Gunakan tombol Kirim ke Cabang.'], 422);
         }
 
         $data = $request->validate([
@@ -731,6 +739,9 @@ class PenjualanController extends Controller
     {
         abort_unless(auth()->user()->can('order.edit'), 403);
         abort_unless(CabangLaporan::bolehAkses($order->cabang_id), 403, 'Order ini milik cabang lain.');
+        if ($order->isKirimanCabang() || $order->isKoreksiRetur()) {
+            return redirect()->route('penjualan.show', $order)->with('error', 'Kiriman/retur antar cabang tidak bisa diedit — nilainya sudah tercatat di kas cabang tujuan. Gunakan Tolak/Batalkan atau Retur.');
+        }
 
         $isOwner = auth()->user()->role === \App\Enums\RoleUser::Owner;
         if (!$isOwner && in_array($order->status, [StatusOrder::Selesai, StatusOrder::Dibatalkan])) {
@@ -748,6 +759,9 @@ class PenjualanController extends Controller
     {
         abort_unless(auth()->user()->can('order.edit'), 403);
         abort_unless(CabangLaporan::bolehAkses($order->cabang_id), 403, 'Order ini milik cabang lain.');
+        if ($order->isKirimanCabang() || $order->isKoreksiRetur()) {
+            return redirect()->route('penjualan.show', $order)->with('error', 'Kiriman/retur antar cabang tidak bisa diedit — nilainya sudah tercatat di kas cabang tujuan. Gunakan Tolak/Batalkan atau Retur.');
+        }
 
         $isOwner = auth()->user()->role === \App\Enums\RoleUser::Owner;
         if (!$isOwner && in_array($order->status, [StatusOrder::Selesai, StatusOrder::Dibatalkan])) {

@@ -193,19 +193,19 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
                         @endif
                     </div>
 
-                    {{-- Roastery V2 Minggu 6-7 — Multi-kanal, cuma tampil di cabang tipe Roastery (Q1) --}}
-                    @if($cabangAktif?->tipe?->value === 'roastery')
+                    {{-- Roastery V2 Minggu 6-7 — Multi-kanal. Kirim ke Cabang (FASE_PRODUKSI_GEROBAK Tahap 2): juga di Gudang Pusat --}}
+                    @if(in_array($cabangAktif?->tipe?->value, ['roastery', 'gudang_pusat'], true))
                     <div class="mt-2">
                         <label class="form-label small">Jenis Pembeli <x-tooltip key="pos.customer_type" /></label>
                         <select name="customer_type" id="selectCustomerType" class="form-select form-select-sm" style="max-width:260px">
                             <option value="retail" selected>Retail (Walk-in)</option>
                             <option value="wholesale">Wholesale (B2B)</option>
-                            <option value="internal">Internal — Kirim ke Outlet {{ $brand->namaSingkat() }}</option>
+                            <option value="internal">Kirim ke Cabang (menunggu diterima)</option>
                         </select>
                         <div class="d-none mt-2" id="wrapOutletTujuan" style="max-width:260px">
-                            <label class="form-label small">Outlet Tujuan <x-tooltip key="pos.outlet_tujuan" /></label>
+                            <label class="form-label small">Cabang Tujuan <x-tooltip key="pos.outlet_tujuan" /></label>
                             <select name="outlet_tujuan_id" id="selectOutletTujuan" class="form-select form-select-sm">
-                                <option value="">-- Pilih Outlet --</option>
+                                <option value="">-- Pilih Cabang --</option>
                                 @foreach($outletList ?? [] as $outlet)
                                 <option value="{{ $outlet->id }}">{{ $outlet->nama_cabang }}</option>
                                 @endforeach
@@ -361,6 +361,11 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
                         <div id="totalBayarDisplay">Rp 0</div>
                     </div>
 
+                    {{-- Kirim ke Cabang: tidak ada pembayaran di pengirim, uang dipotong dari kas cabang saat Terima --}}
+                    <div id="infoKirimCabang" class="alert alert-info small d-none">
+                        <i class="bi bi-truck me-1"></i><strong>Kirim ke Cabang.</strong> Stok keluar dari sini sekarang. Cabang tujuan mengecek barang lalu menekan <strong>Terima</strong> di menu <em>Kiriman Cabang</em>: stok masuk ke cabang, kas tunai cabang terpotong, dan pendapatan tercatat di sini.
+                    </div>
+                    <div id="wrapPembayaran">
                     {{-- Tipe Pembayaran --}}
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Tipe Pembayaran</label>
@@ -499,6 +504,7 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
                             <span id="kembalianDisplay" class="fs-5 fw-bold text-success">Rp 0</span>
                         </div>
                     </div>
+                    </div>{{-- /wrapPembayaran --}}
 
                     {{-- Tampil di Antrian Produksi — default centang. Uncheck utk order
                          tambahan yang dikerjakan barengan order asli (tidak perlu nomor
@@ -899,12 +905,18 @@ function pilihTipeTransaksi(tipe) {
     if (!selCustType) return; // hanya ada di cabang tipe roastery
     const wrapOutlet = document.getElementById('wrapOutletTujuan');
     selCustType.addEventListener('change', function () {
-        if (this.value === 'internal') {
-            wrapOutlet.classList.remove('d-none');
-        } else {
-            wrapOutlet.classList.add('d-none');
-            document.getElementById('selectOutletTujuan').value = '';
-        }
+        const kirim = this.value === 'internal';
+        wrapOutlet.classList.toggle('d-none', !kirim);
+        if (!kirim) document.getElementById('selectOutletTujuan').value = '';
+        // Kirim ke Cabang: tanpa pembayaran & tanpa Save Bill (uang pindah saat cabang menekan Terima)
+        document.getElementById('wrapPembayaran')?.classList.toggle('d-none', kirim);
+        document.getElementById('infoKirimCabang')?.classList.toggle('d-none', !kirim);
+        document.getElementById('btnSaveBill')?.classList.toggle('d-none', kirim);
+        document.getElementById('tampilAntrianCheck')?.closest('.form-check')?.classList.toggle('d-none', kirim); // kiriman tidak masuk antrian
+        const btn = document.getElementById('btnProses');
+        if (btn) btn.innerHTML = kirim
+            ? '<i class="bi bi-truck me-2"></i>KIRIM KE CABANG'
+            : '<i class="bi bi-check-circle-fill me-2"></i>PROSES ORDER';
     });
 })();
 
@@ -1551,12 +1563,13 @@ document.getElementById('formPos').addEventListener('submit', async function(e) 
 
     // 1. Tipe transaksi wajib dipilih
     const tipeTransaksi = document.getElementById('tipeTransaksiInput').value;
-    if (!tipeTransaksi) {
+    const isKirimCabang = document.getElementById('selectCustomerType')?.value === 'internal';
+    if (!tipeTransaksi && !isKirimCabang) {
         await window.showAlert('error', 'Tipe Transaksi Belum Dipilih', 'Pilih Dine-in / Takeaway / Frozen dulu.');
         return;
     }
     // 1b. Nomor meja wajib kalau dine-in & outlet mewajibkan
-    if (tipeTransaksi === 'dine_in' && window.POS_NOMOR_MEJA_AKTIF) {
+    if (tipeTransaksi === 'dine_in' && window.POS_NOMOR_MEJA_AKTIF && !isKirimCabang) {
         const mejaEl = document.getElementById('inputNomorMeja');
         if (!mejaEl.value.trim()) {
             await window.showAlert('error', 'Nomor Meja Belum Diisi', 'Nomor meja wajib diisi untuk transaksi Dine-in.');
@@ -1570,6 +1583,61 @@ document.getElementById('formPos').addEventListener('submit', async function(e) 
         await window.showAlert('warning', 'Item Kosong', 'Harap tambahkan minimal 1 item!');
         return;
     }
+
+    // 2b. Kirim ke Cabang (gudang/roastery → cabang sendiri): tanpa pembayaran —
+    // kas cabang tujuan terpotong saat cabang menekan Terima. Alur bayar biasa
+    // di bawah tidak tersentuh.
+    if (document.getElementById('selectCustomerType')?.value === 'internal') {
+        const tujuanEl = document.getElementById('selectOutletTujuan');
+        if (!tujuanEl?.value) {
+            await window.showAlert('error', 'Cabang Tujuan Belum Dipilih', 'Pilih cabang tujuan kiriman dulu.');
+            tujuanEl?.focus();
+            return;
+        }
+        const totalKirim = parseInt(document.getElementById('totalBayarDisplay').textContent.replace(/[^0-9]/g, '')) || 0;
+        const namaTujuan = tujuanEl.options[tujuanEl.selectedIndex].text;
+        const ok = await window.showConfirm(
+            'Kirim ke ' + namaTujuan + '?',
+            `<div style="text-align:left">`
+                + `<div>Nilai kiriman: <strong>Rp ${totalKirim.toLocaleString('id-ID')}</strong></div>`
+                + `<div class="small text-muted mt-2">Stok keluar dari sini sekarang. Uang dipotong dari kas tunai ${escHtml(namaTujuan)} saat cabang menekan Terima.</div>`
+            + `</div>`,
+            { icon: 'question', confirmText: 'Ya, Kirim', cancelText: 'Cek Kembali' }
+        );
+        if (!ok.isConfirmed) return;
+
+        const btnK = document.getElementById('btnProses');
+        const htmlK = btnK.innerHTML;
+        btnK.disabled = true;
+        btnK.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mengirim...';
+        try {
+            const fd = new FormData(e.target);
+            fd.set('tipe_transaksi', 'takeaway');
+            fd.set('tipe_pembayaran', 'tunai');
+            fd.set('jumlah_bayar', String(totalKirim));
+            fd.append('payments[0][metode]', 'tunai');
+            fd.append('payments[0][jumlah]', String(Math.max(totalKirim, 1)));
+            const resp = await fetch(e.target.action, {
+                method: 'POST', body: fd,
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.message || 'Gagal mengirim ke cabang.');
+            showToast('success', data.message || 'Kiriman tercatat.');
+            if (data.auto_print) {
+                openStrukModal(data.order_id, data.copies, data.tampil_harga_struk);
+            } else {
+                resetPosForm();
+            }
+        } catch (err) {
+            await window.showAlert('error', 'Gagal Kirim ke Cabang', err.message);
+        } finally {
+            btnK.disabled = false;
+            btnK.innerHTML = htmlK;
+        }
+        return;
+    }
+
 
     const tipe = document.getElementById('tipePembayaranInput').value;
     const isSplit = document.getElementById('splitPaymentCheck')?.checked;

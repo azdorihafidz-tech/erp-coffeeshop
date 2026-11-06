@@ -42,6 +42,13 @@ class UpdateDatabaseService
         'produksi.create'       => ['admin_pusat', 'admin_gudang', 'operator_produksi'],
         'produksi.batalkan'     => ['admin_pusat', 'admin_gudang'],
         'produksi.resep.kelola' => ['admin_pusat', 'admin_gudang'],
+        // Kiriman Cabang (2026-11-06)
+        'kiriman.view'   => ['admin_pusat', 'admin_gudang', 'manajer_cabang', 'kasir'],
+        'kiriman.terima' => ['admin_pusat', 'manajer_cabang', 'kasir'],
+        // Retur Cabang (2026-11-06)
+        'retur.view'   => ['admin_pusat', 'admin_gudang', 'manajer_cabang', 'kasir'],
+        'retur.create' => ['admin_pusat', 'manajer_cabang', 'kasir'],
+        'retur.terima' => ['admin_pusat', 'admin_gudang'],
     ];
 
     public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder'];

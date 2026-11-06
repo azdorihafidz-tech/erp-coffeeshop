@@ -212,6 +212,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'produksi.create',       'display_name' => 'Catat Produksi',                  'group' => 'stok'],
             ['name' => 'produksi.batalkan',     'display_name' => 'Batalkan Produksi',               'group' => 'stok'],
             ['name' => 'produksi.resep.kelola', 'display_name' => 'Kelola Resep Produksi',           'group' => 'stok'],
+            // Kiriman Cabang — gudang/roastery → cabang, Terima/Tolak (Tahap 2, 2026-11-06)
+            ['name' => 'kiriman.view',   'display_name' => 'Lihat Kiriman Cabang (barang masuk/keluar)', 'group' => 'stok'],
+            ['name' => 'kiriman.terima', 'display_name' => 'Terima / Tolak Kiriman dari Gudang',        'group' => 'stok'],
+            // Retur Cabang → gudang/roastery (Tahap 3, 2026-11-06)
+            ['name' => 'retur.view',   'display_name' => 'Lihat Retur Cabang',                       'group' => 'stok'],
+            ['name' => 'retur.create', 'display_name' => 'Buat / Batalkan Retur ke Gudang',          'group' => 'stok'],
+            ['name' => 'retur.terima', 'display_name' => 'Terima / Tolak Retur dari Cabang',         'group' => 'stok'],
 
             // Audit retroaktif 3.8 (2026-09-24) — permission yang dipakai di sidebar/controller
             // sejak warisan Dimsum tapi TIDAK pernah dibuat (RolePermissionSeeder melewatinya diam-diam,

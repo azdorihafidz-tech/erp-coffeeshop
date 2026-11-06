@@ -34,6 +34,8 @@ class RolePermissionSeeder extends Seeder
             'label_cup.print', // Sprint Label Cup (2026-10-19)
             'penjualan.laporan_transaksi.view', 'penjualan.laporan_produk.view', 'penjualan.laporan_kategori.view', 'penjualan.laporan.keuntungan', // 4.49
             'produksi.view', 'produksi.create', 'produksi.batalkan', 'produksi.resep.kelola', // Produksi (2026-11-06)
+            'kiriman.view', 'kiriman.terima', // Kiriman Cabang (2026-11-06)
+            'retur.view', 'retur.create', 'retur.terima', // Retur Cabang (2026-11-06)
             'jenis-olahan.view', 'jenis-olahan.manage',
             'pembelian.view', 'pembelian.create', 'pembelian.approve', 'pembelian.delete',
             'pembelian.kirim-supplier', 'pembelian.terima',
@@ -103,6 +105,8 @@ class RolePermissionSeeder extends Seeder
             'packing-batch.view', 'packing-batch.create', 'packing-batch.selesaikan', 'packing-batch.batalkan',
             // Produksi bahan setengah jadi (2026-11-06)
             'produksi.view', 'produksi.create', 'produksi.batalkan', 'produksi.resep.kelola',
+            'kiriman.view', // lihat barang keluar dari gudang
+            'retur.view', 'retur.terima', // terima retur dari cabang
             'karyawan.view',
             'stok.view', 'stok.adjustment', 'stok.transfer',
             'item.view', 'item.create', 'item.edit',
@@ -130,6 +134,8 @@ class RolePermissionSeeder extends Seeder
 
         'manajer_cabang' => [
             'order.view', 'order.create', 'order.batalkan',
+            'kiriman.view', 'kiriman.terima', // Kiriman Cabang (2026-11-06)
+            'retur.view', 'retur.create', // Retur Cabang (2026-11-06)
             'pelanggan.view', 'pelanggan.create', 'pelanggan.edit',
             'stok.view', 'stok.request', 'stok.adjustment',
             'item.view', 'item.edit',
@@ -181,6 +187,8 @@ class RolePermissionSeeder extends Seeder
 
         'kasir' => [
             'order.view', 'order.create',
+            'kiriman.view', 'kiriman.terima', // Kiriman Cabang (2026-11-06)
+            'retur.view', 'retur.create', // Retur Cabang (2026-11-06)
             'pelanggan.view', 'pelanggan.create',
             'karyawan.view',
             'stok.view',

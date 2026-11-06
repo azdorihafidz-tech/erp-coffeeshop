@@ -1244,6 +1244,32 @@ class TooltipKontenSeeder extends Seeder
             Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'stok', 'urutan' => 80 + $i, 'aktif' => true]));
         }
 
+        // Kiriman Cabang — gudang/roastery → cabang (2026-11-06). pos.* menimpa teks lama Roastery
+        // (dulu stok & kas outlet langsung berubah, sekarang menunggu cabang menekan Terima).
+        $kiriman = [
+            ['key' => 'pos.customer_type', 'title' => 'Jenis Pembeli', 'modul' => 'penjualan', 'urutan' => 20,
+             'content' => 'Retail: pembeli datang langsung. Wholesale: pembeli partai/B2B (dicatat terpisah di laporan). Kirim ke Cabang: dijual ke cabang sendiri — stok keluar sekarang, uang dan stok masuk di cabang baru terjadi saat cabang menekan Terima di menu Kiriman Cabang.'],
+            ['key' => 'pos.outlet_tujuan', 'title' => 'Cabang Tujuan', 'modul' => 'penjualan', 'urutan' => 21,
+             'content' => 'Cabang yang menerima kiriman. Yang masuk ke stok cabang = bahan di komposisi Produk Jual × jumlah (produk tanpa komposisi dikirim sebagai barang itu sendiri). Kas tunai cabang terpotong senilai kiriman saat Terima.'],
+            ['key' => 'kiriman.qty_diterima', 'title' => 'Jumlah sampai', 'modul' => 'stok', 'urutan' => 90,
+             'content' => 'Isi jumlah yang benar-benar datang. Kalau kurang dari yang dikirim, sisanya otomatis kembali ke stok pengirim dan total yang dibayar cabang ikut turun.'],
+            ['key' => 'kiriman.tolak', 'title' => 'Tolak kiriman', 'modul' => 'stok', 'urutan' => 91,
+             'content' => 'Semua barang kembali ke stok pengirim dengan modal semula, tidak ada uang yang berpindah. Untuk barang yang sudah diterima, gunakan Retur.'],
+        ];
+        foreach ($kiriman as $d) {
+            Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['aktif' => true]));
+        }
+
+        // Retur Cabang (2026-11-06)
+        foreach ([
+            ['key' => 'retur_cabang.uang_kembali', 'title' => 'Uang dikembalikan?',
+             'content' => 'Ya: kas tunai cabang mendapat kembali harga kiriman, pendapatan pengirim turun, rugi ditanggung pengirim. Tidak: barang saja yang dikembalikan, tidak ada uang berpindah, rugi ditanggung cabang ini.'],
+            ['key' => 'retur_cabang.koreksi', 'title' => 'Order koreksi',
+             'content' => 'Order bernilai minus yang dibuat otomatis di pengirim saat retur dengan uang kembali diterima, supaya pendapatan dan keuntungan di laporan ikut turun. Tidak bisa dibatalkan atau diedit.'],
+        ] as $i => $d) {
+            Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'stok', 'urutan' => 92 + $i, 'aktif' => true]));
+        }
+
         // Tooltip lama (firstOrCreate di atas tidak menimpa) yang masih menyebut
         // nama Kopi Drip → penanda, ditampilkan sesuai Pengaturan Umum.
         Tooltip::where('content', 'like', '%Kopi Drip%')->get()->each(function (Tooltip $t) {

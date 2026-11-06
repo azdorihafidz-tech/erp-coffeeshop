@@ -757,7 +757,7 @@
         @endcanany
 
         <!-- STOK & GUDANG -->
-        @canany(['stok.view', 'stok.request', 'stok.transfer', 'master.meja.view', 'produksi.view'])
+        @canany(['stok.view', 'stok.request', 'stok.transfer', 'master.meja.view', 'produksi.view', 'kiriman.view', 'retur.view'])
         <div class="nav-section-title">Stok & Gudang</div>
         @can('stok.view')
         <a href="{{ route('stok.dashboard') }}"
@@ -783,6 +783,24 @@
            class="nav-link {{ request()->routeIs('stock-transfer.*') ? 'active' : '' }}">
             <i class="bi bi-truck"></i>
             <span>Transfer Stok</span>
+        </a>
+        @endcan
+        @can('kiriman.view')
+        @php $kirimanMenunggu = \App\Http\Controllers\KirimanCabangController::jumlahMenunggu(); @endphp
+        <a href="{{ route('kiriman.index') }}"
+           class="nav-link {{ request()->routeIs('kiriman.*') ? 'active' : '' }}">
+            <i class="bi bi-truck-front"></i>
+            <span>Kiriman Cabang</span>
+            @if($kirimanMenunggu > 0)<span class="badge bg-danger ms-auto">{{ $kirimanMenunggu }}</span>@endif
+        </a>
+        @endcan
+        @can('retur.view')
+        @php $returMenunggu = \App\Services\ReturInternalService::jumlahMenunggu(); @endphp
+        <a href="{{ route('retur-cabang.index') }}"
+           class="nav-link {{ request()->routeIs('retur-cabang.*') ? 'active' : '' }}">
+            <i class="bi bi-arrow-return-left"></i>
+            <span>Retur Cabang</span>
+            @if($returMenunggu > 0)<span class="badge bg-danger ms-auto">{{ $returMenunggu }}</span>@endif
         </a>
         @endcan
         @can('produksi.view')
