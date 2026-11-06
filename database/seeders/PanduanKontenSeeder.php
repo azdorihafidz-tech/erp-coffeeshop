@@ -506,6 +506,8 @@ Setiap printer & gulungan stiker posisinya sedikit berbeda. Di jendela Label Cup
 4. Tulisan terbalik → centang/hapus centang **Putar tulisan 180°**.
 5. Cetak uji lagi sampai pas. Pengaturan disimpan di perangkat itu saja (tablet, HP gerobak, atau PC masing-masing).
 
+**Cara cetak** (di menu yang sama): **Gambar** (bawaan, disarankan) — label digambar oleh aplikasi lalu dikirim sebagai gambar, jadi ukuran huruf & posisi pasti sama di semua printer dan contoh di layar = hasil cetak (nomor antrean besar, nama menu tebal, opsi, nama pelanggan, jam & nama toko kecil). **Teks printer** — memakai huruf bawaan printer (lebih cepat, tapi ukuran huruf tergantung merek printer). Kalau dengan cara Gambar stiker tercetak **hitam semua**, centang **Balik hitam-putih**.
+
 Pastikan juga **ukuran stiker** di Cabang → Edit → Label Cup sama dengan stiker yang dipasang (mis. 40 × 30 mm).
 MARKDOWN,
             'modul'  => 'penjualan',

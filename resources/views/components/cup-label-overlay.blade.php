@@ -44,6 +44,14 @@
                     <div class="col-6"><label class="form-label mb-0">Geser atas/bawah (mm)</label>
                         <input type="number" step="0.5" min="-10" max="10" class="form-control form-control-sm" id="cupLabelGeserY" onchange="window.cupLabelSimpanPosisi()">
                         <div class="text-muted">+ ke bawah, − ke atas</div></div>
+                    <div class="col-12"><label class="form-label mb-0">Cara cetak</label>
+                        <select class="form-select form-select-sm" id="cupLabelMode" onchange="window.cupLabelSimpanPosisi()">
+                            <option value="gambar">Gambar — rapi, ukuran huruf pasti (disarankan)</option>
+                            <option value="teks">Teks printer — huruf bawaan printer</option>
+                        </select></div>
+                    <div class="col-12"><div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="cupLabelBalik" onchange="window.cupLabelSimpanPosisi()">
+                        <label class="form-check-label" for="cupLabelBalik">Balik hitam-putih (centang hanya kalau stiker tercetak hitam semua)</label></div></div>
                     <div class="col-12"><div class="form-check">
                         <input class="form-check-input" type="checkbox" id="cupLabelPutar" onchange="window.cupLabelSimpanPosisi()">
                         <label class="form-check-label" for="cupLabelPutar">Putar tulisan 180°</label></div></div>
@@ -91,6 +99,18 @@
 
     function renderPreview(labels) {
         el('cupLabelCount').textContent = labels.length;
+        if (modeGambar() && state && state.ukuran) {
+            // Mode gambar: contoh di layar = persis yang dikirim ke printer
+            el('cupLabelPreview').innerHTML = '';
+            labels.forEach(function (l) {
+                var img = new Image();
+                img.src = gambarLabel(l, state.ukuran.lebar, state.ukuran.tinggi, 0, 0).toDataURL();
+                img.alt = 'Label ' + l.ke; img.className = 'border rounded bg-white';
+                img.style.cssText = 'width:100%;max-width:320px;align-self:center';
+                el('cupLabelPreview').appendChild(img);
+            });
+            return;
+        }
         el('cupLabelPreview').innerHTML = labels.map(function (l) {
             return '<div class="border rounded p-2 small" style="font-family:Arial,sans-serif">'
                 + '<div class="d-flex justify-content-between fw-bold border-bottom pb-1"><span>' + esc(l.toko.toUpperCase()) + '</span><span>#' + esc(l.nomor) + ' · ' + l.ke + '/' + l.dari + '</span></div>'
@@ -174,12 +194,17 @@
         var p = posisi();
         if (!el('cupLabelGeserX')) return;
         el('cupLabelGeserX').value = p.gx; el('cupLabelGeserY').value = p.gy; el('cupLabelPutar').checked = p.arah === 0;
+        el('cupLabelMode').value = ls(KEY_MODE) === 'teks' ? 'teks' : 'gambar';
+        el('cupLabelBalik').checked = ls(KEY_BALIK) === '1';
     }
     window.cupLabelSimpanPosisi = function () {
         var gx = parseFloat(el('cupLabelGeserX').value), gy = parseFloat(el('cupLabelGeserY').value);
         ls(KEY_GESER_X, isFinite(gx) ? String(Math.max(-10, Math.min(10, gx))) : null);
         ls(KEY_GESER_Y, isFinite(gy) ? String(Math.max(-10, Math.min(10, gy))) : null);
         ls(KEY_PUTAR, el('cupLabelPutar').checked ? '0' : null);
+        ls(KEY_MODE, el('cupLabelMode').value === 'teks' ? 'teks' : null);
+        ls(KEY_BALIK, el('cupLabelBalik').checked ? '1' : null);
+        if (state && state.labels) renderPreview(state.labels);
         isiPosisiUi();
         status('Posisi label disimpan di perangkat ini.', 'muted');
     };
@@ -238,7 +263,119 @@
     }
     function q(t) { return '"' + ascii(t).replace(/"/g, "'") + '"'; }
 
-    function buildTspl() {
+    // ---- Label sebagai GAMBAR (2026-11-06) ----
+    // Foto Owner: huruf bawaan printer beda-beda ukurannya (Blueprint: semua font ±12×24 titik)
+    // sehingga baris bertabrakan & ukuran huruf tidak bisa diatur. Label digambar di canvas
+    // seukuran stiker (8 titik/mm) lalu dikirim sebagai BITMAP TSPL: ukuran huruf, tebal &
+    // posisi pasti sama di semua printer, dan contoh di layar = hasil cetak.
+    var KEY_MODE = 'labelCupMode', KEY_BALIK = 'labelCupBalik';
+    function modeGambar() { return ls(KEY_MODE) !== 'teks' && !!document.createElement('canvas').getContext; }
+
+    function gambarLabel(l, w, h, ox, oy) {
+        var W = w * 8, H = h * 8, cv = document.createElement('canvas');
+        cv.width = W; cv.height = H;
+        var g = cv.getContext('2d');
+        g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+        g.translate(ox || 0, oy || 0);                       // geser posisi (mm × 8)
+        g.fillStyle = '#000'; g.textBaseline = 'top';
+        var M = 24, kanan = W - M, lebar = kanan - M;        // margin 3 mm kiri & kanan
+        var F = 'Arial, Helvetica, sans-serif';
+        var font = function (px, tebal) { g.font = (tebal ? 'bold ' : '') + px + 'px ' + F; };
+        var potong = function (t, maks) {
+            t = String(t || '');
+            if (g.measureText(t).width <= maks) return t;
+            while (t.length && g.measureText(t + '…').width > maks) t = t.slice(0, -1);
+            return t + '…';
+        };
+        var bungkus = function (t, maks, maksBaris) {
+            if (maksBaris <= 0) { var k = []; k.terpotong = !!String(t || '').trim(); return k; }
+            var out = [], cur = '';
+            String(t || '').split(/\s+/).filter(Boolean).forEach(function (kata) {
+                var c = cur ? cur + ' ' + kata : kata;
+                if (g.measureText(c).width <= maks) cur = c; else { if (cur) out.push(cur); cur = kata; }
+            });
+            if (cur) out.push(cur);
+            out = out.map(function (s) { return potong(s, maks); });
+            var terpotong = out.length > maksBaris;
+            if (terpotong) { var sisa = out.slice(maksBaris - 1).join(' '); out = out.slice(0, maksBaris - 1); out.push(potong(sisa, maks)); }
+            out.terpotong = terpotong;
+            return out;
+        };
+
+        // 1. Nomor antrean besar + urutan gelas kecil di kanan
+        var y = 12, kd = l.ke + '/' + l.dari;
+        font(18, true); var wKd = g.measureText(kd).width; g.fillText(kd, kanan - wKd, y + 10);
+        font(34, true); g.fillText(potong('#' + l.nomor, lebar - wKd - 10), M, y);
+        y += 38; g.fillRect(M, y, lebar, 2); y += 7;
+
+        // Batas bawah: baris info (15 px) + nama pelanggan (bila ada)
+        var yInfo = H - 14 - 15, batas = yInfo - 4 - (l.pelanggan ? 24 : 0);
+
+        // 2. Nama menu tebal, 2 baris, dikecilkan sampai muat
+        var uk = 26, baris = [];
+        for (; uk >= 18; uk -= 2) { font(uk, true); baris = bungkus(l.nama, lebar, 2); if (!baris.terpotong) break; }
+        baris.forEach(function (t) { if (y + uk <= batas) { g.fillText(t, M, y); y += uk + 3; } });
+        y += 2;
+
+        // 3. Opsi (Size/Gula/Es…) & catatan
+        font(17, false);
+        var badan = [];
+        if (l.opsi && l.opsi.length) badan.push(l.opsi.join(' · '));
+        if (l.catatan) badan.push(l.catatan);
+        badan.forEach(function (t) {
+            bungkus(t, lebar, Math.floor((batas - y) / 20)).forEach(function (s) { g.fillText(s, M, y); y += 20; });
+        });
+
+        // 4. Nama pelanggan (tebal)
+        if (l.pelanggan) { font(20, true); g.fillText(potong(String(l.pelanggan).toUpperCase(), lebar), M, batas + 2); }
+
+        // 5. Baris bawah: tipe pesanan + jam (kiri), nama toko kecil (kanan)
+        font(13, false); var toko = potong(l.toko, lebar * 0.45), wToko = g.measureText(toko).width;
+        g.fillText(toko, kanan - wToko, yInfo + 2);
+        font(15, false); g.fillText(potong(l.info, lebar - wToko - 8), M, yInfo);
+        return cv;
+    }
+
+    // Canvas → data BITMAP TSPL (1 bit/titik). Standar TSPL: bit 0 = titik hitam.
+    function canvasKeBitmap(cv, balik) {
+        var W = cv.width, H = cv.height, wb = Math.ceil(W / 8);
+        var d = cv.getContext('2d').getImageData(0, 0, W, H).data, out = new Uint8Array(wb * H);
+        out.fill(balik ? 0x00 : 0xFF);
+        for (var y = 0; y < H; y++) {
+            for (var x = 0; x < W; x++) {
+                var i = (y * W + x) * 4;
+                if ((d[i] * 299 + d[i + 1] * 587 + d[i + 2] * 114) / 1000 < 140) {
+                    var b = y * wb + (x >> 3), m = 0x80 >> (x & 7);
+                    if (balik) out[b] |= m; else out[b] &= ~m;
+                }
+            }
+        }
+        return { data: out, wb: wb, h: H };
+    }
+
+    function gabung(bagian) {
+        var n = 0; bagian.forEach(function (b) { n += b.length; });
+        var out = new Uint8Array(n), o = 0;
+        bagian.forEach(function (b) { out.set(b, o); o += b.length; });
+        return out;
+    }
+
+    function buildTsplGambar() {
+        var w = state.ukuran.lebar, h = state.ukuran.tinggi, p = posisi(), enc = new TextEncoder();
+        var balik = ls(KEY_BALIK) === '1', bagian = [];
+        state.labels.forEach(function (l) {
+            var bmp = canvasKeBitmap(gambarLabel(l, w, h, Math.round(p.gx * 8), Math.round(p.gy * 8)), balik);
+            bagian.push(enc.encode(tsplAwal(w, h, p).join('\r\n') + '\r\nBITMAP 0,0,' + bmp.wb + ',' + bmp.h + ',0,'));
+            bagian.push(bmp.data);
+            bagian.push(enc.encode('\r\nPRINT 1,1\r\n'));
+        });
+        return gabung(bagian);
+    }
+
+    function buildTspl() { return modeGambar() ? buildTsplGambar() : buildTsplTeks(); }
+
+    // Mode teks (huruf bawaan printer) — cadangan kalau printer tidak mendukung BITMAP
+    function buildTsplTeks() {
         var w = state.ukuran.lebar, h = state.ukuran.tinggi, dotsW = w * 8, dotsH = h * 8, p = posisi();
         var ox = Math.round(p.gx * 8), oy = Math.round(p.gy * 8);
         // 2026-11-06 (Owner: tulisan dikecilkan, stiker 40×30): margin 3 mm KIRI & KANAN sama besar —
