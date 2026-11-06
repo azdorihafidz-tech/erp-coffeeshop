@@ -320,11 +320,10 @@
         // 1. Nama toko di paling atas (permintaan Owner), lalu nomor antrean besar + urutan gelas di kanan
         var y = 10, kd = l.ke + '/' + l.dari;
         font(14, true); g.fillText(potong(String(l.toko).toUpperCase(), lebar), M, y); y += 18;
-        // Urutan gelas (1/2) di kotak hitam TEPAT di sebelah nomor — dulu rata kanan & terpotong di tepi (foto Owner)
-        font(30, true); var nomor = potong('#' + l.nomor, lebar - 70), wNo = g.measureText(nomor).width; g.fillText(nomor, M, y);
-        font(17, true); var wKd = g.measureText(kd).width, bx = M + wNo + 10;
-        // Kotak garis tepi + angka hitam (blok hitam + angka putih jadi hitam semua di printer thermal — foto Owner)
-        g.lineWidth = 2; g.strokeRect(bx + 1, y + 4, wKd + 12, 24); g.fillText(kd, bx + 7, y + 8);
+        // Urutan gelas (1/2) rata kanan TANPA kotak (permintaan Owner); posisi tengah stiker diatur
+        // lewat geser per cabang. Nomor dipotong supaya tidak pernah menimpa "1/2".
+        font(18, true); var wKd = g.measureText(kd).width; g.fillText(kd, kanan - wKd, y + 9);
+        font(30, true); g.fillText(potong('#' + l.nomor, lebar - wKd - 10), M, y);
         y += 33; g.fillRect(M, y, lebar, 2); y += 6;
 
         // Batas bawah: baris info (15 px) + nama pelanggan (bila ada)
@@ -342,15 +341,29 @@
         if (l.opsi && l.opsi.length) badan.push(l.opsi.join(' · '));
         if (l.catatan) badan.push(l.catatan);
         if (l.catatan_order) badan.push(l.catatan_order);   // catatan pesanan (kolom Catatan di POS)
-        badan.forEach(function (t) {
-            bungkus(t, lebar, Math.floor((batas - y) / 20)).forEach(function (s) { g.fillText(s, M, y); y += 20; });
+        // Jatah baris: hanya ruang antara nama menu dan nama pelanggan. Setiap teks dapat minimal
+        // 1 baris (kalau ada tempat), sisa baris dibagi berurutan; kelebihan dipotong "…" —
+        // tidak pernah menimpa nama pelanggan / baris jam.
+        var sisaBaris = Math.max(0, Math.floor((batas - y) / 20));
+        if (badan.length > sisaBaris && sisaBaris > 0) badan = badan.slice(0, sisaBaris - 1).concat([badan.slice(sisaBaris - 1).join(' · ')]);
+        var perlu = badan.map(function (t) { return bungkus(t, lebar, 99).length; });
+        var jatah = badan.map(function () { return sisaBaris > 0 ? 1 : 0; });
+        var sisa = sisaBaris - jatah.reduce(function (a, b) { return a + b; }, 0);
+        for (var bi = 0; bi < badan.length && sisa > 0; bi++) { var tambah = Math.min(sisa, perlu[bi] - jatah[bi]); if (tambah > 0) { jatah[bi] += tambah; sisa -= tambah; } }
+        badan.forEach(function (t, i) {
+            bungkus(t, lebar, jatah[i]).forEach(function (s) { g.fillText(s, M, y); y += 20; });
         });
 
         // 4. Nama pelanggan (tebal)
         if (l.pelanggan) { font(20, true); g.fillText(potong(String(l.pelanggan).toUpperCase(), lebar), M, batas + 2); }
 
-        // 5. Baris bawah: tipe pesanan + jam
-        font(15, false); g.fillText(potong(l.info, lebar), M, yInfo);
+        // 5. Baris bawah: jam + tanggal rata kanan (selalu utuh), tipe pesanan/meja di kiri dipotong bila panjang
+        font(15, false);
+        var info = String(l.info || ''), pisah = info.lastIndexOf(' · ');
+        var waktu = pisah >= 0 ? info.slice(pisah + 3) : '', tipe = pisah >= 0 ? info.slice(0, pisah) : info;
+        var wWaktu = waktu ? g.measureText(waktu).width : 0;
+        if (waktu) g.fillText(waktu, kanan - wWaktu, yInfo);
+        g.fillText(potong(tipe, lebar - wWaktu - (waktu ? 10 : 0)), M, yInfo);
         return cv;
     }
 
