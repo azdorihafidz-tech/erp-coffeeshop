@@ -241,22 +241,25 @@
     function buildTspl() {
         var w = state.ukuran.lebar, h = state.ukuran.tinggi, dotsW = w * 8, dotsH = h * 8, p = posisi();
         var ox = Math.round(p.gx * 8), oy = Math.round(p.gy * 8);
-        var x = Math.max(0, 32 + ox), lebar = dotsW - 32 - 16;   // margin kiri 4 mm, kanan 2 mm
+        // 2026-11-06 (Owner: tulisan dikecilkan, stiker 40×30): margin 3 mm KIRI & KANAN sama besar —
+        // saat tulisan diputar 180° sisi yang terpotong ikut berpindah, jadi keduanya harus aman.
+        var x = Math.max(0, 24 + ox), lebar = dotsW - 48;
         var muat = function (font) { return Math.max(4, Math.floor(lebar / LEBAR_FONT[font])); };
         var out = '';
         state.labels.forEach(function (l) {
             var cmds = tsplAwal(w, h, p);
-            var y = Math.max(0, 12 + oy), batas = dotsH - 30 + oy; // baris terakhir untuk info
+            var y = Math.max(0, 16 + oy), batas = dotsH - 34 + oy; // atas 2 mm, baris terakhir untuk info
             var tulis = function (font, t, tinggi) {
                 if (y + tinggi <= batas) { cmds.push('TEXT ' + x + ',' + y + ',"' + font + '",0,1,1,' + q(t)); y += tinggi; }
             };
             // Setiap elemen di barisnya sendiri — tidak ada yang bisa saling menabrak
+            // Tulisan kecil: hanya nomor & nama menu yang font sedang (2), sisanya font kecil (1)
             tulis('1', ascii(l.toko.toUpperCase()).slice(0, muat('1')), 16);
             tulis('2', ('#' + l.nomor + '  ' + l.ke + '/' + l.dari).slice(0, muat('2')), 24);
             cmds.push('BAR ' + x + ',' + y + ',' + lebar + ',2'); y += 6;
-            wrap(l.nama, muat('3')).slice(0, 2).forEach(function (t) { tulis('3', t, 28); });
-            bodyLines(l).forEach(function (b) { wrap(b, muat('2')).forEach(function (t) { tulis('2', t, 22); }); });
-            cmds.push('TEXT ' + x + ',' + Math.max(0, dotsH - 22 + oy) + ',"1",0,1,1,' + q(ascii(l.info).slice(0, muat('1'))));
+            wrap(l.nama, muat('2')).slice(0, 2).forEach(function (t) { tulis('2', t, 24); });
+            bodyLines(l).forEach(function (b) { wrap(b, muat('1')).forEach(function (t) { tulis('1', t, 16); }); });
+            cmds.push('TEXT ' + x + ',' + Math.max(0, dotsH - 30 + oy) + ',"1",0,1,1,' + q(ascii(l.info).slice(0, muat('1'))));
             cmds.push('PRINT 1,1');
             out += cmds.join('\r\n') + '\r\n';
         });
@@ -270,7 +273,7 @@
         var ox = Math.round(p.gx * 8), oy = Math.round(p.gy * 8), c = function (v) { return Math.max(0, v); };
         var cmds = tsplAwal(w, h, p);
         cmds.push('BOX ' + c(ox) + ',' + c(oy) + ',' + c(dotsW - 1 + ox) + ',' + c(dotsH - 1 + oy) + ',3');
-        cmds.push('BOX ' + c(32 + ox) + ',' + c(12 + oy) + ',' + c(dotsW - 16 + ox) + ',' + c(dotsH - 8 + oy) + ',1');
+        cmds.push('BOX ' + c(24 + ox) + ',' + c(16 + oy) + ',' + c(dotsW - 24 + ox) + ',' + c(dotsH - 16 + oy) + ',1'); // batas tulisan
         cmds.push('TEXT ' + c(40 + ox) + ',' + c(24 + oy) + ',"2",0,1,1,' + q('LABEL UJI ' + w + 'x' + h));
         cmds.push('TEXT ' + c(40 + ox) + ',' + c(56 + oy) + ',"1",0,1,1,' + q('Geser X ' + p.gx + ' mm, Y ' + p.gy + ' mm'));
         cmds.push('TEXT ' + c(40 + ox) + ',' + c(80 + oy) + ',"1",0,1,1,' + q('Bingkai tebal = tepi stiker'));
