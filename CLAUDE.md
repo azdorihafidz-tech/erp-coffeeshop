@@ -893,6 +893,22 @@ Lanjutan 4.50 (`FASE_PRODUKSI_GEROBAK_DESIGN.md`). Gudang menjual Produk Jual ke
 - **Insiden demo (2026-11-06)**: setelah Deploy, sebelum Update Database dijalankan, SEMUA halaman 500 (`Unknown column status_kirim`) karena badge Kiriman/Retur di sidebar menghitung kolom/tabel yang belum ada — termasuk halaman Update Database sendiri. Diperbaiki: `KirimanCabangController::jumlahMenunggu()` & `ReturInternalService::jumlahMenunggu()` cek `Schema::hasColumn/hasTable` dulu (0 kalau belum ada). Diuji di DB test dengan 3 migration dimundurkan: 9 halaman utama 200 + halaman Update Database menampilkan 3 migration tertunda → `jalankan()` berhasil. **ATURAN: kode yang dijalankan di SEMUA halaman (layout/sidebar/middleware) tidak boleh bergantung pada tabel/kolom dari migration yang belum tentu sudah dijalankan.**
 - **Deploy**: 3 migration (`2026_11_06_100001/200001/300001`) lewat menu **Update Database** (migrate + seeder izin/panduan/tooltip + 26 centangan). Di go-live belum ada cabang Gudang Pusat → buat dulu bila ingin memakai.
 
+### 4.52 🟡 Perbaikan POS — Panel Tablet, Harga Terkunci, Produk Digabung (porting dimsum 4.47, 2026-11-07)
+
+Sumber: `erp-dimsum/PORTING_POS_KE_COFFEESHOP.md`, CLAUDE.md dimsum 4.47, commit dimsum `a6d9ba4` (folder dimsum hanya dibaca). Keputusan Owner: izin baru tidak dicentang role mana pun; kunci server = harga yang tampil di POS; selisih harga varian di Layout Meja/QR ditunda (TODO 12.6); Item Tambahan ikut digabung.
+
+- **Tahap A — panel Tablet** (commit `084a964`): hanya `body.pos-tablet-mode` + layar ≥ 768px. Kolom kiri/kanan 58/42% (`#posKolomKiri/#posKolomKanan`), `#cardRingkasan` sticky setinggi layar, isi (`#panelBayarIsi`) scroll sendiri, kaki `#panelBayarKaki` (TOTAL BAYAR disalin dari `#totalBayarDisplay` lewat MutationObserver, PROSES ORDER, Save Bill) selalu terlihat dan tetap di dalam `#formPos`. Desktop tidak berubah (kaki di posisi lama, total kaki disembunyikan).
+- **Tahap B — Harga/Unit terkunci** (commit `8220034`):
+  - Izin `order.ubah_harga` "Ubah Harga Jual di POS (kolom Harga/Unit)" (grup penjualan, `UpdateDatabaseService::PERMISSION_BARU` = `[]` → tidak dicentang). Owner via `Gate::before`.
+  - `PenjualanService::bolehUbahHarga()` (tanpa login = tidak berizin) dan `hargaResmi($item, $variant, $cabangId)`: varian milik item → `harga_efektif` (override ?? harga_jual), selain itu `hargaEfektifDiCabang()` (harga `item_cabang`). `resolveItemRows(..., $cabangId, $hargaDariBill)` memakai harga resmi bila tidak berizin.
+  - Jalur yang dikunci: POS Charge, Save Bill takeaway, **Save Bill dine-in** (`PenjualanController::simpanBill` → `addItemManual` dengan harga resmi), **Kirim ke Cabang**. **Bayar Bill** (`BillService::closeBill`) mengirim flag internal `harga_dari_bill` → harga bill dipakai apa adanya (flag tidak bisa datang dari request, dibuang `validated()`/`validate()`). Layout Meja `tambahItem` & QR sudah memakai harga produk (tidak berubah).
+  - Form POS: input readonly + `bg-light` + gembok, `window.POS_BOLEH_UBAH_HARGA`, tooltip `pos.harga_unit`.
+- **Tahap C — produk sama digabung**: `gabungKeBarisSama(item, variant)` → baris dengan item + varian sama dan **catatan item kosong** → qty +1 + kedip `.pos-item-tambah`. Varian beda / baris bercatatan → baris baru. `tambahkanItemKeForm(item, variant, gabung = true)` (grid produk, modal varian, Item Tambahan). Bilah HP (`#posBarHp`) kini menghitung **jumlah qty**, bukan jumlah baris.
+- **Tahap D — ringkasan seperti struk**: `hitungTotal()` → nama (baris varian memakai nama "Produk - Varian"), lalu `2 pcs x Rp 22.000` + subtotal (pakai `escHtml`).
+- Panduan `pos` bagian "Mode Tablet, Harga Terkunci & Produk Digabung", tooltip `pos.harga_unit`.
+- **Test**: `PosTabletPanelBayarTest` 1, `PosUbahHargaTest` 9 (izin tidak tercentang; kasir → harga produk; owner & kasir berizin → harga form; harga cabang & varian; Save Bill takeaway & dine-in; bayar bill memakai harga bill walau kasir yang bayar; Layout Meja; tampilan readonly; Kirim ke Cabang admin pusat), `PosGabungBarisTest` 1. Chrome headless di DB dev (salinan go-live, rollback) dengan POS asli kasir & owner: 15/15 cek JS lulus (gabung, catatan, varian, ringkasan, readonly, bilah HP, total kaki), 0 error JS. Regresi: **69 gagal lama identik, 0 baru**.
+- **Deploy**: tanpa migration — Update from Remote → Deploy → menu **Update Database** (izin + panduan + tooltip). Belum di-push.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1321,6 +1337,12 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] Push + deploy demo & go-live — dikonfirmasi Owner 2026-11-06 (termasuk perbaikan label cup & POS HP)
 - [ ] Owner: uji klik alur di demo: buat cabang Gudang Pusat + gerobak, Kas Tunai keduanya, Produk Jual "… (kirim ke cabang)"
 - [ ] Diskusi terpisah: POS offline untuk gerobak/angkringan
+
+### 12.20 Perbaikan POS dari dimsum 4.47 (2026-11-07, lihat 4.52)
+- [x] Tahap A panel Tablet, B harga terkunci + izin `order.ubah_harga`, C gabung baris, D ringkasan seperti struk, panduan/tooltip/test — commit lokal
+- [ ] Owner: setuju push + deploy (Update from Remote → Deploy → Update Database) di demo lalu go-live
+- [ ] Owner: coba di tablet (mode Tablet) & centang izin "Ubah Harga Jual di POS" di Role & Hak Akses kalau ada role yang perlu
+- [ ] Ditunda: harga varian di tambah item Layout Meja / QR Order (ikut TODO 12.6)
 
 ---
 

@@ -166,6 +166,9 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
    Total + PROSES ORDER + Save Bill selalu terlihat di bawah. Tampilan HP (≤575px) tidak terpengaruh. */
 .pos-bayar-kaki { padding: 0 1rem 1rem; }
 .pos-kaki-total { display: none; }
+/* 4.52 — baris Item Order berkedip saat qty digabung (klik produk yang sama) */
+@keyframes posItemTambah { from { background: #F5F0E6; border-color: #2D6A4F; } to { background: #fff; } }
+.pos-item-row.pos-item-tambah { animation: posItemTambah .6s ease-out; }
 body.pos-tablet-mode .pos-bayar-kaki { padding: 0 10px 7px; }
 @media (min-width: 768px) {
     body.pos-tablet-mode #posKolomKiri  { width: 58.333%; }
@@ -1074,7 +1077,33 @@ function klikItemTambahanGrid(itemId) {
     tambahkanItemKeForm(item, null);
 }
 
-function tambahkanItemKeForm(item, variant) {
+// 4.52 (porting dimsum 4.47) — produk (+ varian) yang sudah ada di Item Order dan
+// belum diberi catatan item → qty +1, bukan baris baru. Mengembalikan true kalau digabung.
+function gabungKeBarisSama(item, variant) {
+    const varianId = variant ? String(variant.id) : '';
+    const rows = document.querySelectorAll('#itemContainer .pos-item-row');
+    for (const row of rows) {
+        const idx = row.dataset.idx;
+        const sel = row.querySelector(`select[name="items[${idx}][item_id]"]`);
+        if (!sel || String(sel.value) !== String(item.id)) continue;
+        const v = row.querySelector(`input[name="items[${idx}][item_variant_id]"]`);
+        if ((v ? String(v.value) : '') !== varianId) continue;
+        const cat = row.querySelector(`input[name="items[${idx}][catatan]"]`);
+        if (cat && cat.value.trim() !== '') continue;
+        const qty = row.querySelector('.qty-input');
+        if (!qty) continue;
+        qty.value = Math.round(((parseFloat(qty.value) || 0) + 1) * 1000) / 1000;
+        hitungSubtotal(idx);
+        row.classList.remove('pos-item-tambah');
+        void row.offsetWidth; // restart animasi
+        row.classList.add('pos-item-tambah');
+        return true;
+    }
+    return false;
+}
+
+function tambahkanItemKeForm(item, variant, gabung = true) {
+    if (gabung && gabungKeBarisSama(item, variant)) return;
     tambahProduk();
     const idx = itemIdx - 1;
     const row = document.querySelector(`.pos-item-row[data-idx="${idx}"]`);
@@ -1434,7 +1463,8 @@ function hitungTotal() {
         let namaEl = row.querySelector(`[name="items[${idx}][nama_item]"]`);
         let nama = namaEl?.value || '-';
 
-        if (tipe === 'produk_jadi') {
+        const adaVarian = !!row.querySelector(`input[name="items[${idx}][item_variant_id]"]`);
+        if (tipe === 'produk_jadi' && !adaVarian) { // baris varian: nama sudah "Produk - Varian"
             const sel = row.querySelector(`select[name="items[${idx}][item_id]"]`);
             if (sel?.selectedOptions[0]?.value) {
                 nama = sel.selectedOptions[0].text.split(' (')[0].trim();
@@ -1450,11 +1480,13 @@ function hitungTotal() {
         // sub/total -- murni label tampilan.
         const satuan = document.getElementById(`satuan_${idx}`)?.value || '';
         const qtyLabel = parseFloat(qty.toFixed(3));
-        const label = `${nama} ${qtyLabel} ${satuan}`;
-
-        listHtml += `<div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="flex-grow-1 me-2">${label}</div>
-            <div class="text-end fw-medium text-nowrap">Rp ${sub.toLocaleString('id-ID')}</div>
+        // 4.52 — seperti struk: nama, lalu "qty satuan x harga satuan" + subtotal
+        listHtml += `<div class="mb-2">
+            <div class="fw-medium">${escHtml(nama)}</div>
+            <div class="d-flex justify-content-between align-items-center small">
+                <div class="text-muted me-2">${qtyLabel.toLocaleString('id-ID')} ${escHtml(satuan)} x Rp ${harga.toLocaleString('id-ID')}</div>
+                <div class="text-end fw-medium text-nowrap">Rp ${sub.toLocaleString('id-ID')}</div>
+            </div>
         </div>`;
     });
 
@@ -2250,7 +2282,13 @@ async function bukaLaciManual() {
 
     let jmlLama = 0;
     function perbarui() {
-        const jml = document.querySelectorAll('#itemContainer .pos-item-row').length;
+        // 4.52 — produk sama digabung jadi qty → hitung jumlah qty, bukan jumlah baris
+        let jml = 0;
+        document.querySelectorAll('#itemContainer .pos-item-row').forEach(r => {
+            const q = parseFloat(r.querySelector('.qty-input')?.value);
+            jml += (q > 0 ? q : 1);
+        });
+        jml = Math.round(jml * 1000) / 1000;
         document.getElementById('posBarJml').textContent = jml ? jml + ' item di keranjang' : 'Keranjang kosong';
         document.getElementById('posBarTotal').textContent = document.getElementById('totalBayarDisplay')?.textContent || 'Rp 0';
         bar.classList.toggle('kosong', jml === 0);
