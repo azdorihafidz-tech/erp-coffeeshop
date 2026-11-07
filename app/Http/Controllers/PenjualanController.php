@@ -11,6 +11,7 @@ use App\Models\Cabang;
 use App\Models\Bill;
 use App\Models\Item;
 use App\Models\ItemCategory;
+use App\Models\ItemVariant;
 use App\Models\JenisOlahan;
 use App\Models\Kas;
 use App\Models\LoyaltyProgram;
@@ -361,8 +362,14 @@ class PenjualanController extends Controller
                 // hanya dicetak untuk item yang baru masuk di simpan ini.
                 $urutanSebelum = (int) $bill->items()->max('urutan_masuk');
 
+                $bolehUbahHarga = PenjualanService::bolehUbahHarga();
                 foreach ($data['items'] as $row) {
                     $varian = ! empty($row['item_variant_id']) ? ['item_variant_id' => (int) $row['item_variant_id']] : null;
+                    // 4.52 — tanpa izin "Ubah Harga Jual di POS" harga dari form diabaikan → harga resmi produk/varian
+                    $harga = (float) $row['harga_satuan'];
+                    if (! $bolehUbahHarga && ($master = Item::find((int) $row['item_id']))) {
+                        $harga = $this->penjualanService->hargaResmi($master, ! empty($row['item_variant_id']) ? ItemVariant::find((int) $row['item_variant_id']) : null, (int) $cabangId);
+                    }
 
                     $bill = $this->billService->addItemManual(
                         $bill->id,
@@ -371,7 +378,7 @@ class PenjualanController extends Controller
                         $varian,
                         $row['catatan'] ?? null,
                         $authUser->id,
-                        (float) $row['harga_satuan']
+                        $harga
                     );
                 }
 

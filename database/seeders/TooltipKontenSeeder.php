@@ -111,6 +111,10 @@ class TooltipKontenSeeder extends Seeder
             ['key' => 'pos.outlet_tujuan', 'title' => 'Outlet Tujuan', 'modul' => 'penjualan', 'urutan' => 21,
              'content' => 'Wajib diisi kalau Jenis Pembeli = Internal. Pilih outlet {nama_singkat} yang menerima kiriman. Otomatis: stok pack masuk di outlet tujuan (harga beli = harga jual roastery) dan Kas Tunai outlet tujuan berkurang senilai transaksi. Kalau order dibatalkan, semuanya dibalik (dibatalkan ditolak bila stok di outlet sudah terpakai).'],
 
+            // ===== 4.52 (2026-11-07): kunci Harga/Unit di POS =====
+            ['key' => 'pos.harga_unit', 'title' => 'Harga/Unit Terkunci', 'modul' => 'penjualan', 'urutan' => 22,
+             'content' => 'Kolom Harga/Unit terisi otomatis dari harga produk (harga cabang atau harga varian) dan terkunci (ikon gembok). Hanya akun yang dicentang izin "Ubah Harga Jual di POS" di menu Role & Hak Akses yang bisa mengubahnya — Owner selalu bisa. Server juga memakai harga produk kalau akun tidak berizin. Untuk potongan harga, pakai kolom Diskon. Klik produk yang sama lagi menambah Qty (bukan baris baru), kecuali baris itu sudah punya catatan item.'],
+
             // ===== Audit retroaktif 3.8 (2026-09-24): 6 menu form kompleks =====
             ['key' => 'supplier.kode_supplier', 'title' => 'Kode Supplier', 'modul' => 'pembelian', 'urutan' => 1,
              'content' => 'Kode singkat unik untuk supplier (mis. SUP-001). Muncul di Purchase Order dan laporan pembelian, jadi buat yang mudah dikenali dan tidak diubah-ubah.'],

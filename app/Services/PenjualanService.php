@@ -108,7 +108,9 @@ class PenjualanService
             throw new \Exception('Nomor meja wajib diisi untuk transaksi Dine-in di outlet ini.');
         }
 
-        [$itemRows, $totalHarga] = $this->resolveItemRows($data['items']);
+        // 4.52 — harga_dari_bill hanya diisi BillService::closeBill (harga sudah dikunci saat item masuk Bill);
+        // tidak bisa dikirim dari form karena validated()/validate() membuang kunci yang tidak terdaftar.
+        [$itemRows, $totalHarga] = $this->resolveItemRows($data['items'], $cabangId, ! empty($data['harga_dari_bill']));
 
         $diskon = (float) ($data['diskon'] ?? 0);
         $subtotalSetelahDiskon = max(0, $totalHarga - $diskon);
@@ -276,8 +278,29 @@ class PenjualanService
      *
      * @return array{0: array, 1: float} [$itemRows, $totalHarga]
      */
-    private function resolveItemRows(array $items): array
+    /**
+     * 4.52 (porting dimsum 4.47) — harga resmi yang dipakai kalau user tidak punya izin
+     * "Ubah Harga Jual di POS": varian = harga varian (sama dengan yang tampil di POS),
+     * selain itu harga produk di cabang (harga khusus cabang kalau ada).
+     */
+    public function hargaResmi(Item $item, ?ItemVariant $variant, int $cabangId): float
     {
+        if ($variant && (int) $variant->item_id === (int) $item->id) {
+            return (float) $variant->harga_efektif;
+        }
+
+        return $item->hargaEfektifDiCabang($cabangId);
+    }
+
+    /** 4.52 — boleh mengubah harga jual di POS? Tanpa user login = tidak (Owner lolos lewat Gate::before). */
+    public static function bolehUbahHarga(): bool
+    {
+        return (bool) auth()->user()?->can('order.ubah_harga');
+    }
+
+    private function resolveItemRows(array $items, int $cabangId, bool $hargaDariBill = false): array
+    {
+        $bolehUbahHarga = $hargaDariBill || self::bolehUbahHarga();
         $totalHarga = 0.0;
         $itemRows = [];
 
@@ -285,9 +308,11 @@ class PenjualanService
             $masterItem = ! empty($row['item_id']) ? Item::find((int) $row['item_id']) : null;
             $variant = ! empty($row['item_variant_id']) ? ItemVariant::find((int) $row['item_variant_id']) : null;
 
+            // 4.52 — tanpa izin "Ubah Harga Jual di POS" harga dari form DIABAIKAN → harga resmi produk/varian.
+            // Dengan izin (atau harga yang sudah dikunci di Bill meja), harga yang dikirim dipakai apa adanya.
             $hargaSatuan = (float) $row['harga_satuan'];
-            if ($variant && $variant->item_id === $masterItem?->id) {
-                $hargaSatuan = $variant->harga_efektif;
+            if ($masterItem && ! $bolehUbahHarga) {
+                $hargaSatuan = $this->hargaResmi($masterItem, $variant, $cabangId);
             }
 
             // Defense-in-depth satuan (dipertahankan dari alur lama) — satuan

@@ -44,6 +44,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'penjualan.laporan_produk.view',    'display_name' => 'Lihat Laporan Penjualan Produk (menu Penjualan)', 'group' => 'penjualan'],
             ['name' => 'penjualan.laporan_kategori.view',  'display_name' => 'Lihat Laporan Penjualan Kategori (menu Penjualan)', 'group' => 'penjualan'],
             ['name' => 'penjualan.laporan.keuntungan',     'display_name' => 'Lihat Keuntungan di Laporan Penjualan (Transaksi/Produk/Kategori)', 'group' => 'penjualan'],
+            // 4.52 (porting dimsum 4.47) — tanpa izin ini kolom Harga/Unit di POS terkunci & server memakai harga produk.
+            // Keputusan Owner: TIDAK dicentang untuk role mana pun (Owner selalu bisa lewat Gate::before).
+            ['name' => 'order.ubah_harga', 'display_name' => 'Ubah Harga Jual di POS (kolom Harga/Unit)', 'group' => 'penjualan'],
 
             // Pelanggan
             ['name' => 'pelanggan.view',   'display_name' => 'Lihat Pelanggan',   'group' => 'pelanggan'],

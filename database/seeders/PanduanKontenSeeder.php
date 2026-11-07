@@ -2887,6 +2887,13 @@ Di layar HP, POS otomatis memakai tampilan ringkas (tablet & PC tidak berubah):
 - Kartu **Pelanggan** dilipat — ketuk judulnya kalau perlu mengisi nama/telepon.
 - **Bilah hitam di bawah layar** selalu menampilkan jumlah item & total. Ketuk **Keranjang** untuk melihat/mengubah item, **Bayar ▸** untuk langsung ke bagian pembayaran (di gudang mode Kirim ke Cabang: **Kirim ▸**).
 - Cetak struk & label tetap lewat aplikasi kasir Android atau Bluetooth seperti di tablet. Label terpotong? Lihat panduan **Label Cup → Label terpotong / tidak pas di stiker**.
+
+## Mode Tablet, Harga Terkunci & Produk Digabung
+- **Mode Tablet** (tombol Desktop/Tablet di kanan atas): panel **Ringkasan & Pembayaran** tetap di layar. Isinya (diskon, metode bayar, kembalian) di-scroll sendiri, sedangkan **TOTAL BAYAR**, **PROSES ORDER** dan **Save Bill** selalu terlihat di bawah panel. Mode Desktop tidak berubah.
+- **Harga/Unit terkunci** (ikon gembok): harga diisi otomatis dari harga produk (harga khusus cabang atau harga varian). Hanya akun yang dicentang izin **Ubah Harga Jual di POS** di menu **Role & Hak Akses** yang bisa mengubahnya — Owner selalu bisa. Bawaan: tidak ada role yang dicentang. Server juga memakai harga produk kalau akun tidak berizin, jadi harga tidak bisa diakali. Untuk potongan harga, pakai kolom **Diskon**.
+- Bill meja yang dibayar memakai harga yang sudah tersimpan di bill.
+- **Klik produk yang sama lagi** → Qty bertambah 1 (baris berkedip), bukan baris baru. Varian berbeda = baris berbeda. Kalau baris itu sudah diberi **catatan item** (mis. less sugar), klik berikutnya membuat baris baru — cocok untuk 1 less sugar + 1 normal.
+- **Ringkasan** menampilkan tiap item seperti struk: nama, lalu `2 gelas x Rp 18.000` dan subtotalnya.
 MARKDOWN
         ]);
     }

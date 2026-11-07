@@ -178,6 +178,9 @@ class BillService
             })->all();
 
             $order = $this->penjualanService->buatOrder([
+                // 4.52 — harga sudah dikunci saat item masuk Bill (POS/Layout Meja/QR); jangan dihitung ulang
+                // saat dibayar, supaya harga varian / harga yang diubah orang berizin tidak tertimpa.
+                'harga_dari_bill' => true,
                 'tipe_transaksi'  => 'dine_in',
                 'nomor_meja'      => (string) $bill->meja->nomor_meja,
                 'meja_id'         => $bill->meja_id,

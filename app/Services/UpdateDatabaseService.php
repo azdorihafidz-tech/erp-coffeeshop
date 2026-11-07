@@ -49,6 +49,8 @@ class UpdateDatabaseService
         'retur.view'   => ['admin_pusat', 'admin_gudang', 'manajer_cabang', 'kasir'],
         'retur.create' => ['admin_pusat', 'manajer_cabang', 'kasir'],
         'retur.terima' => ['admin_pusat', 'admin_gudang'],
+        // 4.52 — Ubah Harga Jual di POS: sengaja TIDAK dicentang untuk role mana pun (keputusan Owner)
+        'order.ubah_harga' => [],
     ];
 
     public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder'];

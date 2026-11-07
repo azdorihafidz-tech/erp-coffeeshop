@@ -397,7 +397,7 @@ body.pos-tablet-mode .pos-bayar-kaki { padding: 0 10px 7px; }
                  (mis. produk belum sempat difoto/di-setup di grid). --}}
             <div class="card" id="cardItemOrder">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Item Order</span>
+                    <span>Item Order <x-tooltip key="pos.harga_unit" /></span>
                     <button type="button" class="btn btn-sm btn-outline-success" onclick="tambahProduk()">
                         <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">Tambah Manual</span>
                     </button>
@@ -924,6 +924,8 @@ $produkJadiJson = $semuaItemDropdown->map(fn($i) => [
 <script>
 const produkJadi = @json($produkJadiJson);
 window.POS_NOMOR_MEJA_AKTIF = {{ $cabangAktif?->nomor_meja_aktif ? 'true' : 'false' }};
+// 4.52 — kolom Harga/Unit hanya bisa diubah pemegang izin "Ubah Harga Jual di POS" (server ikut mengunci)
+window.POS_BOLEH_UBAH_HARGA = {{ \App\Services\PenjualanService::bolehUbahHarga() ? 'true' : 'false' }};
 window.POS_SERVICE_CHARGE_PERSEN = {{ (float) ($cabangAktif?->service_charge_persen ?? 0) }};
 window.POS_TAKE_AWAY_FEE = {{ (float) ($cabangAktif?->take_away_fee ?? 0) }};
 
@@ -957,9 +959,9 @@ function tambahProduk() {
                 <input type="hidden" name="items[${idx}][satuan]" id="satuan_${idx}" value="pack">
             </div>
             <div class="col-8 col-sm-3">
-                <label class="form-label small">Harga/Unit</label>
-                <input type="number" name="items[${idx}][harga_satuan]" class="form-control form-control-sm harga-input"
-                    step="1" min="0" value="0" required onchange="hitungSubtotal(${idx})">
+                <label class="form-label small">Harga/Unit${window.POS_BOLEH_UBAH_HARGA ? '' : ' <i class="bi bi-lock-fill text-muted" title="Harga terkunci — hanya akun berizin Ubah Harga Jual di POS"></i>'}</label>
+                <input type="number" name="items[${idx}][harga_satuan]" class="form-control form-control-sm harga-input${window.POS_BOLEH_UBAH_HARGA ? '' : ' bg-light'}"
+                    step="1" min="0" value="0" required onchange="hitungSubtotal(${idx})"${window.POS_BOLEH_UBAH_HARGA ? '' : ' readonly tabindex="-1"'}>
             </div>
             <div class="col-12 col-sm-1 d-flex align-items-end justify-content-end">
                 <button type="button" class="btn btn-sm btn-outline-danger" onclick="hapusItem(this)">
