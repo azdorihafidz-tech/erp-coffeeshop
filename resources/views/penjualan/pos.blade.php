@@ -159,6 +159,44 @@ body.pos-tablet-mode #sectionJumlahBayar .btn { padding: 2px 6px !important; fon
 /* Tombol Proses Transaksi */
 body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size: 0.85rem !important; }
 
+/* ── 4.52 Panel Ringkasan & Pembayaran (porting dimsum 4.47) ──
+   Desktop: kaki (Total + tombol aksi) tampil seperti dulu, di bawah isi panel.
+   Tablet (layar ≥768px): 2 kolom berdampingan; panel kanan setinggi layar dan
+   tidak ikut tergeser saat produk di kiri di-scroll; isinya scroll sendiri,
+   Total + PROSES ORDER + Save Bill selalu terlihat di bawah. Tampilan HP (≤575px) tidak terpengaruh. */
+.pos-bayar-kaki { padding: 0 1rem 1rem; }
+.pos-kaki-total { display: none; }
+body.pos-tablet-mode .pos-bayar-kaki { padding: 0 10px 7px; }
+@media (min-width: 768px) {
+    body.pos-tablet-mode #posKolomKiri  { width: 58.333%; }
+    body.pos-tablet-mode #posKolomKanan { width: 41.667%; }
+    body.pos-tablet-mode #cardRingkasan {
+        position: sticky !important;
+        top: 0.5rem !important;
+        max-height: calc(100vh - 1rem);
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0 !important;
+    }
+    body.pos-tablet-mode #panelBayarIsi {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    body.pos-tablet-mode #panelBayarKaki {
+        flex-shrink: 0;
+        padding: 6px 10px 8px !important;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -4px 10px rgba(0,0,0,.06);
+        background: inherit;
+        border-radius: 0 0 10px 10px;
+    }
+    body.pos-tablet-mode .pos-kaki-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    body.pos-tablet-mode #kakiTotalNilai { font-size: 1.1rem; }
+    body.pos-tablet-mode #panelBayarKaki .btn.mt-2 { margin-top: 4px !important; padding-top: 3px; padding-bottom: 3px; font-size: .8rem; }
+}
+
 </style>
 @endpush
 
@@ -201,7 +239,7 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
     @csrf
     <div class="row g-3">
         {{-- Kiri: Form Order --}}
-        <div class="col-12 col-lg-7">
+        <div class="col-12 col-lg-7" id="posKolomKiri">
 
             {{-- ===== Tahap 3 D'mentai — Tipe Transaksi + Grid Produk ===== --}}
             <div class="card mb-3">
@@ -377,10 +415,10 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
         </div>
 
         {{-- Kanan: Ringkasan & Bayar --}}
-        <div class="col-12 col-lg-5">
+        <div class="col-12 col-lg-5" id="posKolomKanan">
             <div class="card sticky-top" style="top:70px" id="cardRingkasan">
                 <div class="card-header fw-bold">Ringkasan & Pembayaran</div>
-                <div class="card-body">
+                <div class="card-body" id="panelBayarIsi">
                     {{-- Subtotal list --}}
                     <div id="subtotalList" class="mb-3"></div>
 
@@ -604,6 +642,17 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
                             <option value="2">2x</option>
                         </select>
                         <span class="text-muted small">struk</span>
+                    </div>
+
+                </div>
+
+                {{-- 4.52 — Total + tombol aksi dipisah dari isi panel. Desktop: tampil persis seperti dulu
+                     (di bawah isi). Tablet: menempel di bawah layar, isi panel di atasnya scroll sendiri.
+                     Tetap di dalam <form id="formPos">. --}}
+                <div class="pos-bayar-kaki" id="panelBayarKaki">
+                    <div class="pos-kaki-total" id="kakiTotal">
+                        <span class="text-muted small">TOTAL BAYAR</span>
+                        <span class="fw-bold" id="kakiTotalNilai">Rp 0</span>
                     </div>
 
                     {{-- Tombol Proses --}}
@@ -2215,6 +2264,15 @@ async function bukaLaciManual() {
     });
     document.getElementById('selectCustomerType')?.addEventListener('change', perbarui);
     perbarui();
+})();
+
+// 4.52 — Total di kaki panel bayar (mode Tablet) ikut angka TOTAL BAYAR (fungsi hitung total tidak diubah)
+(function () {
+    var sumber = document.getElementById('totalBayarDisplay'), salin = document.getElementById('kakiTotalNilai');
+    if (!sumber || !salin) return;
+    var ikut = function () { salin.textContent = sumber.textContent; };
+    ikut();
+    if (window.MutationObserver) new MutationObserver(ikut).observe(sumber, { childList: true, characterData: true, subtree: true });
 })();
 </script>
 @endpush
