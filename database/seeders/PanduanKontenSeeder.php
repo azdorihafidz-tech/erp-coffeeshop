@@ -3795,7 +3795,7 @@ MARKDOWN
 Program Loyalty membantu {nama_usaha} menghargai pelanggan setia. Ada **2 tipe program**, dipilih saat **Tambah Program** (field di form menyesuaikan otomatis):
 
 - **Auto-Track** — sistem menghitung sendiri progress tiap pelanggan dari transaksi POS (total belanja Rupiah atau jumlah kunjungan), lalu mencatat saat target tercapai. Contoh: *"Belanja kumulatif Rp500.000 → gratis 1 Kopi Susu"*.
-- **Event-Based** — pelanggan mengklaim manual dengan bukti, lalu Owner/Admin Pusat menyetujui. Contoh: *"Posting di Instagram + tag @kopidrip → voucher Rp15.000"* (1x per pelanggan).
+- **Event-Based** — pelanggan mengklaim manual dengan bukti, lalu Owner/Admin Pusat menyetujui. Contoh: *"Posting di Instagram + tag akun Instagram toko → voucher Rp15.000"* (1x per pelanggan).
 
 > **Catatan:** sistem ini **bukan sistem poin** (tidak ada "1 poin per Rp10.000" atau tukar poin di layar kasir). Yang dihitung adalah progress menuju target, dan hadiah diserahkan manual lalu ditandai di sistem.
 
@@ -4453,7 +4453,7 @@ Mengelola akun yang bisa login ke ERP {nama_singkat}. Setiap user punya **role**
 ## Cara Menambah User
 
 1. **Pengaturan → Manajemen User → Tambah User**
-2. Isi nama, email (format `nama@kopidrip.com`), password, role, dan centang cabang yang boleh diakses
+2. Isi nama, email (mis. `nama@email.com`), password, role, dan centang cabang yang boleh diakses
 3. Bagikan email + password ke karyawan; sarankan ganti password saat login pertama
 
 ## Cara Edit / Nonaktifkan
