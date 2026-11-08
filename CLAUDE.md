@@ -907,7 +907,22 @@ Sumber: `erp-dimsum/PORTING_POS_KE_COFFEESHOP.md`, CLAUDE.md dimsum 4.47, commit
 - **Tahap D — ringkasan seperti struk**: `hitungTotal()` → nama (baris varian memakai nama "Produk - Varian"), lalu `2 pcs x Rp 22.000` + subtotal (pakai `escHtml`).
 - Panduan `pos` bagian "Mode Tablet, Harga Terkunci & Produk Digabung", tooltip `pos.harga_unit`.
 - **Test**: `PosTabletPanelBayarTest` 1, `PosUbahHargaTest` 9 (izin tidak tercentang; kasir → harga produk; owner & kasir berizin → harga form; harga cabang & varian; Save Bill takeaway & dine-in; bayar bill memakai harga bill walau kasir yang bayar; Layout Meja; tampilan readonly; Kirim ke Cabang admin pusat), `PosGabungBarisTest` 1. Chrome headless di DB dev (salinan go-live, rollback) dengan POS asli kasir & owner: 15/15 cek JS lulus (gabung, catatan, varian, ringkasan, readonly, bilah HP, total kaki), 0 error JS. Regresi: **69 gagal lama identik, 0 baru**.
-- **Deploy**: tanpa migration — Update from Remote → Deploy → menu **Update Database** (izin + panduan + tooltip). Belum di-push.
+- **Deploy**: tanpa migration — Update from Remote → Deploy → menu **Update Database** (izin + panduan + tooltip). Push disetujui Owner 2026-11-07.
+
+### 4.53 🟡 Instalasi Usaha Baru — WONGKO PI (wongkopi.azwacore.com, 2026-11-08)
+
+Program yang sama dipakai usaha lain (pola 4.44). Sekarang ada **3 instalasi**: go-live Kopi Drip (`erp.kopidripsidikalang.com`), demo (`erpdrip.azwacore.com`), **WONGKO PI** (`wongkopi.azwacore.com`, folder `public_html/wongkopi.azwacore.com`, DB `azwc7142_erp_wongkopi`, user DB `azwc7142_wongkopi`). Nama usaha **"WONGKO PI"** (ejaan dari Owner, memang begitu). Setiap update program sekarang perlu Update from Remote → Deploy → Update Database di **3 tempat**.
+
+- **Data awal BERSIH** (pilihan Owner; Tahap 2 Setup Awal 4.44 masih ditunda): script di luar repo `D:\wongkopi-setup\buat-db-wongkopi.php` (menolak jalan kalau DB bukan `erp_wongkopi_setup`, password Owner lewat argumen) → `migrate:fresh` + seeder master saja (Permission, JenisOlahan, KategoriTransaksi, COA, KategoriPengeluaranBackfill, EvaluationAspect, ItemCategory 9 kategori, AssetCategory, RolePermission, Tooltip/Panduan) + 1 cabang `OUT001` "WONGKO PI" + Kas Tunai/Transfer/QRIS saldo 0 + 1 Owner `wongkopi@gmail.com` + Pengaturan Umum. **Tanpa** menu/bahan/resep/user/cabang/petani Kopi Drip. Ekspor `D:\wongkopi-setup\wongkopi-awal-2026-11-08.sql` (120 tabel, 152 migration, 0 sebutan Kopi Drip), di-import Owner lewat phpMyAdmin. `.env` disiapkan di `D:\wongkopi-setup\env-wongkopi.txt` (APP_KEY sendiri, `SESSION_SECURE_COOKIE=true`, `CACHE_PREFIX=wongkopi_`, `DB_PASSWORD` petik satu). Uji lokal: login + 32 halaman 200, import ulang ke DB percobaan bersih.
+- 2 contoh panduan yang menyebut kopidrip dinetralkan (`nama@email.com`, "tag akun Instagram toko") — commit `fa27fad`.
+- **Jebakan yang terjadi (ingat untuk instalasi berikutnya)**:
+  1. Subdomain dibuat SEBELUM git clone → folder dipindah sementara lalu isinya disalin balik → `.htaccess`/`cgi-bin` buatan cPanel ikut ke folder utama, dan **document root subdomain tetap folder utama (tanpa `/public`)**. Gejala: 403 "Server unable to read htaccess file" (izin file), lalu setelah izin dibetulkan → **"Index of /" menampilkan seluruh isi project** (termasuk `.git`, dan `.env` bisa diunduh). Fix: Domains → Manage → Document Root `public_html/wongkopi.azwacore.com/public`. Owner memilih tidak mengganti APP_KEY/password karena masih baru.
+  2. `.env` sempat dibuat di dalam `public/` (bisa diunduh publik) → dipindah ke folder utama.
+  3. Deploy pertama berjalan tanpa `.env` di folder utama → `config:cache` menyimpan pengaturan kosong → hapus `bootstrap/cache/config.php` + Deploy ulang.
+  4. `Access denied for user ... (using password: YES)` → password user DB diganti hasil generator tanpa simbol, ditulis ulang di `.env`.
+  5. AutoSSL gagal saat subdomain baru (403 di `/.well-known/acme-challenge`) dan cPanel tidak punya tombol Run AutoSSL → menunggu jadwal otomatis (±1 hari).
+- **Urutan yang benar untuk usaha berikutnya**: (1) Git clone ke folder baru, (2) buat subdomain dengan document root `<folder>/public`, (3) DB + user baru, (4) `.env` di folder utama, (5) import SQL awal, (6) Deploy, tunggu SSL, baru login.
+- Halaman error 500 memakai `layouts.app` → kalau DB/route belum jalan, Laravel jatuh ke halaman cadangan Symfony "Oops! An Error Occurred" (aman, tidak membocorkan data). Sengaja tidak diubah.
 
 ---
 
@@ -1343,6 +1358,13 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [ ] Owner: setuju push + deploy (Update from Remote → Deploy → Update Database) di demo lalu go-live
 - [ ] Owner: coba di tablet (mode Tablet) & centang izin "Ubah Harga Jual di POS" di Role & Hak Akses kalau ada role yang perlu
 - [ ] Ditunda: harga varian di tambah item Layout Meja / QR Order (ikut TODO 12.6)
+
+### 12.21 Instalasi WONGKO PI (2026-11-08, lihat 4.53)
+- [x] Git clone, subdomain (document root `/public`), DB + user, `.env`, import SQL awal bersih, halaman login tampil
+- [ ] SSL AutoSSL aktif (menunggu jadwal otomatis, ±1 hari) → login pertama via https, cek Update Database ("tidak ada migration baru") & POS, ganti password Owner, hapus `D:\wongkopi-setup\password-awal-owner.txt`
+- [ ] Owner WONGKO PI isi: Pengaturan Umum (logo, alamat, telepon), cabang (alamat/GPS), Master Bahan Baku, Produk Jual + komposisi, user kasir/barista, saldo awal kas, meja (kalau dine-in)
+- [ ] Bersih-bersih: folder lama yang diganti nama, `public/.well-known/acme-challenge/tes.txt`, `cgi-bin` salinan (jangan hapus `.htaccess` folder utama sebelum dicek isinya — bisa berisi versi PHP)
+- [ ] Opsional: ganti `APP_KEY` & password DB (sempat terbuka beberapa menit saat "Index of /") — Owner memilih tidak
 
 ---
 

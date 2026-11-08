@@ -1,8 +1,9 @@
 ---
 # Dipakai tombol "Deploy HEAD Commit" di cPanel Git Version Control.
-# Repo ini di-pull ke 2 folder (2026-10-19):
-#   demo    : /home/azwc7142/public_html/erpdrip.azwacore.com
-#   go-live : /home/azwc7142/public_html/kopidripsidikalang.com/erp
+# Repo ini di-pull ke 3 folder:
+#   demo     : /home/azwc7142/public_html/erpdrip.azwacore.com          (2026-10-19)
+#   go-live  : /home/azwc7142/public_html/kopidripsidikalang.com/erp    (2026-10-19)
+#   wongkopi : /home/azwc7142/public_html/wongkopi.azwacore.com         (2026-11-08, usaha lain)
 # cPanel menjalankan task dari folder repo yang sedang di-deploy, jadi
 # DEPLOYPATH = folder kerja saat itu ($PWD) — Deploy di demo hanya menyentuh
 # demo, Deploy di go-live hanya go-live. JANGAN ditulis mati ke satu folder
