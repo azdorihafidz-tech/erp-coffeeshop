@@ -1197,6 +1197,8 @@ class TooltipKontenSeeder extends Seeder
              'content' => 'Kalimat singkat di bawah nama usaha (mis. "Coffee Shop & Roastery"). Tampil di sidebar, header laporan PDF, slip gaji, dan footer struk bawaan. Boleh dikosongkan.'],
             ['key' => 'pengaturan_umum.logo', 'title' => 'Logo Usaha',
              'content' => 'Tampil di halaman login, sidebar, laporan PDF, menu QR pelanggan, TV Antrian, dan aplikasi kasir. Favicon & ikon aplikasi (PWA) dibuat otomatis dari logo ini. Paling bagus PNG latar transparan berbentuk persegi/bulat.'],
+            ['key' => 'pengaturan_umum.warna', 'title' => 'Warna Tampilan',
+             'content' => 'Pilih tema siap pakai atau atur sendiri warna utama, sidebar dan latar. Kosong = warna bawaan program (tampilan tidak berubah). Begitu warna diatur, tombol, ikon, link dan grafik ikut warna utama. Warna yang terlalu terang/gelap sehingga tulisan susah dibaca ditolak. Warna merah/hijau/kuning penanda arti dan struk/label tidak ikut berubah.'],
         ];
         foreach ($identitas as $i => $d) {
             Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['modul' => 'pengaturan', 'urutan' => $i + 1, 'aktif' => true]));

@@ -16,16 +16,16 @@
 .pos-card { border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; cursor: pointer; overflow: hidden; transition: box-shadow .15s, transform .15s; }
 .pos-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); transform: translateY(-2px); }
 .pos-card.habis { opacity: .45; cursor: not-allowed; pointer-events: none; }
-.pos-card .thumb { width: 100%; aspect-ratio: 1/1; background: #F5F0E6; display: flex; align-items: center; justify-content: center; font-size: 2rem; overflow: hidden; }
+.pos-card .thumb { width: 100%; aspect-ratio: 1/1; background: {{ $brand->warnaLatar() }}; display: flex; align-items: center; justify-content: center; font-size: 2rem; overflow: hidden; }
 .pos-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
 .pos-card .body { padding: .4rem .5rem; }
 .pos-card .nama { font-size: .78rem; font-weight: 600; line-height: 1.2; min-height: 2em; }
-.pos-card .harga { font-size: .76rem; color: #2D6A4F; font-weight: 700; }
+.pos-card .harga { font-size: .76rem; color: {{ $brand->warnaUtama() }}; font-weight: 700; }
 .cat-pill { border-radius: 20px; }
 .item-tambahan-scroll { display: flex; gap: .5rem; overflow-x: auto; padding-bottom: .25rem; }
 .item-tambahan-card { flex: 0 0 auto; width: 100px; border: 1px solid #e2e8f0; border-radius: 8px; padding: .4rem; text-align: center; cursor: pointer; background: #fff; }
-.item-tambahan-card:hover { border-color: #2D6A4F; }
-.btn-tipe-transaksi.active { background: #1A1A1A !important; color: #fff !important; border-color: #1A1A1A !important; }
+.item-tambahan-card:hover { border-color: {{ $brand->warnaUtama() }}; }
+.btn-tipe-transaksi.active { background: {{ $brand->warnaSidebar() }} !important; color: #fff !important; border-color: {{ $brand->warnaSidebar() }} !important; }
 
 
 /* ══ Tampilan HP (≤ 575px) — gerobak/kasir pakai HP (2026-11-06). Tablet & PC tidak terpengaruh. ══ */
@@ -58,7 +58,7 @@
     #posBarHp {
         display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1040;
         align-items: center; gap: .5rem; padding: .55rem .75rem calc(.55rem + env(safe-area-inset-bottom));
-        background: #1A1A1A; color: #fff; box-shadow: 0 -4px 14px rgba(0,0,0,.25);
+        background: {{ $brand->warnaSidebar() }}; color: #fff; box-shadow: 0 -4px 14px rgba(0,0,0,.25);
     }
     #posBarHp .info { flex: 1; line-height: 1.15; min-width: 0; }
     #posBarHp .info .jml { font-size: .75rem; opacity: .8; }
@@ -167,7 +167,7 @@ body.pos-tablet-mode #btnProses { padding: 0.45rem 0.75rem !important; font-size
 .pos-bayar-kaki { padding: 0 1rem 1rem; }
 .pos-kaki-total { display: none; }
 /* 4.52 — baris Item Order berkedip saat qty digabung (klik produk yang sama) */
-@keyframes posItemTambah { from { background: #F5F0E6; border-color: #2D6A4F; } to { background: #fff; } }
+@keyframes posItemTambah { from { background: {{ $brand->warnaLatar() }}; border-color: {{ $brand->warnaUtama() }}; } to { background: #fff; } }
 .pos-item-row.pos-item-tambah { animation: posItemTambah .6s ease-out; }
 body.pos-tablet-mode .pos-bayar-kaki { padding: 0 10px 7px; }
 @media (min-width: 768px) {
@@ -701,7 +701,7 @@ body.pos-tablet-mode .pos-bayar-kaki { padding: 0 10px 7px; }
     <div class="list-group list-group-flush">
         {{-- E4.3 — Dine-in via BillService (Bill), background krim beda dari legacy --}}
         @foreach($billTersimpanBill as $bill)
-            <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:#F5F0E6">
+            <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:{{ $brand->warnaLatar() }}">
                 <div>
                     <strong>{{ $bill->nomor_bill }}</strong>
                     <span class="badge bg-success ms-1">Dine-in</span>
@@ -887,7 +887,7 @@ body.pos-tablet-mode .pos-bayar-kaki { padding: 0 10px 7px; }
             <div class="modal-body" id="modalVarianBody"></div>
             <div class="modal-footer">
                 <div class="me-auto fw-bold" id="modalVarianHargaPreview"></div>
-                <button type="button" class="btn text-white" style="background:#2D6A4F" onclick="konfirmasiVarian()" id="btnKonfirmasiVarian" disabled>
+                <button type="button" class="btn text-white" style="background:{{ $brand->warnaUtama() }}" onclick="konfirmasiVarian()" id="btnKonfirmasiVarian" disabled>
                     Tambah ke Keranjang
                 </button>
             </div>

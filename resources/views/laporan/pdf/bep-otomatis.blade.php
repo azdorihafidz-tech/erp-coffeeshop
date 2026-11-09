@@ -11,9 +11,9 @@
         .logo { width: 55px; height: 55px; }
         .company-name { font-size: 16px; font-weight: bold; color: #1e293b; }
         .company-sub { font-size: 9px; color: #64748b; }
-        .report-title { text-align: right; font-size: 14px; font-weight: bold; color: #2D6A4F; }
+        .report-title { text-align: right; font-size: 14px; font-weight: bold; color: {{ $brand->warnaUtama() }}; }
         .report-meta { text-align: right; font-size: 9px; color: #64748b; margin-top: 3px; }
-        .divider { border-bottom: 2px solid #2D6A4F; margin-bottom: 12px; }
+        .divider { border-bottom: 2px solid {{ $brand->warnaUtama() }}; margin-bottom: 12px; }
 
         .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
         .summary-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: center; width: 25%; }

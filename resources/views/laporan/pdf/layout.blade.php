@@ -20,12 +20,12 @@
         .logo { width: 55px; height: 55px; }
         .company-name { font-size: 16px; font-weight: bold; color: #1e293b; }
         .company-sub { font-size: 9px; color: #64748b; }
-        .report-title { text-align: right; font-size: 14px; font-weight: bold; color: #2D6A4F; }
+        .report-title { text-align: right; font-size: 14px; font-weight: bold; color: {{ $brand->warnaUtama() }}; }
         .report-meta { text-align: right; font-size: 9px; color: #64748b; margin-top: 3px; }
-        .divider { border-bottom: 2px solid #2D6A4F; margin-bottom: 12px; }
+        .divider { border-bottom: 2px solid {{ $brand->warnaUtama() }}; margin-bottom: 12px; }
 
         table.data { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-        table.data th { background: #F5F0E6; padding: 5px 6px; text-align: left; font-size: 10px; border-bottom: 1px solid #cbd5e1; font-weight: bold; }
+        table.data th { background: {{ $brand->warnaLatar() }}; padding: 5px 6px; text-align: left; font-size: 10px; border-bottom: 1px solid #cbd5e1; font-weight: bold; }
         table.data td { padding: 4px 6px; font-size: 10px; border-bottom: 1px solid #f1f5f9; }
         table.data td.num { text-align: right; }
         table.data td.center { text-align: center; }

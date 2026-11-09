@@ -73,7 +73,7 @@
             el.textContent = pesan;
             el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:3000;'
                 + 'padding:10px 16px;border-radius:8px;color:#fff;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.25);'
-                + 'background:' + (ok === false ? '#b91c1c' : '#2D6A4F');
+                + 'background:' + (ok === false ? '#b91c1c' : '{{ $brand->warnaUtama() }}');
             document.body.appendChild(el);
             setTimeout(function () { el.remove(); }, ok === false ? 5000 : 2500);
         },

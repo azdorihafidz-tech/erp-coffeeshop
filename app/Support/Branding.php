@@ -19,7 +19,27 @@ use Illuminate\Support\Facades\Storage;
  */
 class Branding
 {
-    public const CACHE_KEY = 'branding:v1';
+    // v2 (4.54): data cache ikut membawa warna tampilan
+    public const CACHE_KEY = 'branding:v2';
+
+    /** Warna bawaan program (dipakai selama Pengaturan Umum belum mengatur warna). */
+    public const WARNA_BAWAAN = ['utama' => '#2D6A4F', 'sidebar' => '#1A1A1A', 'latar' => '#F5F0E6'];
+
+    /** Tema siap pakai di Pengaturan Umum (semua lolos aturan keterbacaan). */
+    public const TEMA = [
+        'hijau'   => ['nama' => 'Hijau Kopi',   'utama' => '#2D6A4F', 'sidebar' => '#1A1A1A', 'latar' => '#F5F0E6'],
+        'cokelat' => ['nama' => 'Cokelat Kopi', 'utama' => '#7B4B2A', 'sidebar' => '#2B1B12', 'latar' => '#F6EFE7'],
+        'biru'    => ['nama' => 'Biru Laut',    'utama' => '#1D4E89', 'sidebar' => '#0F1B2D', 'latar' => '#EEF3F9'],
+        'merah'   => ['nama' => 'Merah Bata',   'utama' => '#A4372A', 'sidebar' => '#2A1414', 'latar' => '#FBF0EE'],
+        'oranye'  => ['nama' => 'Oranye',       'utama' => '#C2410C', 'sidebar' => '#1F1A17', 'latar' => '#FFF7ED'],
+        'ungu'    => ['nama' => 'Ungu',         'utama' => '#6B3FA0', 'sidebar' => '#1E1530', 'latar' => '#F5F1FA'],
+    ];
+
+    /** Batas keterbacaan (rasio kontras WCAG). Tulisan di atas warna utama & sidebar selalu putih. */
+    public const KONTRAS_UTAMA_PUTIH = 3.0;   // tombol & judul tebal
+    public const KONTRAS_UTAMA_LATAR = 3.0;   // ikon/judul warna utama di atas latar
+    public const KONTRAS_SIDEBAR_PUTIH = 4.5; // teks menu sidebar
+    public const KONTRAS_LATAR_TEKS = 10.0;   // latar harus terang (teks hitam #1A1A1A)
     public const FOLDER = 'uploads/branding';
     public const UKURAN_IKON = [72, 96, 128, 144, 152, 192, 384, 512];
 
@@ -45,6 +65,10 @@ class Branding
                     'alamat'       => $s->alamat_perusahaan,
                     'telepon'      => $s->telepon,
                     'logo_path'    => $s->logo_path,
+                    // Kolom warna belum ada sebelum migration 4.54 dijalankan → null = bawaan
+                    'warna_utama'   => $s->getAttribute('warna_utama'),
+                    'warna_sidebar' => $s->getAttribute('warna_sidebar'),
+                    'warna_latar'   => $s->getAttribute('warna_latar'),
                     'versi'        => $s->updated_at?->timestamp,
                 ] : [];
             });
@@ -102,6 +126,142 @@ class Branding
     public function isiPenanda(?string $teks): string
     {
         return str_replace(['{nama_usaha}', '{nama_singkat}'], [$this->nama(), $this->namaSingkat()], (string) $teks);
+    }
+
+    // ----------------------------------------------------------- warna (4.54)
+
+    public function warnaUtama(): string
+    {
+        return $this->warna('utama');
+    }
+
+    public function warnaSidebar(): string
+    {
+        return $this->warna('sidebar');
+    }
+
+    public function warnaLatar(): string
+    {
+        return $this->warna('latar');
+    }
+
+    /** true kalau Owner sudah memilih warna sendiri (minimal satu). */
+    public function warnaDiatur(): bool
+    {
+        foreach (['utama', 'sidebar', 'latar'] as $k) {
+            if (self::hexValid($this->data()['warna_' . $k] ?? null)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Warna utama digelapkan (hover tombol, dll.). */
+    public function warnaUtamaGelap(float $porsi = 0.15): string
+    {
+        return self::campur($this->warnaUtama(), '#000000', $porsi);
+    }
+
+    /** "rgba(r,g,b,a)" dari warna hex — untuk bayangan/gradasi transparan. */
+    public static function rgba(string $hex, float $alpha): string
+    {
+        [$r, $g, $b] = self::rgb($hex);
+
+        return "rgba({$r},{$g},{$b},{$alpha})";
+    }
+
+    /** "r,g,b" — untuk variabel Bootstrap `--bs-*-rgb`. */
+    public static function rgbTeks(string $hex): string
+    {
+        return implode(',', self::rgb($hex));
+    }
+
+    /** Campur dua warna; $porsi = bagian warna kedua (0–1). */
+    public static function campur(string $a, string $b, float $porsi): string
+    {
+        $x = self::rgb($a);
+        $y = self::rgb($b);
+        $hasil = '';
+        for ($i = 0; $i < 3; $i++) {
+            $hasil .= sprintf('%02X', (int) round($x[$i] + ($y[$i] - $x[$i]) * $porsi));
+        }
+
+        return '#' . $hasil;
+    }
+
+    public static function hexValid(?string $hex): bool
+    {
+        return is_string($hex) && preg_match('/^#[0-9A-Fa-f]{6}$/', $hex) === 1;
+    }
+
+    /** Rasio kontras WCAG 2 (1–21). */
+    public static function kontras(string $a, string $b): float
+    {
+        $la = self::luminansi($a);
+        $lb = self::luminansi($b);
+
+        return (max($la, $lb) + 0.05) / (min($la, $lb) + 0.05);
+    }
+
+    /**
+     * Cek keterbacaan 3 warna. Return daftar pesan (kosong = aman).
+     * Kunci = nama field, supaya bisa dipakai sebagai error validasi.
+     */
+    public static function cekKeterbacaan(string $utama, string $sidebar, string $latar): array
+    {
+        $pesan = [];
+        if (self::kontras($utama, '#FFFFFF') < self::KONTRAS_UTAMA_PUTIH) {
+            $pesan['warna_utama'] = 'Warna utama terlalu terang — tulisan putih di tombol tidak terbaca. Pilih warna yang lebih gelap.';
+        } elseif (self::kontras($utama, $latar) < self::KONTRAS_UTAMA_LATAR) {
+            $pesan['warna_utama'] = 'Warna utama terlalu mirip dengan warna latar — judul dan ikon tidak terlihat jelas.';
+        }
+        if (self::kontras($sidebar, '#FFFFFF') < self::KONTRAS_SIDEBAR_PUTIH) {
+            $pesan['warna_sidebar'] = 'Warna sidebar terlalu terang — tulisan menu (putih) tidak terbaca. Pilih warna yang lebih gelap.';
+        }
+        if (self::kontras($latar, '#1A1A1A') < self::KONTRAS_LATAR_TEKS) {
+            $pesan['warna_latar'] = 'Warna latar terlalu gelap — tulisan hitam di halaman tidak terbaca. Pilih warna yang lebih terang.';
+        }
+
+        return $pesan;
+    }
+
+    /** Warna tema ke manifest PWA (bilah atas HP saat aplikasi dipasang). */
+    private function terapkanWarnaKeConfigPwa(): void
+    {
+        if (!$this->warnaDiatur()) {
+            return; // bawaan: biarkan config/laravelpwa.php
+        }
+        config([
+            'laravelpwa.manifest.theme_color'      => $this->warnaUtama(),
+            'laravelpwa.manifest.background_color' => $this->warnaSidebar(),
+        ]);
+    }
+
+    private function warna(string $jenis): string
+    {
+        $v = $this->data()['warna_' . $jenis] ?? null;
+
+        return self::hexValid($v) ? strtoupper($v) : self::WARNA_BAWAAN[$jenis];
+    }
+
+    /** @return array{int,int,int} */
+    private static function rgb(string $hex): array
+    {
+        $hex = ltrim($hex, '#');
+
+        return [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+    }
+
+    private static function luminansi(string $hex): float
+    {
+        $c = array_map(function ($v) {
+            $v /= 255;
+
+            return $v <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4;
+        }, self::rgb($hex));
+
+        return 0.2126 * $c[0] + 0.7152 * $c[1] + 0.0722 * $c[2];
     }
 
     // ------------------------------------------------------------------ logo
@@ -162,6 +322,7 @@ class Branding
             'laravelpwa.manifest.short_name' => $this->namaSingkat(),
             'laravelpwa.manifest.icons'      => $ikon,
         ]);
+        $this->terapkanWarnaKeConfigPwa();
     }
 
     /** Data untuk aplikasi kasir Android (endpoint /app-info). */

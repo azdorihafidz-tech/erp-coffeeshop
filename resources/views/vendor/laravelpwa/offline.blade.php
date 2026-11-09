@@ -8,7 +8,7 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            background: #1A1A1A;
+            background: {{ $brand->warnaSidebar() }};
             color: #fff;
             min-height: 100vh;
             display: flex;
@@ -23,7 +23,7 @@
             height: 120px;
             margin: 0 auto 24px;
             border-radius: 50%;
-            background: #2D6A4F;
+            background: {{ $brand->warnaUtama() }};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -34,7 +34,7 @@
         h1 { font-size: 24px; margin: 0 0 12px; }
         p { font-size: 16px; line-height: 1.5; margin: 0 0 24px; opacity: 0.9; }
         button {
-            background: #2D6A4F;
+            background: {{ $brand->warnaUtama() }};
             color: #fff;
             border: none;
             padding: 12px 32px;

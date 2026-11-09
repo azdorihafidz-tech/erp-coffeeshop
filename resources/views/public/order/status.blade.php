@@ -32,7 +32,7 @@
         <div style="font-size:.82rem;color:#777;margin-top:8px">Catatan: {{ $queue->catatan_umum }}</div>
         @endif
         @if($estimasiMenit)
-        <div style="font-size:.82rem;color:#2D6A4F;margin-top:8px;font-weight:600">⏳ Estimasi ~{{ $estimasiMenit }} menit setelah dikonfirmasi kasir</div>
+        <div style="font-size:.82rem;color:{{ $brand->warnaUtama() }};margin-top:8px;font-weight:600">⏳ Estimasi ~{{ $estimasiMenit }} menit setelah dikonfirmasi kasir</div>
         @endif
     </div>
 

@@ -18,6 +18,9 @@ class PengaturanUmum extends Model
         'logo_path',
         'alamat_perusahaan',
         'telepon',
+        'warna_utama',
+        'warna_sidebar',
+        'warna_latar',
     ];
 
     /** Singleton getter — selalu return instance baris pertama/satu-satunya */

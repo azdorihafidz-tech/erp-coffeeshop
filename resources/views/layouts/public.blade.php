@@ -8,9 +8,9 @@
 
     <style>
         :root {
-            --kd-black: #1A1A1A;
-            --kd-green: #2D6A4F;
-            --kd-cream: #F5F0E6;
+            --kd-black: {{ $brand->warnaSidebar() }};
+            --kd-green: {{ $brand->warnaUtama() }};
+            --kd-cream: {{ $brand->warnaLatar() }};
             --kd-white: #FFFFFF;
         }
 

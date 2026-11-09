@@ -32,12 +32,40 @@ class PengaturanUmumController extends Controller
             'alamat_perusahaan' => ['nullable', 'string', 'max:1000'],
             'telepon'           => ['nullable', 'string', 'max:30'],
             'logo'              => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            // 4.54 Warna Tampilan — kosong = warna bawaan program
+            'warna_utama'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'warna_sidebar'     => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'warna_latar'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ], [
             'logo.mimes' => 'Logo harus berupa gambar JPG, PNG, atau WebP.',
             'logo.max'   => 'Ukuran logo maksimal 2 MB.',
+            'warna_utama.regex'   => 'Kode warna utama harus seperti #2D6A4F.',
+            'warna_sidebar.regex' => 'Kode warna sidebar harus seperti #1A1A1A.',
+            'warna_latar.regex'   => 'Kode warna latar harus seperti #F5F0E6.',
         ]);
 
+        // Warna: "Kembalikan ke bawaan" mengosongkan ketiganya; selain itu wajib lolos aturan keterbacaan
+        $warna = [];
+        foreach (['utama', 'sidebar', 'latar'] as $k) {
+            $v = $request->boolean('reset_warna') ? null : ($validated['warna_' . $k] ?? null);
+            $warna[$k] = $v ? strtoupper($v) : null;
+        }
+        $masalah = Branding::cekKeterbacaan(
+            $warna['utama'] ?? Branding::WARNA_BAWAAN['utama'],
+            $warna['sidebar'] ?? Branding::WARNA_BAWAAN['sidebar'],
+            $warna['latar'] ?? Branding::WARNA_BAWAAN['latar'],
+        );
+        if ($masalah) {
+            return back()->withInput()->withErrors($masalah);
+        }
+
         $setting = $this->setting();
+        // Kolom warna belum ada kalau Update Database belum dijalankan → lewati, data lain tetap tersimpan
+        if (\Illuminate\Support\Facades\Schema::hasColumn('pengaturan_umums', 'warna_utama')) {
+            $setting->warna_utama   = $warna['utama'];
+            $setting->warna_sidebar = $warna['sidebar'];
+            $setting->warna_latar   = $warna['latar'];
+        }
 
         $setting->nama_perusahaan   = $validated['nama_perusahaan'];
         $setting->nama_singkat      = $validated['nama_singkat'] ?? null;

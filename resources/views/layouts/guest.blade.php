@@ -11,13 +11,14 @@
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <x-tema-warna />
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
         body {
             min-height: 100vh;
-            background: linear-gradient(145deg, #1A1A1A 0%, #2b2b2b 40%, #2D6A4F 100%);
+            background: linear-gradient(145deg, {{ $brand->warnaSidebar() }} 0%, {{ \App\Support\Branding::campur($brand->warnaSidebar(), '#FFFFFF', 0.075) }} 40%, {{ $brand->warnaUtama() }} 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -63,7 +64,7 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #1A1A1A, #2D6A4F);
+            background: linear-gradient(90deg, {{ $brand->warnaSidebar() }}, {{ $brand->warnaUtama() }});
             border-radius: 20px 20px 0 0;
         }
 
@@ -76,7 +77,7 @@
             justify-content: center;
             margin: 0 auto 1rem;
             overflow: hidden;
-            background: #F5F0E6;
+            background: {{ $brand->warnaLatar() }};
             box-shadow: 0 4px 16px rgba(255,107,0,0.25);
         }
 
@@ -106,12 +107,12 @@
         }
 
         .form-control:focus, .form-select:focus {
-            border-color: #2D6A4F;
+            border-color: {{ $brand->warnaUtama() }};
             box-shadow: 0 0 0 3px rgba(255,107,0,0.15);
         }
 
         .btn-primary {
-            background: linear-gradient(90deg, #1A1A1A, #2D6A4F);
+            background: linear-gradient(90deg, {{ $brand->warnaSidebar() }}, {{ $brand->warnaUtama() }});
             border: none;
             border-radius: 10px;
             padding: 0.85rem 1.5rem;
@@ -139,7 +140,7 @@
 
         /* Teks link lupa password */
         a[href*="password"] {
-            color: #2D6A4F !important;
+            color: {{ $brand->warnaUtama() }} !important;
         }
         a[href*="password"]:hover {
             color: #1A1A1A !important;

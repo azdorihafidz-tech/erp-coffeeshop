@@ -15,6 +15,7 @@
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <x-tema-warna />
     <!-- Select2 (searchable dropdown, dipakai di POS) + tema Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
@@ -31,16 +32,16 @@
     <style>
         :root {
             --sidebar-width: 260px;
-            --sidebar-bg: #1A1A1A;
+            --sidebar-bg: {{ $brand->warnaSidebar() }};
 
-            --sidebar-hover: #2D6A4F;
-            --sidebar-active: #2D6A4F;
+            --sidebar-hover: {{ $brand->warnaUtama() }};
+            --sidebar-active: {{ $brand->warnaUtama() }};
             --topbar-height: 60px;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #F5F0E6;
+            background-color: {{ $brand->warnaLatar() }};
             min-height: 100vh;
         }
 
@@ -167,7 +168,7 @@
         #topbar {
             height: var(--topbar-height);
             background: white;
-            border-bottom: 1px solid #2D6A4F;
+            border-bottom: 1px solid {{ $brand->warnaUtama() }};
             position: fixed;
             top: 0;
             left: var(--sidebar-width);

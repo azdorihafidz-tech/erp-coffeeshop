@@ -58,7 +58,7 @@
                 <input type="date" id="rentangSampai" name="sampai" class="form-control form-control-sm" required
                        value="{{ $isian[1]?->toDateString() }}" max="{{ today()->toDateString() }}">
             </div>
-            <button type="submit" class="btn btn-sm text-white" style="background:#2D6A4F">
+            <button type="submit" class="btn btn-sm text-white" style="background:{{ $brand->warnaUtama() }}">
                 <i class="bi bi-search me-1"></i>Tampilkan
             </button>
         </form>
@@ -90,7 +90,7 @@
 {{-- Kotak total --}}
 <div class="row g-3 mb-3">
     <div class="col-6 {{ $lihatUntung ? 'col-lg-4' : 'col-lg-6' }}">
-        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #1A1A1A !important">
+        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid {{ $brand->warnaSidebar() }} !important">
             <div class="card-body py-3">
                 <div class="text-muted small">Jumlah Transaksi</div>
                 <div class="fs-4 fw-bold">{{ number_format($total['transaksi'], 0, ',', '.') }}</div>
@@ -98,10 +98,10 @@
         </div>
     </div>
     <div class="col-6 {{ $lihatUntung ? 'col-lg-4' : 'col-lg-6' }}">
-        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #2D6A4F !important">
+        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid {{ $brand->warnaUtama() }} !important">
             <div class="card-body py-3">
                 <div class="text-muted small">Pendapatan <x-tooltip key="laporan_transaksi_kasir.pendapatan" /></div>
-                <div class="fs-4 fw-bold" style="color:#2D6A4F">{{ fmt_rupiah($total['pendapatan']) }}</div>
+                <div class="fs-4 fw-bold" style="color:{{ $brand->warnaUtama() }}">{{ fmt_rupiah($total['pendapatan']) }}</div>
             </div>
         </div>
     </div>
@@ -130,7 +130,7 @@
         <div class="card border-0 shadow-sm h-100 lt-grafik-card">
             <div class="card-header bg-white d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div class="fw-semibold">
-                    <i class="bi bi-graph-up me-1" style="color:#2D6A4F"></i>Grafik per {{ $satuan }}
+                    <i class="bi bi-graph-up me-1" style="color:{{ $brand->warnaUtama() }}"></i>Grafik per {{ $satuan }}
                     @unless($isTransaksi)<x-tooltip key="laporan_transaksi_kasir.tingkat" />@endunless
                 </div>
                 @if($grafik->isNotEmpty())
@@ -147,7 +147,7 @@
                 </div>
                 @else
                 <div class="d-flex flex-wrap gap-2 mb-3">
-                    <span class="lt-chip"><i class="bi bi-trophy-fill" style="color:#2D6A4F"></i>
+                    <span class="lt-chip"><i class="bi bi-trophy-fill" style="color:{{ $brand->warnaUtama() }}"></i>
                         Tertinggi: <strong>{{ $puncak['label'] ?? $puncak['label_pendek'] }}</strong> · {{ fmt_rupiah($puncak['pendapatan']) }}</span>
                     @if($isTransaksi)
                     <span class="lt-chip"><i class="bi bi-people-fill"></i>Tersibuk: <strong>{{ $tersibuk['label_pendek'] }}</strong> · {{ $tersibuk['transaksi'] }} transaksi</span>
@@ -262,8 +262,8 @@
 @push('styles')
 <style>
     .lt-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px;
-        background:#F5F0E6; border:1px solid #e4dccb; font-size:.8rem; color:#1A1A1A; }
-    .lt-jenis.active { background:#1A1A1A; color:#fff; border-color:#1A1A1A; }
+        background:{{ $brand->warnaLatar() }}; border:1px solid #e4dccb; font-size:.8rem; color:#1A1A1A; }
+    .lt-jenis.active { background:{{ $brand->warnaSidebar() }}; color:#fff; border-color:{{ $brand->warnaSidebar() }}; }
     .lt-grafik-card .card-header { border-bottom:1px solid #f1f1f1; }
 </style>
 @endpush
@@ -327,10 +327,10 @@
             data: d.pendapatan,
             yAxisID: 'y',
             order: 2,
-            backgroundColor: batang ? gradasi('#2D6A4F', '#2D6A4F', 'rgba(45,106,79,0.35)')
-                                    : gradasi('#2D6A4F', 'rgba(45,106,79,0.35)', 'rgba(45,106,79,0)'),
+            backgroundColor: batang ? gradasi('{{ $brand->warnaUtama() }}', '{{ $brand->warnaUtama() }}', '{{ \App\Support\Branding::rgba($brand->warnaUtama(), 0.35) }}')
+                                    : gradasi('{{ $brand->warnaUtama() }}', '{{ \App\Support\Branding::rgba($brand->warnaUtama(), 0.35) }}', '{{ \App\Support\Branding::rgba($brand->warnaUtama(), 0) }}'),
             hoverBackgroundColor: batang ? '#24553F' : undefined,
-            borderColor: '#2D6A4F',
+            borderColor: '{{ $brand->warnaUtama() }}',
             borderWidth: batang ? 0 : 3,
             borderRadius: 8,
             borderSkipped: false,
@@ -340,7 +340,7 @@
             pointRadius: batang ? 0 : 3,
             pointHoverRadius: 6,
             pointBackgroundColor: '#fff',
-            pointBorderColor: '#2D6A4F',
+            pointBorderColor: '{{ $brand->warnaUtama() }}',
             pointBorderWidth: 2,
         }];
         @if($lihatUntung)
@@ -375,14 +375,14 @@
             data: d.transaksi,
             yAxisID: 'y1',
             order: 1,
-            borderColor: '#1A1A1A',
-            backgroundColor: '#1A1A1A',
+            borderColor: '{{ $brand->warnaSidebar() }}',
+            backgroundColor: '{{ $brand->warnaSidebar() }}',
             borderWidth: 2,
             borderDash: [6, 4],
             tension: 0.4,
             pointRadius: 3,
             pointHoverRadius: 6,
-            pointBackgroundColor: '#1A1A1A',
+            pointBackgroundColor: '{{ $brand->warnaSidebar() }}',
             pointBorderColor: '#fff',
             pointBorderWidth: 2,
         });
@@ -403,7 +403,7 @@
                     labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8, padding: 16, color: '#475569', font: { size: 12 } },
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(26,26,26,0.95)',
+                    backgroundColor: '{{ \App\Support\Branding::rgba($brand->warnaSidebar(), 0.95) }}',
                     titleColor: '#fff', bodyColor: '#e2e8f0', footerColor: '#9FD3B8',
                     titleFont: { size: 13, weight: '600' }, bodyFont: { size: 12 }, footerFont: { size: 11, weight: 'normal' },
                     padding: 12, cornerRadius: 10, boxPadding: 6, usePointStyle: true,

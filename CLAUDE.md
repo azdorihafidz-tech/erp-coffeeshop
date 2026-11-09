@@ -924,6 +924,19 @@ Program yang sama dipakai usaha lain (pola 4.44). Sekarang ada **3 instalasi**: 
 - **Urutan yang benar untuk usaha berikutnya**: (1) Git clone ke folder baru, (2) buat subdomain dengan document root `<folder>/public`, (3) DB + user baru, (4) `.env` di folder utama, (5) import SQL awal, (6) Deploy, tunggu SSL, baru login.
 - Halaman error 500 memakai `layouts.app` → kalau DB/route belum jalan, Laravel jatuh ke halaman cadangan Symfony "Oops! An Error Occurred" (aman, tidak membocorkan data). Sengaja tidak diubah.
 
+### 4.54 🟡 Warna Tampilan per Usaha di Pengaturan Umum (2026-11-09)
+
+Lanjutan 4.44 (dulu ditunda "warna nanti"). Keputusan Owner: ikuti saran — 3 warna (utama, sidebar, latar), tema siap pakai + atur sendiri.
+
+- **Migration** `2026_11_09_100001` `pengaturan_umums.warna_utama/warna_sidebar/warna_latar` (string 7, nullable). **NULL = warna bawaan** (`Branding::WARNA_BAWAAN` #2D6A4F / #1A1A1A / #F5F0E6) → go-live, demo & WONGKO PI tidak berubah sampai Owner masing-masing memilih warna.
+- **`App\Support\Branding`**: `warnaUtama()`, `warnaSidebar()`, `warnaLatar()`, `warnaDiatur()`, `warnaUtamaGelap($porsi)`, statis `rgba()`, `rgbTeks()`, `campur()`, `hexValid()`, `kontras()` (WCAG), `cekKeterbacaan()`; `TEMA` 6 tema (Hijau Kopi, Cokelat Kopi, Biru Laut, Merah Bata, Oranye, Ungu — semua lolos aturan). Cache `branding:v2`. PWA `theme_color`/`background_color` ikut (hanya bila diatur). Membaca kolom lewat `getAttribute` → aman sebelum migration jalan.
+- **Aturan keterbacaan (ditolak server + peringatan langsung di form)**: tulisan di atas warna utama & sidebar selalu putih, jadi utama vs putih ≥ 3, utama vs latar ≥ 3, sidebar vs putih ≥ 4,5, latar vs #1A1A1A ≥ 10. (Bukan mengubah warna tulisan otomatis — disampaikan ke Owner.)
+- **`<x-tema-warna />`** (sesudah CSS Bootstrap di `layouts/app` & `layouts/guest`): variabel `--kd-*`; **hanya bila warna diatur** juga menimpa komponen "primary" Bootstrap (btn-primary/outline, text/bg-primary, link, nav, pagination, dropdown/list-group aktif, progress, checkbox, fokus input). Warna bawaan = tombol biru Bootstrap tidak disentuh. Merah/hijau/kuning penanda arti, struk & label tidak berubah.
+- **±97 baris di 25 view** memakai `$brand` (layout, login, error, POS, 3 laporan kasir + grafik, kitchen display, menu/status QR, PDF neraca/laba-rugi formal/buku besar/BEP/layout PDF, stiker QR meja, roastery dashboard, closing, toast APK, offline PWA). `#1A1A1A` sebagai **warna tulisan** sengaja tidak diganti. **ATURAN: jangan tulis warna tema (#2D6A4F/#1A1A1A/#F5F0E6) langsung di view baru — pakai `$brand->warnaUtama()` dst.**
+- **Pengaturan Umum**: kartu "Warna Tampilan" (tema sekali klik, pemilih warna + kode hex, kosong = bawaan, contoh tampilan langsung, peringatan keterbacaan, Kembalikan ke bawaan → `reset_warna`). Tanpa izin/menu baru (pakai `pengaturan.umum_edit`). Controller melewati kolom warna kalau migration belum jalan. Tooltip `pengaturan_umum.warna`, panduan `pengaturan-umum` bagian "Warna Tampilan".
+- **Test** `WarnaTampilanTest` 7 (83 assertion): bawaan tidak menyentuh tombol, tema berlaku di POS/404/login/manifest PWA, warna tak terbaca & kode salah ditolak, satu warna saja + kembalikan bawaan, kasir 403, PDF neraca + stiker QR + Kitchen Display (bawaan & tema), aturan & data tanpa kunci warna. **Bukti tampilan tidak berubah**: 12 halaman di-render program lama (`git stash`) vs baru dengan DB dev → beda hanya blok variabel `--kd-*` tambahan + `#2b2b2b`→`#2B2B2B` (warna sama). Chrome: 11/11 cek JS form lulus. **Tanpa kolom** (migration dimundurkan di DB dev): POS, dashboard, Pengaturan Umum (simpan juga), Update Database, laporan, kitchen, PDF, login semua 200; rollback/migrate bersih.
+- **Deploy**: 1 migration → Update from Remote → Deploy → **Update Database** di go-live, demo & WONGKO PI (panduan + tooltip ikut).
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1124,7 +1137,7 @@ database/
 - **Trait `FillsDeletedBy`**: dipakai di banyak model
 - **Gate pattern**: permission di-cache 1 jam (`all_permission_names`), delegasi ke `$user->hasPermission()`
 - **DB::transaction()**: WAJIB untuk operasi multi-tabel
-- **Identitas usaha via `$brand`** (`App\Support\Branding`, sejak 4.44): nama, logo, tagline usaha JANGAN ditulis langsung di view/kode — program dipakai banyak usaha. Teks panduan/tooltip pakai penanda `{nama_usaha}` / `{nama_singkat}`
+- **Identitas usaha via `$brand`** (`App\Support\Branding`, sejak 4.44): nama, logo, tagline usaha JANGAN ditulis langsung di view/kode — program dipakai banyak usaha. Teks panduan/tooltip pakai penanda `{nama_usaha}` / `{nama_singkat}`. **Warna tema juga** (4.54): pakai `$brand->warnaUtama()` / `warnaSidebar()` / `warnaLatar()`, bukan `#2D6A4F` / `#1A1A1A` / `#F5F0E6`
 - **🔴 Nested `<form>` HTML DILARANG** — HTML5 parser membuang tag form bersarang tapi child input-nya (termasuk `_method`) tetap masuk ke form luar, bisa menyebabkan method-spoofing salah sasaran (pernah jadi bug KRITIS data-ghost di Dimsum). Kalau butuh tombol submit "di dalam" card form lain, pisahkan jadi sibling + pakai HTML5 `form="id-form-lain"` attribute.
 
 ---
@@ -1365,6 +1378,11 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [ ] Owner WONGKO PI isi: Pengaturan Umum (logo, alamat, telepon), cabang (alamat/GPS), Master Bahan Baku, Produk Jual + komposisi, user kasir/barista, saldo awal kas, meja (kalau dine-in)
 - [ ] Bersih-bersih: folder lama yang diganti nama, `public/.well-known/acme-challenge/tes.txt`, `cgi-bin` salinan (jangan hapus `.htaccess` folder utama sebelum dicek isinya — bisa berisi versi PHP)
 - [ ] Opsional: ganti `APP_KEY` & password DB (sempat terbuka beberapa menit saat "Index of /") — Owner memilih tidak
+
+### 12.22 Warna Tampilan (2026-11-09, lihat 4.54)
+- [x] 3 warna + 6 tema + atur sendiri + aturan keterbacaan, ±25 view memakai `$brand`, 7 test, bukti tampilan bawaan tidak berubah — commit lokal
+- [ ] Owner: setuju push + deploy (Update Database) di demo → go-live → WONGKO PI, lalu coba pilih tema di demo
+- [ ] Opsional nanti: warna di aplikasi Android Kasir POS (header Pengaturan masih abu-abu netral)
 
 ---
 

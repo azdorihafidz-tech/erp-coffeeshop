@@ -74,7 +74,7 @@
 {{-- Kotak total --}}
 <div class="row g-3 mb-3">
     <div class="col-6 {{ $lihatUntung ? 'col-lg-3' : 'col-lg-4' }}">
-        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #1A1A1A !important">
+        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid {{ $brand->warnaSidebar() }} !important">
             <div class="card-body py-3">
                 <div class="text-muted small">Produk terjual</div>
                 <div class="fs-4 fw-bold">{{ number_format($baris->count(), 0, ',', '.') }} <span class="fs-6 fw-normal text-muted">jenis</span></div>
@@ -90,10 +90,10 @@
         </div>
     </div>
     <div class="col-12 {{ $lihatUntung ? 'col-sm-6 col-lg-3' : 'col-lg-4' }}">
-        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #2D6A4F !important">
+        <div class="card border-0 shadow-sm h-100" style="border-left:4px solid {{ $brand->warnaUtama() }} !important">
             <div class="card-body py-3">
                 <div class="text-muted small">Pendapatan produk <x-tooltip key="laporan_produk_kasir.pendapatan" /></div>
-                <div class="fs-4 fw-bold" style="color:#2D6A4F">{{ fmt_rupiah($total['pendapatan']) }}</div>
+                <div class="fs-4 fw-bold" style="color:{{ $brand->warnaUtama() }}">{{ fmt_rupiah($total['pendapatan']) }}</div>
                 @if($total['diskon'] > 0)
                 <div class="small text-muted">Sebelum diskon {{ fmt_rupiah($total['penjualan']) }} · diskon {{ fmt_rupiah($total['diskon']) }}</div>
                 @endif
@@ -119,7 +119,7 @@
 @if($baris->isNotEmpty())
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-header bg-white d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="fw-semibold"><i class="bi bi-trophy me-1" style="color:#2D6A4F"></i>10 Produk Teratas</div>
+        <div class="fw-semibold"><i class="bi bi-trophy me-1" style="color:{{ $brand->warnaUtama() }}"></i>10 Produk Teratas</div>
         <div class="btn-group btn-group-sm" role="group" aria-label="Urutan grafik">
             <button type="button" class="btn btn-outline-secondary lp-metrik" data-metrik="qty">Qty</button>
             <button type="button" class="btn btn-outline-secondary lp-metrik" data-metrik="pendapatan">Pendapatan</button>
@@ -197,7 +197,7 @@
                     @endif
                 </tr>
                 @foreach($r['varian'] as $v)
-                <tr class="varian-{{ $i }} d-none" style="background:#F5F0E6">
+                <tr class="varian-{{ $i }} d-none" style="background:{{ $brand->warnaLatar() }}">
                     <td></td>
                     <td class="ps-4 small"><i class="bi bi-arrow-return-right me-1 text-muted"></i>{{ $v['nama'] }}</td>
                     <td class="text-end small">{{ $q($v['qty']) }}</td>
@@ -270,7 +270,7 @@
 
 @push('styles')
 <style>
-    .lp-metrik.active { background:#1A1A1A; color:#fff; border-color:#1A1A1A; }
+    .lp-metrik.active { background:{{ $brand->warnaSidebar() }}; color:#fff; border-color:{{ $brand->warnaSidebar() }}; }
 </style>
 @endpush
 
@@ -305,7 +305,7 @@ document.querySelectorAll('.lp-varian').forEach(function (b) {
 
     const semua = @json($dataGrafik);
     const LABEL = { qty: 'Qty terjual', pendapatan: 'Pendapatan'@if($lihatUntung), keuntungan: 'Keuntungan'@endif };
-    const WARNA = { qty: ['#1A1A1A', 'rgba(26,26,26,0.45)'], pendapatan: ['#2D6A4F', 'rgba(45,106,79,0.4)'], keuntungan: ['#D69E2E', 'rgba(214,158,46,0.4)'] };
+    const WARNA = { qty: ['{{ $brand->warnaSidebar() }}', '{{ \App\Support\Branding::rgba($brand->warnaSidebar(), 0.45) }}'], pendapatan: ['{{ $brand->warnaUtama() }}', '{{ \App\Support\Branding::rgba($brand->warnaUtama(), 0.4) }}'], keuntungan: ['#D69E2E', 'rgba(214,158,46,0.4)'] };
     const rp = v => 'Rp ' + Math.round(v).toLocaleString('id-ID');
     const angka = v => (+v).toLocaleString('id-ID', { maximumFractionDigits: 3 });
     const singkat = v => Math.abs(v) >= 1e6 ? (v / 1e6).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + 'jt'
@@ -370,7 +370,7 @@ document.querySelectorAll('.lp-varian').forEach(function (b) {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'rgba(26,26,26,0.95)', padding: 12, cornerRadius: 10,
+                    backgroundColor: '{{ \App\Support\Branding::rgba($brand->warnaSidebar(), 0.95) }}', padding: 12, cornerRadius: 10,
                     titleFont: { size: 13, weight: '600' }, bodyFont: { size: 12 }, displayColors: false,
                     callbacks: {
                         title: items => items[0].dataset._baris[items[0].dataIndex].nama,

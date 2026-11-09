@@ -57,7 +57,7 @@ new Chart(document.getElementById('roasteryChart'), {
     data: {
         labels: @json($labels),
         datasets: [
-            { type: 'line', label: 'Yield (%)', data: @json($yield), borderColor: '#2D6A4F', backgroundColor: '#2D6A4F', yAxisID: 'y', spanGaps: true, tension: .2 },
+            { type: 'line', label: 'Yield (%)', data: @json($yield), borderColor: '{{ $brand->warnaUtama() }}', backgroundColor: '{{ $brand->warnaUtama() }}', yAxisID: 'y', spanGaps: true, tension: .2 },
             { type: 'bar', label: 'Waste (kg)', data: @json($waste), backgroundColor: '#F5C77E', yAxisID: 'y1' }
         ]
     },

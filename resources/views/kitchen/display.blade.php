@@ -17,7 +17,7 @@
             display: flex; justify-content: space-between; align-items: center;
             padding: 12px 18px; background: #1e293b; border-radius: 14px; flex-shrink: 0;
         }
-        .header-title { font-size: clamp(1.2rem, 2.4vw, 1.8rem); font-weight: 800; color: #2D6A4F; }
+        .header-title { font-size: clamp(1.2rem, 2.4vw, 1.8rem); font-weight: 800; color: {{ $brand->warnaUtama() }}; }
         .header-cabang { font-size: clamp(0.75rem, 1.5vw, 1rem); color: #94a3b8; margin-top: 2px; }
         .clock { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 700; color: #34d399; font-variant-numeric: tabular-nums; font-family: 'Courier New', monospace; }
 
@@ -26,7 +26,7 @@
             display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 12px; align-content: start;
         }
-        .order-card { background: #1e293b; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; border-left: 6px solid #2D6A4F; }
+        .order-card { background: #1e293b; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; border-left: 6px solid {{ $brand->warnaUtama() }}; }
         .order-card.overdue { border-left-color: #ef4444; animation: pulseRed 1.5s ease-in-out infinite; }
         @keyframes pulseRed { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0);} 50% { box-shadow: 0 0 14px 3px rgba(239,68,68,.35);} }
         .order-card-head { display: flex; justify-content: space-between; align-items: baseline; }
@@ -41,7 +41,7 @@
             flex: 1; border: none; border-radius: 6px; padding: 6px 8px; font-weight: 700;
             font-size: 0.78rem; cursor: pointer;
         }
-        .btn-siap { background: #2D6A4F; color: #fff; }
+        .btn-siap { background: {{ $brand->warnaUtama() }}; color: #fff; }
         .btn-siap:hover { background: #24573f; }
         .btn-komplain { background: #7f1d1d; color: #fecaca; }
         .btn-komplain:hover { background: #991b1b; }

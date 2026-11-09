@@ -77,7 +77,7 @@ document.getElementById('btnKunci')?.addEventListener('click', function (e) {
         showCancelButton: true,
         confirmButtonText: 'Ya, kunci',
         cancelButtonText: 'Batal',
-        confirmButtonColor: '#2D6A4F',
+        confirmButtonColor: '{{ $brand->warnaUtama() }}',
     }).then(r => {
         if (r.isConfirmed) {
             btn.dataset.ok = '1';

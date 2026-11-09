@@ -14,14 +14,14 @@
 
         {{-- Logo Kopi Drip --}}
         <div class="mx-auto mb-3 d-flex align-items-center justify-content-center"
-             style="width:64px;height:64px;border-radius:16px;background:#F5F0E6;box-shadow:0 4px 16px rgba(255,107,0,0.2)">
+             style="width:64px;height:64px;border-radius:16px;background:{{ $brand->warnaLatar() }};box-shadow:0 4px 16px rgba(255,107,0,0.2)">
             <img src="{{ $brand->logoUrl() }}" alt="{{ $brand->namaSingkat() }}" style="width:44px;height:44px;object-fit:contain">
         </div>
 
         {{-- Icon --}}
         <div class="mb-3">
             <i class="bi bi-exclamation-triangle-fill"
-               style="font-size:80px;color:#2D6A4F;opacity:0.9;line-height:1"></i>
+               style="font-size:80px;color:{{ $brand->warnaUtama() }};opacity:0.9;line-height:1"></i>
         </div>
 
         {{-- HTTP Code + Heading --}}
@@ -34,7 +34,7 @@
 
         {{-- Info card: waktu + kode referensi --}}
         <div class="card border-0 shadow-sm text-start mb-4"
-             style="background:#F5F0E6;border-left:4px solid #2D6A4F !important">
+             style="background:{{ $brand->warnaLatar() }};border-left:4px solid {{ $brand->warnaUtama() }} !important">
             <div class="card-body py-3 px-4">
                 <div class="fw-semibold mb-2" style="font-size:.75rem;color:#c2410c;text-transform:uppercase;letter-spacing:1px">
                     <i class="bi bi-info-circle me-1"></i>Detail Error
@@ -48,7 +48,7 @@
                         <tr>
                             <td class="text-muted ps-0 py-1" style="vertical-align:middle">Kode Referensi</td>
                             <td class="py-1">
-                                <code class="fw-bold" style="color:#2D6A4F;font-size:.9rem;letter-spacing:1px">
+                                <code class="fw-bold" style="color:{{ $brand->warnaUtama() }};font-size:.9rem;letter-spacing:1px">
                                     {{ $errorRef }}
                                 </code>
                                 <button type="button"
@@ -72,7 +72,7 @@
         </div>
 
         <a href="{{ route('dashboard') }}" class="btn text-white px-4"
-           style="min-height:44px;padding-top:10px;padding-bottom:10px;background:linear-gradient(90deg,#1A1A1A,#2D6A4F);border:none">
+           style="min-height:44px;padding-top:10px;padding-bottom:10px;background:linear-gradient(90deg,{{ $brand->warnaSidebar() }},{{ $brand->warnaUtama() }});border:none">
             <i class="bi bi-arrow-left me-2"></i>Kembali ke Dashboard
         </a>
 

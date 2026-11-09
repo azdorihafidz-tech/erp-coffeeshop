@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
     <title>Hasil Reset Production</title>
     <style>
-        body { font-family: ui-monospace, Consolas, Monaco, monospace; max-width:900px; margin:20px auto; padding:20px; background:#1a1a1a; color:#0f0; }
+        body { font-family: ui-monospace, Consolas, Monaco, monospace; max-width:900px; margin:20px auto; padding:20px; background:{{ $brand->warnaSidebar() }}; color:#0f0; }
         h1 { color:#fff; }
         .box { background:#000; padding:20px; border-radius:8px; }
         .line { padding:4px 0; }
@@ -16,8 +16,8 @@
         .err { color:#f66; }
         .info { color:#6cf; }
         .ts { color:#888; margin-right:8px; }
-        a.btn-login { display:inline-block; margin-top:20px; background:#2D6A4F; color:#fff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; }
-        a.btn-login:hover { background:#1B4332; }
+        a.btn-login { display:inline-block; margin-top:20px; background:{{ $brand->warnaUtama() }}; color:#fff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; }
+        a.btn-login:hover { background:{{ $brand->warnaUtamaGelap(0.4) }}; }
         .note { background:#2a2a00; border-left:4px solid #ffc107; padding:12px; margin:15px 0; color:#ffd700; border-radius:4px; }
     </style>
 </head>

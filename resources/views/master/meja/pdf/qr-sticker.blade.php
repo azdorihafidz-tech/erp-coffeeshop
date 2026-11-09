@@ -17,7 +17,7 @@
         .outlet-name { font-size: 9px; color: #555; margin-bottom: 10px; }
         .qr-box { margin: 10px 0; }
         .qr-box img { width: 160px; height: 160px; }
-        .meja-label { font-size: 22px; font-weight: bold; color: #2D6A4F; margin-top: 8px; }
+        .meja-label { font-size: 22px; font-weight: bold; color: {{ $brand->warnaUtama() }}; margin-top: 8px; }
         .scan-text { font-size: 10px; color: #444; margin-top: 4px; }
         .footer { margin-top: 14px; font-size: 7px; color: #888; border-top: 1px solid #ddd; padding-top: 6px; }
         .footer .url-fallback { word-break: break-all; }

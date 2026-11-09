@@ -151,6 +151,99 @@
 
                 </div>
             </div>
+
+            {{-- 4.54 Warna Tampilan --}}
+            @php
+                $bawaan = \App\Support\Branding::WARNA_BAWAAN;
+                $nilaiWarna = [];
+                foreach (['utama', 'sidebar', 'latar'] as $k) {
+                    $nilaiWarna[$k] = old('warna_' . $k, $setting->getAttribute('warna_' . $k));
+                }
+                $labelWarna = [
+                    'utama'   => ['Warna Utama', 'Tombol, judul, ikon, link, grafik & menu aktif'],
+                    'sidebar' => ['Warna Sidebar', 'Sidebar kiri & bagian gelap halaman login'],
+                    'latar'   => ['Warna Latar', 'Latar belakang halaman'],
+                ];
+            @endphp
+            <div class="card mt-4" id="cardWarna">
+                <div class="card-header py-3 px-4">
+                    <i class="bi bi-palette me-2 text-primary"></i>
+                    <span class="fw-semibold">Warna Tampilan</span>
+                    <x-tooltip key="pengaturan_umum.warna" placement="top" />
+                    <span class="badge ms-2 {{ $brand->warnaDiatur() ? 'bg-primary' : 'bg-secondary' }}" style="font-size:.7rem">
+                        {{ $brand->warnaDiatur() ? 'Warna sendiri' : 'Warna bawaan' }}
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <input type="hidden" name="reset_warna" id="resetWarna" value="0">
+
+                    <div class="fw-medium mb-2" style="font-size:.875rem">Tema siap pakai</div>
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        @foreach(\App\Support\Branding::TEMA as $kode => $tema)
+                            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2 btn-tema"
+                                    data-utama="{{ $tema['utama'] }}" data-sidebar="{{ $tema['sidebar'] }}" data-latar="{{ $tema['latar'] }}">
+                                <span class="d-inline-flex rounded overflow-hidden border" style="height:18px">
+                                    <span style="width:12px;background:{{ $tema['sidebar'] }}"></span>
+                                    <span style="width:12px;background:{{ $tema['utama'] }}"></span>
+                                    <span style="width:12px;background:{{ $tema['latar'] }}"></span>
+                                </span>
+                                {{ $tema['nama'] }}
+                            </button>
+                        @endforeach
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            @foreach($labelWarna as $k => [$judul, $ket])
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium mb-1" for="warna_{{ $k }}">{{ $judul }}</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color pilih-warna" id="pilih_{{ $k }}"
+                                               style="flex:0 0 3.5rem;max-width:3.5rem"
+                                               data-target="warna_{{ $k }}"
+                                               value="{{ \App\Support\Branding::hexValid($nilaiWarna[$k]) ? strtoupper($nilaiWarna[$k]) : $bawaan[$k] }}"
+                                               title="Pilih {{ strtolower($judul) }}">
+                                        <input type="text" class="form-control font-monospace teks-warna @error('warna_' . $k) is-invalid @enderror"
+                                               id="warna_{{ $k }}" name="warna_{{ $k }}" maxlength="7"
+                                               value="{{ $nilaiWarna[$k] }}" data-bawaan="{{ $bawaan[$k] }}"
+                                               placeholder="Bawaan {{ $bawaan[$k] }}">
+                                        @error('warna_' . $k)
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="form-text">{{ $ket }}. Kosong = bawaan.</div>
+                                </div>
+                            @endforeach
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnWarnaBawaan">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Kembalikan ke bawaan
+                            </button>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="fw-medium mb-1" style="font-size:.875rem">Contoh tampilan</div>
+                            <div class="d-flex border rounded-3 overflow-hidden" style="height:190px" id="contohWarna">
+                                <div class="p-2 d-flex flex-column gap-1" style="width:38%;background:var(--cw-sidebar);color:#fff;font-size:.7rem">
+                                    <div class="fw-bold mb-1" style="font-size:.75rem">{{ $brand->namaSingkat() }}</div>
+                                    <div class="rounded px-2 py-1" style="background:var(--cw-utama)"><i class="bi bi-cart3 me-1"></i>POS</div>
+                                    <div class="px-2 py-1" style="opacity:.75"><i class="bi bi-box-seam me-1"></i>Stok</div>
+                                    <div class="px-2 py-1" style="opacity:.75"><i class="bi bi-graph-up me-1"></i>Laporan</div>
+                                </div>
+                                <div class="flex-grow-1 p-2" style="background:var(--cw-latar)">
+                                    <div class="bg-white rounded-2 p-2 shadow-sm h-100" style="font-size:.72rem;color:#1A1A1A">
+                                        <div class="fw-bold mb-1" style="color:var(--cw-utama);font-size:.8rem"><i class="bi bi-receipt me-1"></i>Laporan Penjualan</div>
+                                        <div class="mb-2">Omzet hari ini <strong>Rp 1.250.000</strong></div>
+                                        <span class="d-inline-block rounded px-2 py-1 mb-2" style="background:var(--cw-utama);color:#fff">Simpan</span>
+                                        <span class="d-inline-block rounded px-2 py-1 mb-2" style="border:1px solid var(--cw-utama);color:var(--cw-utama)">Batal</span>
+                                        <div><a href="javascript:void(0)" style="color:var(--cw-utama)">Lihat detail</a></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="peringatanWarna" class="small mt-2"></div>
+                            <div class="form-text">Warna merah (hapus/peringatan), hijau (sukses) dan kuning (perhatian) sengaja tidak ikut berubah. Struk &amp; label tetap hitam-putih.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- Kolom Kanan --}}
@@ -209,5 +302,77 @@ function previewLogo(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+// 4.54 Warna Tampilan — contoh langsung + cek keterbacaan (aturan sama dengan server, Branding::cekKeterbacaan)
+(function () {
+    const KUNCI = ['utama', 'sidebar', 'latar'];
+    const BATAS = {
+        utamaPutih: {{ \App\Support\Branding::KONTRAS_UTAMA_PUTIH }},
+        utamaLatar: {{ \App\Support\Branding::KONTRAS_UTAMA_LATAR }},
+        sidebarPutih: {{ \App\Support\Branding::KONTRAS_SIDEBAR_PUTIH }},
+        latarTeks: {{ \App\Support\Branding::KONTRAS_LATAR_TEKS }},
+    };
+    const hexValid = v => /^#[0-9A-Fa-f]{6}$/.test(v || '');
+    const teks = k => document.getElementById('warna_' + k);
+    const pilih = k => document.getElementById('pilih_' + k);
+    const efektif = k => hexValid(teks(k).value.trim()) ? teks(k).value.trim().toUpperCase() : teks(k).dataset.bawaan;
+
+    function lum(hex) {
+        const c = [1, 3, 5].map(i => parseInt(hex.substr(i, 2), 16) / 255)
+            .map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    }
+    function kontras(a, b) {
+        const la = lum(a), lb = lum(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+
+    function perbarui() {
+        const w = {}; KUNCI.forEach(k => w[k] = efektif(k));
+        const box = document.getElementById('contohWarna');
+        box.style.setProperty('--cw-utama', w.utama);
+        box.style.setProperty('--cw-sidebar', w.sidebar);
+        box.style.setProperty('--cw-latar', w.latar);
+
+        const pesan = [];
+        KUNCI.forEach(k => {
+            const v = teks(k).value.trim();
+            if (v !== '' && !hexValid(v)) pesan.push('Kode ' + k + ' harus seperti ' + teks(k).dataset.bawaan + '.');
+        });
+        if (kontras(w.utama, '#FFFFFF') < BATAS.utamaPutih) pesan.push('Warna utama terlalu terang — tulisan putih di tombol tidak terbaca.');
+        else if (kontras(w.utama, w.latar) < BATAS.utamaLatar) pesan.push('Warna utama terlalu mirip dengan warna latar.');
+        if (kontras(w.sidebar, '#FFFFFF') < BATAS.sidebarPutih) pesan.push('Warna sidebar terlalu terang — tulisan menu tidak terbaca.');
+        if (kontras(w.latar, '#1A1A1A') < BATAS.latarTeks) pesan.push('Warna latar terlalu gelap — tulisan halaman tidak terbaca.');
+
+        const el = document.getElementById('peringatanWarna');
+        el.className = 'small mt-2 ' + (pesan.length ? 'text-danger' : 'text-success');
+        el.innerHTML = pesan.length
+            ? '<i class="bi bi-exclamation-triangle-fill me-1"></i>' + pesan.join(' ') + ' <strong>Tidak bisa disimpan</strong> — pilih warna lain.'
+            : '<i class="bi bi-check-circle-fill me-1"></i>Mudah dibaca.';
+    }
+
+    document.querySelectorAll('.pilih-warna').forEach(p => p.addEventListener('input', function () {
+        document.getElementById(this.dataset.target).value = this.value.toUpperCase();
+        document.getElementById('resetWarna').value = '0';
+        perbarui();
+    }));
+    document.querySelectorAll('.teks-warna').forEach(t => t.addEventListener('input', function () {
+        const k = this.id.replace('warna_', '');
+        if (hexValid(this.value.trim())) pilih(k).value = this.value.trim();
+        document.getElementById('resetWarna').value = '0';
+        perbarui();
+    }));
+    document.querySelectorAll('.btn-tema').forEach(b => b.addEventListener('click', function () {
+        KUNCI.forEach(k => { teks(k).value = this.dataset[k]; pilih(k).value = this.dataset[k]; });
+        document.getElementById('resetWarna').value = '0';
+        perbarui();
+    }));
+    document.getElementById('btnWarnaBawaan').addEventListener('click', function () {
+        KUNCI.forEach(k => { teks(k).value = ''; pilih(k).value = teks(k).dataset.bawaan; });
+        document.getElementById('resetWarna').value = '1';
+        perbarui();
+    });
+    perbarui();
+})();
 </script>
 @endpush

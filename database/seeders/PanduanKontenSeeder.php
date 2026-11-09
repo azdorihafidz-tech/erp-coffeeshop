@@ -4252,6 +4252,21 @@ Mengatur identitas usaha — nama, nama singkat, tagline, alamat, telepon, dan l
 
 Setelah logo di-upload, **favicon browser dan ikon aplikasi (PWA, 8 ukuran) dibuat otomatis** dari logo — tidak perlu bantuan teknis. Pratinjau ikon tampil di sebelah logo. Centang **Hapus logo ini** untuk kembali ke logo bawaan program.
 
+## Warna Tampilan
+
+Bagian **Warna Tampilan** mengatur 3 warna: **Warna Utama** (tombol, judul, ikon, link, grafik, menu aktif), **Warna Sidebar** (sidebar kiri & bagian gelap halaman login) dan **Warna Latar** (latar belakang halaman).
+
+1. Klik salah satu **Tema siap pakai** (Hijau Kopi, Cokelat Kopi, Biru Laut, Merah Bata, Oranye, Ungu), atau pilih warna sendiri lewat kotak warna / ketik kodenya (mis. `#7B4B2A`)
+2. Lihat **Contoh tampilan** di sebelah kanan — kalau muncul tulisan merah "tidak bisa disimpan", warnanya terlalu terang/gelap sehingga tulisan tidak terbaca
+3. Klik **Simpan Pengaturan** — semua halaman, PDF laporan, menu QR pelanggan, TV/Kitchen Display ikut berubah
+4. **Kembalikan ke bawaan** → kosongkan ketiga warna lalu Simpan
+
+Catatan:
+- Selama warna kosong (bawaan), tampilan sama persis seperti sebelumnya — tombol biru bawaan tetap biru. Begitu warna diatur, tombol & link biru ikut warna utama
+- Warna penanda arti tetap: merah = hapus/peringatan, hijau = sukses, kuning = perhatian
+- Struk & label cup tetap hitam-putih (printer thermal)
+- Warna ikon aplikasi yang sudah terpasang di HP baru berubah setelah aplikasi dipasang ulang dari browser
+
 ## Dipakai di Mana Saja
 
 | Tempat | Yang tampil |
