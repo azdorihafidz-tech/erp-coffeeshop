@@ -39,6 +39,7 @@ class ProduksiKirimReturAlurTest extends TestCase
         $mkCabang = fn ($n, $k, $t) => Cabang::create(['nama_cabang' => "{$n} {$u}", 'kode_cabang' => "{$k}{$u}", 'tipe' => $t, 'is_active' => true,
             'takeaway_aktif' => true, 'take_away_fee' => 0, 'service_charge_persen' => 0, 'antrian_produksi_aktif' => false]);
         $gudang = $mkCabang('Gudang Alur', 'GAL', 'gudang_pusat');
+        $gudang->update(['jenis_pembeli_aktif' => true]); // saklar Jenis Pembeli di POS (Cabang → Edit), bawaan OFF
         $gerobak = $mkCabang('Gerobak Alur', 'GBA', 'cabang');
         foreach ([$gudang, $gerobak] as $c) {
             Kas::create(['cabang_id' => $c->id, 'nama_kas' => "Kas Tunai {$c->kode_cabang}", 'tipe_kas' => 'tunai', 'default_untuk' => 'tunai',

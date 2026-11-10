@@ -42,6 +42,7 @@ class Cabang extends Model
         'dine_in_aktif',
         'takeaway_aktif',
         'frozen_aktif',
+        'jenis_pembeli_aktif', // 2026-11-10 — saklar Jenis Pembeli di POS gudang/roastery
         'nomor_meja_aktif',
         'take_away_fee',
         'service_charge_persen',
@@ -72,6 +73,7 @@ class Cabang extends Model
             'dine_in_aktif'          => 'boolean',
             'takeaway_aktif'         => 'boolean',
             'frozen_aktif'           => 'boolean',
+            'jenis_pembeli_aktif'    => 'boolean',
             'nomor_meja_aktif'       => 'boolean',
             'take_away_fee'          => 'decimal:2',
             'service_charge_persen'  => 'decimal:2',
@@ -89,6 +91,20 @@ class Cabang extends Model
     public function kategoriLabelCup(): array
     {
         return is_array($this->label_cup_kategori) ? $this->label_cup_kategori : self::LABEL_CUP_KATEGORI_DEFAULT;
+    }
+
+    /** Tipe cabang yang boleh punya pilihan Jenis Pembeli (Retail / Wholesale / Kirim ke Cabang) di POS. */
+    public const TIPE_JENIS_PEMBELI = ['gudang_pusat', 'roastery'];
+
+    /**
+     * 2026-11-10 — pilihan Jenis Pembeli tampil di POS hanya untuk Gudang Pusat / Roastery
+     * yang saklarnya dinyalakan (Cabang → Edit, bawaan OFF). Dibaca lewat getAttribute
+     * supaya aman sebelum migration dijalankan (kolom belum ada = OFF).
+     */
+    public function jenisPembeliTampil(): bool
+    {
+        return in_array($this->tipe?->value, self::TIPE_JENIS_PEMBELI, true)
+            && (bool) $this->getAttribute('jenis_pembeli_aktif');
     }
 
     /** Tahap 3 D'mentai — cek apakah tipe transaksi ini aktif utk cabang ini. */

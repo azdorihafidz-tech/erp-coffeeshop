@@ -276,8 +276,9 @@ body.pos-tablet-mode .pos-bayar-kaki { padding: 0 10px 7px; }
                         @endif
                     </div>
 
-                    {{-- Roastery V2 Minggu 6-7 — Multi-kanal. Kirim ke Cabang (FASE_PRODUKSI_GEROBAK Tahap 2): juga di Gudang Pusat --}}
-                    @if(in_array($cabangAktif?->tipe?->value, ['roastery', 'gudang_pusat'], true))
+                    {{-- Roastery V2 Minggu 6-7 — Multi-kanal. Kirim ke Cabang (FASE_PRODUKSI_GEROBAK Tahap 2): juga di Gudang Pusat.
+                         2026-11-10: hanya tampil kalau saklar "Jenis Pembeli di POS" cabang ini ON (Cabang → Edit, bawaan OFF). --}}
+                    @if($cabangAktif?->jenisPembeliTampil())
                     <div class="mt-2">
                         <label class="form-label small">Jenis Pembeli <x-tooltip key="pos.customer_type" /></label>
                         <select name="customer_type" id="selectCustomerType" class="form-select form-select-sm" style="max-width:260px">

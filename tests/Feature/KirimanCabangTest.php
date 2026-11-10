@@ -39,7 +39,7 @@ class KirimanCabangTest extends TestCase
     {
         parent::setUp();
         $u = rand(10000, 99999);
-        $this->gudang = Cabang::create(['nama_cabang' => "Gudang KC {$u}", 'kode_cabang' => "GKC{$u}", 'tipe' => 'gudang_pusat', 'is_active' => true]);
+        $this->gudang = Cabang::create(['nama_cabang' => "Gudang KC {$u}", 'kode_cabang' => "GKC{$u}", 'tipe' => 'gudang_pusat', 'is_active' => true, 'jenis_pembeli_aktif' => true]);
         $this->gerobak = Cabang::create(['nama_cabang' => "Gerobak 1 KC {$u}", 'kode_cabang' => "GR1{$u}", 'tipe' => 'cabang', 'is_active' => true]);
         $this->gerobak2 = Cabang::create(['nama_cabang' => "Gerobak 2 KC {$u}", 'kode_cabang' => "GR2{$u}", 'tipe' => 'cabang', 'is_active' => true]);
         foreach ([$this->gudang, $this->gerobak, $this->gerobak2] as $c) {

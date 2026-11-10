@@ -182,7 +182,7 @@ class PosUbahHargaTest extends TestCase
     public function test_kirim_ke_cabang_terkunci_untuk_admin_pusat(): void
     {
         $u = rand(10000, 99999);
-        $gudang = Cabang::create(['nama_cabang' => "Gudang Harga {$u}", 'kode_cabang' => "GHR{$u}", 'tipe' => 'gudang_pusat', 'is_active' => true]);
+        $gudang = Cabang::create(['nama_cabang' => "Gudang Harga {$u}", 'kode_cabang' => "GHR{$u}", 'tipe' => 'gudang_pusat', 'is_active' => true, 'jenis_pembeli_aktif' => true]);
         Kas::create(['cabang_id' => $gudang->id, 'nama_kas' => "Kas Tunai G{$u}", 'tipe_kas' => 'tunai', 'default_untuk' => 'tunai',
             'saldo_awal' => 0, 'saldo_sekarang' => 0, 'is_active' => true]);
         app(StokService::class)->masuk($this->kopi->id, $gudang->id, 10, 'stok awal', 'uji', null, 5000);

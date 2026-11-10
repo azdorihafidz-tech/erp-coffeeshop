@@ -937,6 +937,17 @@ Lanjutan 4.44 (dulu ditunda "warna nanti"). Keputusan Owner: ikuti saran — 3 w
 - **Test** `WarnaTampilanTest` 7 (83 assertion): bawaan tidak menyentuh tombol, tema berlaku di POS/404/login/manifest PWA, warna tak terbaca & kode salah ditolak, satu warna saja + kembalikan bawaan, kasir 403, PDF neraca + stiker QR + Kitchen Display (bawaan & tema), aturan & data tanpa kunci warna. **Bukti tampilan tidak berubah**: 12 halaman di-render program lama (`git stash`) vs baru dengan DB dev → beda hanya blok variabel `--kd-*` tambahan + `#2b2b2b`→`#2B2B2B` (warna sama). Chrome: 11/11 cek JS form lulus. **Tanpa kolom** (migration dimundurkan di DB dev): POS, dashboard, Pengaturan Umum (simpan juga), Update Database, laporan, kitchen, PDF, login semua 200; rollback/migrate bersih.
 - **Deploy**: 1 migration → Update from Remote → Deploy → **Update Database** di go-live, demo & WONGKO PI (panduan + tooltip ikut).
 
+### 4.55 🟡 Saklar "Jenis Pembeli di POS" per Cabang Gudang/Roastery (2026-11-10)
+
+Permintaan Owner: pilihan Jenis Pembeli (Retail / Wholesale / Kirim ke Cabang) di POS gudang diberi tombol on/off, **bawaan OFF**. Owner memilih letaknya di **Cabang → Edit** (bukan saklar di layar POS).
+
+- Migration `2026_11_10_100001` `cabangs.jenis_pembeli_aktif` boolean default **false** → semua cabang lama OFF (demo: GP001 & RST001 kehilangan pilihan sampai dinyalakan; go-live belum punya gudang).
+- `Cabang::TIPE_JENIS_PEMBELI` (`gudang_pusat`, `roastery`) + `jenisPembeliTampil()` (tipe cocok **dan** saklar ON; baca lewat `getAttribute` → aman sebelum migration). Dipakai POS (`$outletList` + blok Jenis Pembeli) dan server.
+- **Server**: `PenjualanService::simpanBillInternal` menolak `customer_type` selain retail kalau `jenisPembeliTampil()` false — pesan "belum dinyalakan… Cabang → Edit" untuk gudang/roastery, "hanya bisa dari Gudang Pusat atau Roastery" untuk cabang biasa. Order koreksi retur (`Order::create` langsung) tidak lewat jalur ini. Kiriman yang sudah ada (Terima/Tolak/Retur) tidak terpengaruh.
+- Form **Cabang → Edit → Config POS**: switch + hidden 0, hanya tampil untuk tipe Gudang Pusat/Roastery (JS ikut pilihan Tipe). `CabangController::update` melewati kolom bila migration belum jalan. Tooltip `cabang.jenis_pembeli_aktif`, panduan `kiriman-cabang` langkah Persiapan 5.
+- **Test** `JenisPembeliSaklarTest` 4 (42 assertion): bawaan OFF (POS tanpa pilihan, Kirim/Wholesale 422 + stok utuh, jual biasa = retail), ON (pilihan + cabang tujuan tampil, wholesale & kirim jalan), outlet biasa tetap tanpa pilihan walau kolom ON, simpan saklar dari form. Test lama Kiriman/Retur/Alur/PosUbahHarga dinyalakan saklarnya di data gudang. Tanpa kolom (migration dimundurkan di DB test): POS gudang, Edit & simpan Cabang 200/302, kirim 422 (bukan 500).
+- **Deploy**: 1 migration → Update Database di 3 tempat. Setelah itu Owner menyalakan saklar di cabang gudang/roastery yang memakai Kirim ke Cabang / Wholesale.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1383,6 +1394,10 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] 3 warna + 6 tema + atur sendiri + aturan keterbacaan, ±25 view memakai `$brand`, 7 test, bukti tampilan bawaan tidak berubah — commit lokal
 - [ ] Owner: setuju push + deploy (Update Database) di demo → go-live → WONGKO PI, lalu coba pilih tema di demo
 - [ ] Opsional nanti: warna di aplikasi Android Kasir POS (header Pengaturan masih abu-abu netral)
+
+### 12.23 Saklar Jenis Pembeli (2026-11-10, lihat 4.55)
+- [x] Kolom + saklar Cabang → Edit (bawaan OFF), POS & server ikut saklar, 4 test — commit lokal
+- [ ] Owner: setuju push + deploy (Update Database) di 3 tempat; di demo nyalakan saklar GP001/RST001 kalau mau mencoba Kirim ke Cabang
 
 ---
 

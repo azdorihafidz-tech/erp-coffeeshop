@@ -320,6 +320,7 @@ Gudang Pusat atau Roastery **menjual** barang ke cabang sendiri (mis. gerobak ke
 2. Isi **komposisinya** dengan barang yang akan masuk ke stok cabang, mis. Cup Kopi Isi 1 pcs. Yang masuk ke cabang = bahan di komposisi × jumlah kiriman.
 3. Produk Jual **tanpa komposisi** yang punya stok sendiri (mis. pack biji kopi Roastery) dikirim sebagai barang itu sendiri.
 4. Gudang dan cabang tujuan wajib punya **Kas Tunai** aktif.
+5. Nyalakan saklar **Jenis Pembeli di POS** di **Cabang → Edit** (cabang gudang, bagian Config POS). Bawaannya **OFF**: selama OFF, POS gudang hanya berjualan biasa (Retail) dan pilihan Kirim ke Cabang tidak muncul.
 
 ## Cara Pakai
 

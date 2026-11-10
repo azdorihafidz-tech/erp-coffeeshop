@@ -440,6 +440,20 @@
                                 </div>
                             </div>
                         </div>
+                        {{-- 2026-11-10 — saklar Jenis Pembeli di POS (hanya Gudang Pusat / Roastery, bawaan OFF) --}}
+                        @php $tipeJenisPembeli = \App\Models\Cabang::TIPE_JENIS_PEMBELI; @endphp
+                        <div id="wrapJenisPembeliAktif" class="border-top pt-2 mb-2 {{ in_array(old('tipe', $cabang->tipe?->value), $tipeJenisPembeli, true) ? '' : 'd-none' }}"
+                            data-tipe='@json($tipeJenisPembeli)'>
+                            <div class="form-check form-switch">
+                                <input type="hidden" name="jenis_pembeli_aktif" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="jenisPembeliAktif" name="jenis_pembeli_aktif" value="1"
+                                    {{ old('jenis_pembeli_aktif', $cabang->getAttribute('jenis_pembeli_aktif') ?? false) ? 'checked' : '' }}>
+                                <label class="form-check-label small fw-medium" for="jenisPembeliAktif">
+                                    Jenis Pembeli di POS <x-tooltip key="cabang.jenis_pembeli_aktif" placement="top" />
+                                </label>
+                            </div>
+                            <div class="form-text small mt-0">OFF: POS berjualan biasa (Retail). ON: muncul pilihan Retail / Wholesale / Kirim ke Cabang.</div>
+                        </div>
                         <div class="row g-2">
                             <div class="col-6">
                                 <x-input-rupiah name="take_away_fee" label="Takeaway Fee" :value="old('take_away_fee', $cabang->take_away_fee ?? 0)" />
@@ -978,6 +992,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300);
     });
     console.log('[Peta] Map listener registered');
+});
+</script>
+{{-- 2026-11-10 — saklar Jenis Pembeli hanya untuk tipe Gudang Pusat / Roastery --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var wrap = document.getElementById('wrapJenisPembeliAktif');
+    var tipe = document.getElementById('tipe');
+    if (!wrap || !tipe) return;
+    var boleh = JSON.parse(wrap.dataset.tipe || '[]');
+    tipe.addEventListener('change', function () { wrap.classList.toggle('d-none', boleh.indexOf(tipe.value) < 0); });
 });
 </script>
 @endpush

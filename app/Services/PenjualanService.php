@@ -93,6 +93,12 @@ class PenjualanService
         // Kirim ke Cabang (FASE_PRODUKSI_GEROBAK Tahap 2): penjualan gudang/roastery ke cabang
         // sendiri. Bukan transaksi pelanggan → tanpa meja, antrian, service charge, take away fee.
         $isKirim = ($data['customer_type'] ?? 'retail') === 'internal';
+        // 2026-11-10: Wholesale / Kirim ke Cabang hanya kalau saklar Jenis Pembeli cabang ini ON
+        if (($data['customer_type'] ?? 'retail') !== 'retail' && ! $cabang->jenisPembeliTampil()) {
+            throw new \Exception(in_array($cabang->tipe?->value, Cabang::TIPE_JENIS_PEMBELI, true)
+                ? 'Jenis Pembeli (Wholesale / Kirim ke Cabang) belum dinyalakan untuk cabang ini. Nyalakan di Cabang → Edit → Jenis Pembeli di POS.'
+                : 'Wholesale / Kirim ke Cabang hanya bisa dari cabang Gudang Pusat atau Roastery.');
+        }
         if ($isKirim) {
             $this->validasiKirimCabang($cabang, $data);
             $data['tipe_transaksi'] = TipeTransaksi::Takeaway->value;

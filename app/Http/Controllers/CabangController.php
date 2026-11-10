@@ -175,6 +175,10 @@ class CabangController extends Controller
         if ($request->boolean('label_cup_form')) {
             $data['label_cup_kategori'] = array_values($request->input('label_cup_kategori', []));
         }
+        // Saklar Jenis Pembeli (2026-11-10): kolom belum ada (Update Database belum jalan) = abaikan
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('cabangs', 'jenis_pembeli_aktif')) {
+            unset($data['jenis_pembeli_aktif']);
+        }
         // Geser label (2026-11-06): kosong = 0; kolom belum ada (Update Database belum jalan) = abaikan
         foreach (['label_cup_geser_x', 'label_cup_geser_y'] as $k) {
             if (! \Illuminate\Support\Facades\Schema::hasColumn('cabangs', $k)) {

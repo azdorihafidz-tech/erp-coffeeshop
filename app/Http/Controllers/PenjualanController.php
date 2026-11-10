@@ -131,7 +131,8 @@ class PenjualanController extends Controller
             ->get();
 
         // Roastery V2 Minggu 6-7 + Kirim ke Cabang (Tahap 2): cabang tujuan utk dropdown "Kirim ke Cabang"
-        $outletList = in_array($cabangAktif?->tipe?->value, ['roastery', 'gudang_pusat'], true)
+        // 2026-11-10: hanya kalau saklar Jenis Pembeli cabang ini ON (Cabang → Edit, bawaan OFF)
+        $outletList = $cabangAktif?->jenisPembeliTampil()
             ? Cabang::where('tipe', 'cabang')->where('is_active', true)->where('id', '!=', $cabangId)->orderBy('nama_cabang')->get()
             : collect();
 

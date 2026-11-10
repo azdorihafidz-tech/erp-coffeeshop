@@ -39,7 +39,7 @@ class ReturCabangTest extends TestCase
     {
         parent::setUp();
         $u = rand(10000, 99999);
-        $this->gudang = Cabang::create(['nama_cabang' => "Gudang RC {$u}", 'kode_cabang' => "GRC{$u}", 'tipe' => 'gudang_pusat', 'is_active' => true]);
+        $this->gudang = Cabang::create(['nama_cabang' => "Gudang RC {$u}", 'kode_cabang' => "GRC{$u}", 'tipe' => 'gudang_pusat', 'is_active' => true, 'jenis_pembeli_aktif' => true]);
         $this->gerobak = Cabang::create(['nama_cabang' => "Gerobak RC {$u}", 'kode_cabang' => "RC1{$u}", 'tipe' => 'cabang', 'is_active' => true]);
         $this->gerobak2 = Cabang::create(['nama_cabang' => "Gerobak2 RC {$u}", 'kode_cabang' => "RC2{$u}", 'tipe' => 'cabang', 'is_active' => true]);
         foreach ([$this->gudang, $this->gerobak, $this->gerobak2] as $c) {

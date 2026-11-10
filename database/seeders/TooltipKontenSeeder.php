@@ -1257,6 +1257,8 @@ class TooltipKontenSeeder extends Seeder
              'content' => 'Retail: pembeli datang langsung. Wholesale: pembeli partai/B2B (dicatat terpisah di laporan). Kirim ke Cabang: dijual ke cabang sendiri — stok keluar sekarang, uang dan stok masuk di cabang baru terjadi saat cabang menekan Terima di menu Kiriman Cabang.'],
             ['key' => 'pos.outlet_tujuan', 'title' => 'Cabang Tujuan', 'modul' => 'penjualan', 'urutan' => 21,
              'content' => 'Cabang yang menerima kiriman. Yang masuk ke stok cabang = bahan di komposisi Produk Jual × jumlah (produk tanpa komposisi dikirim sebagai barang itu sendiri). Kas tunai cabang terpotong senilai kiriman saat Terima.'],
+            ['key' => 'cabang.jenis_pembeli_aktif', 'title' => 'Jenis Pembeli di POS', 'modul' => 'cabang', 'urutan' => 30,
+             'content' => 'Khusus cabang Gudang Pusat / Roastery. OFF (bawaan): POS cabang ini berjualan biasa (Retail), pilihan Jenis Pembeli tidak tampil. ON: di POS muncul pilihan Retail / Wholesale / Kirim ke Cabang. Nyalakan kalau gudang ini mengirim barang ke cabang lewat POS.'],
             ['key' => 'kiriman.qty_diterima', 'title' => 'Jumlah sampai', 'modul' => 'stok', 'urutan' => 90,
              'content' => 'Isi jumlah yang benar-benar datang. Kalau kurang dari yang dikirim, sisanya otomatis kembali ke stok pengirim dan total yang dibayar cabang ikut turun.'],
             ['key' => 'kiriman.tolak', 'title' => 'Tolak kiriman', 'modul' => 'stok', 'urutan' => 91,
