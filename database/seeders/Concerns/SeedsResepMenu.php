@@ -37,7 +37,7 @@ trait SeedsResepMenu
             $resep = ResepBumbu::where('item_id', $menu->id)->first();
             if (! $resep) {
                 $resep = ResepBumbu::create([
-                    'nama' => $menu->nama_item, 'kode' => 'RESEP-' . $menu->kode_item,
+                    'nama' => $menu->nama_item, 'kode' => ResepBumbu::kodeUntukItem($menu),
                     'item_id' => $menu->id, 'is_active' => true, 'catatan' => $catatan,
                 ]);
                 $resepBaru++;

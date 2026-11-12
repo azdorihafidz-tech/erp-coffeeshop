@@ -498,7 +498,7 @@ class MasterProdukJualController extends Controller
         if (! $resep) {
             $resep = ResepBumbu::create([
                 'nama'         => $item->nama_item,
-                'kode'         => 'RESEP-' . $item->kode_item,
+                'kode'         => ResepBumbu::kodeUntukItem($item), // maks 20 huruf (bug WONGKO PI 2026-11-12)
                 'item_id'      => $item->id,
                 'is_active'    => true,
                 'dibuat_oleh'  => auth()->id(),

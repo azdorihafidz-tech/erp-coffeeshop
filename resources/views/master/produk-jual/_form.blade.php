@@ -5,7 +5,8 @@
 --}}
 @php
     $isEdit = $item !== null;
-    $resepAwal = $isEdit ? $item->resep?->items->map(fn($ri) => [
+    // 2026-11-12: produk tanpa komposisi → [] (dulu null → RESEP_AWAL.forEach error di halaman Edit)
+    $resepAwal = $isEdit ? ($item->resep?->items ?? collect())->map(fn($ri) => [
         'item_id' => $ri->item_id, 'nama' => $ri->item?->nama_item, 'qty_per_unit' => $ri->qty_per_unit,
         'satuan' => $ri->satuan, 'is_wajib' => $ri->is_wajib, 'mode_harga' => $ri->mode_harga,
         // Fitur Import dari Bumbu Pusat (2026-09-17)

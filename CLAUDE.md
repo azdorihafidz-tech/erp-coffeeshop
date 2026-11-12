@@ -948,6 +948,16 @@ Permintaan Owner: pilihan Jenis Pembeli (Retail / Wholesale / Kirim ke Cabang) d
 - **Test** `JenisPembeliSaklarTest` 4 (42 assertion): bawaan OFF (POS tanpa pilihan, Kirim/Wholesale 422 + stok utuh, jual biasa = retail), ON (pilihan + cabang tujuan tampil, wholesale & kirim jalan), outlet biasa tetap tanpa pilihan walau kolom ON, simpan saklar dari form. Test lama Kiriman/Retur/Alur/PosUbahHarga dinyalakan saklarnya di data gudang. Tanpa kolom (migration dimundurkan di DB test): POS gudang, Edit & simpan Cabang 200/302, kirim 422 (bukan 500).
 - **Deploy**: 1 migration → Update Database di 3 tempat. Setelah itu Owner menyalakan saklar di cabang gudang/roastery yang memakai Kirim ke Cabang / Wholesale.
 
+### 4.56 🟢 Fix 500 Simpan Komposisi Produk Jual — Kode Resep Kepanjangan (2026-11-12)
+
+Owner (WONGKO PI): Edit Produk Jual "ICED PANDAN AREN LATTE" + tambah komposisi → 500 `SQLSTATE[22001] Data too long for column 'kode'`. Penyebab: komposisi pertama membuat `resep_bumbu` dengan kode `"RESEP-" . kode_item`, padahal `kode_item` boleh 30 huruf (`ProdukJualRequest`) dan `resep_bumbu.kode` hanya **20** → kode produk > 14 huruf (`KP-ICED PANDAN AREN LATTE`) selalu gagal, baik di Tambah maupun Edit. Kopi Drip tidak kena (kode pendek `PJ-MKN-015`).
+
+- `ResepBumbu::kodeUntukItem(Item)` (+ `KODE_MAKS = 20`): pola lama `RESEP-{kode_item}` kalau muat & belum dipakai, selain itu `RESEP-ID{id item}` (+ akhiran `-2`, `-3` bila bentrok). Dipakai `MasterProdukJualController::syncResep` dan seeder trait `SeedsResepMenu`. Tanpa migration (kolom tidak diubah); resep yang sudah ada tidak berubah kodenya.
+- **Ikut difix**: halaman Edit produk yang **belum punya komposisi** → `RESEP_AWAL = null` → `RESEP_AWAL.forEach` error JavaScript di akhir skrip (24 dari 68 produk di salinan go-live; tidak memblokir tombol, tapi error). `$resepAwal` kini `[]`.
+- **Cara uji yang dipakai** (ingat untuk bug form berikutnya): semua 68 Produk Jual salinan go-live dibuka di Chrome headless → klik Tambah Bahan → pilih bahan → isi form diambil dengan `FormData` → dikirim lewat HTTP test (rollback per produk) → cek komposisi +1 dan harga/varian/cabang tidak berubah. Semua lolos di data Kopi Drip; bug baru terlihat dengan kode produk panjang dari WONGKO PI.
+- Test `KomposisiKodeResepTest` 3 (kode panjang → `RESEP-ID{id}` + simpan ulang aman, kode pendek pola lama + bentrok diberi akhiran, halaman Edit tanpa komposisi `RESEP_AWAL = []`).
+- **Catatan WONGKO PI**: halaman error menampilkan detail program (Laravel debug) → `.env` server berisi `APP_DEBUG=true` (file siapan awal `false`). Harus dikembalikan `false` lalu Deploy.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1397,7 +1407,13 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 
 ### 12.23 Saklar Jenis Pembeli (2026-11-10, lihat 4.55)
 - [x] Kolom + saklar Cabang → Edit (bawaan OFF), POS & server ikut saklar, 4 test — commit lokal
-- [ ] Owner: setuju push + deploy (Update Database) di 3 tempat; di demo nyalakan saklar GP001/RST001 kalau mau mencoba Kirim ke Cabang
+- [x] Push + deploy di 3 tempat — dikonfirmasi Owner 2026-11-12
+- [ ] Di demo nyalakan saklar GP001/RST001 kalau mau mencoba Kirim ke Cabang
+
+### 12.24 Fix Kode Resep Kepanjangan (2026-11-12, lihat 4.56)
+- [x] `ResepBumbu::kodeUntukItem`, fix `RESEP_AWAL` null, 3 test — commit lokal
+- [ ] Owner: setuju push + deploy (tanpa migration, cukup Update from Remote → Deploy) di 3 tempat, lalu coba simpan lagi ICED PANDAN AREN LATTE di WONGKO PI
+- [ ] WONGKO PI: `.env` `APP_DEBUG=false` lalu Deploy
 
 ---
 
