@@ -10,7 +10,7 @@ class PanduanRequest extends FormRequest
     public function authorize(): bool
     {
         $role = $this->user()?->role?->value;
-        return in_array($role, ['owner', 'admin_pusat']);
+        return in_array($role, ['owner', 'teknisi', 'admin_pusat']);
     }
 
     public function rules(): array

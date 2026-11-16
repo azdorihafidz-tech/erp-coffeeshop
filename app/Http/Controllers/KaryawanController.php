@@ -77,7 +77,7 @@ class KaryawanController extends Controller
             'buat_akun_login' => 'nullable|in:1',
             'user_email'      => 'required_if:buat_akun_login,1|nullable|email|unique:users,email',
             'user_role'       => ['required_if:buat_akun_login,1', 'nullable',
-                Rule::in(collect(RoleUser::cases())->reject(fn($r) => $r === RoleUser::Owner)->pluck('value')->toArray())],
+                Rule::in(RoleUser::nilaiUntukPelanggan(false))],
         ]);
 
         $data = $request->validated();
@@ -201,7 +201,7 @@ class KaryawanController extends Controller
             $emailRules[] = 'required_if:buat_akun_login,1';
         }
 
-        $validRoles = collect(RoleUser::cases())->reject(fn($r) => $r === RoleUser::Owner)->pluck('value')->toArray();
+        $validRoles = RoleUser::nilaiUntukPelanggan(false);
         $roleRules = ['nullable', Rule::in($validRoles)];
         if (!$hasUser) {
             $roleRules[] = 'required_if:buat_akun_login,1';

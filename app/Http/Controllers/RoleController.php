@@ -15,7 +15,7 @@ class RoleController extends Controller
      */
     public function index()
     {
-        $roles = collect(RoleUser::cases())->map(function (RoleUser $role) {
+        $roles = collect(RoleUser::untukPelanggan())->map(function (RoleUser $role) {
             $userCount = \App\Models\User::where('role', $role->value)->count();
             $permissionIds = DB::table('role_permissions')
                 ->where('role', $role->value)
@@ -31,7 +31,9 @@ class RoleController extends Controller
             ];
         });
 
+        // Paket: izin modul yang tidak termasuk paket tidak ditampilkan (centangannya tetap tersimpan)
         $permissions = Permission::orderBy('group')->orderBy('name')->get()
+            ->filter(fn ($p) => \App\Support\Paket::izinDiizinkan($p->name))
             ->groupBy('group');
 
         return view('role.index', compact('roles', 'permissions'));
@@ -43,7 +45,7 @@ class RoleController extends Controller
     public function updatePermissions(Request $request, string $role)
     {
         // Validasi role valid
-        $validRoles = collect(RoleUser::cases())->pluck('value')->toArray();
+        $validRoles = RoleUser::nilaiUntukPelanggan();
         if (!in_array($role, $validRoles)) {
             abort(404, 'Role tidak ditemukan.');
         }
@@ -54,6 +56,12 @@ class RoleController extends Controller
         ]);
 
         $permissionIds = $request->input('permission_ids', []);
+
+        // Paket: centangan izin modul di luar paket tidak tampil di form → jangan ikut terhapus
+        $tersembunyi = DB::table('role_permissions as rp')->join('permissions as p', 'p.id', '=', 'rp.permission_id')
+            ->where('rp.role', $role)->get(['p.id', 'p.name'])
+            ->reject(fn ($p) => \App\Support\Paket::izinDiizinkan($p->name))->pluck('id')->all();
+        $permissionIds = array_values(array_unique(array_merge(array_map('intval', $permissionIds), $tersembunyi)));
 
         // Hapus semua permission lama untuk role ini
         DB::table('role_permissions')->where('role', $role)->delete();

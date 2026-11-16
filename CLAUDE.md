@@ -958,6 +958,32 @@ Owner (WONGKO PI): Edit Produk Jual "ICED PANDAN AREN LATTE" + tambah komposisi 
 - Test `KomposisiKodeResepTest` 3 (kode panjang → `RESEP-ID{id}` + simpan ulang aman, kode pendek pola lama + bentrok diberi akhiran, halaman Edit tanpa komposisi `RESEP_AWAL = []`).
 - **Catatan WONGKO PI**: halaman error menampilkan detail program (Laravel debug) → `.env` server berisi `APP_DEBUG=true` (file siapan awal `false`). Harus dikembalikan `false` lalu Deploy.
 
+### 4.57 🟡 Porting Dimsum 4.50–4.53 — Tahap A: Akun Tim IT (2026-11-16)
+
+Sumber: `erp-dimsum/PORTING_DIMSUM_4.50-4.53.md` (folder dimsum hanya dibaca). Rancangan + audit + daftar bug: **`RANCANGAN_PORTING_DIMSUM.md`** (disetujui Owner "setuju semua saran": K1 pembagian modul, K2 semua bug di Tahap P, K3 perbaiki bug 16 walau angka Laba Rugi Formal berubah, K4 akun Tim IT dari `.env` per instalasi). Urutan: **A Tim IT → B Paket → P perbaikan bug → C Stok Opname → D Kamus → E aturan + skrip deploy gabungan**. Deploy hanya di akhir (Tahap E).
+
+- Migration `2026_11_16_100001` ENUM `users.role` + `teknisi`; `down()` menolak kalau masih ada akun Tim IT (MySQL akan mengosongkan nilainya).
+- `RoleUser::Teknisi` (label "Tim IT", akses semua cabang), `RoleUser::untukPelanggan($termasukOwner)` / `nilaiUntukPelanggan()` — dipakai Role & Hak Akses, form/validasi User, form/validasi Karyawan.
+- `User::isTeknisi()`, **`User::aksesPenuh()`** (Owner atau Tim IT), `scopePelanggan()`. `Gate::before`, `hasPermission`, `getPermissions`, `RoleMiddleware` (Tim IT lolos grup `role:owner…`), Update Database, Reset Go-Live, edit/batal order lintas hari, Neraca modal Owner, sidebar (Role & Hak Akses, Jenis Olahan, Tooltip/Panduan Helper, Update Database), 6 FormRequest + view cuti/evaluasi/permintaan stok yang menyebut `'owner'` → ikut Tim IT. Tetap khusus Owner: penerima notifikasi Owner (`NotificationService`), penjaga "Owner terakhir".
+- **Tersembunyi**: Manajemen User (daftar, statistik, cari) memakai `pelanggan()`; show/edit/update/hapus/aktif/reset akun Tim IT → 404; role `teknisi` ditolak di form User; Role & Hak Akses tanpa Tim IT; pilihan kepala cabang `pelanggan()`.
+- Menu **Pengaturan → Tim IT** (`tim-it.*`, `role:teknisi`): tambah, ganti kata sandi (min 12, huruf + angka), aktif/nonaktif (bukan diri sendiri / akun aktif terakhir). **Keamanan → Aktivitas Tim IT** (khusus Tim IT, Owner 403): middleware `CatatAktivitasTeknisi` (semua non-GET Tim IT: route, url, method, IP, status — isi formulir tidak disimpan) + listener Login. Audit Log menyembunyikan log `TimIT` & semua aktivitas ber-causer akun Tim IT dari pengguna usaha (index, filter, pilihan user, detail → 404).
+- Panduan `tim-it`, `aktivitas-tim-it`; tooltip `tim_it.password`. Kamus menyusul Tahap D. Akun Tim IT pertama dibuat skrip deploy Tahap E dari `.env` (`TEKNISI_NAMA/EMAIL/PASSWORD`).
+- **Test** `TimItTest` 6 (81 assertion): akses penuh termasuk halaman `role:owner`, Owner & kasir tidak berubah, tersembunyi dari Owner (user/role/form, 404, role teknisi ditolak), kelola akun, aktivitas tercatat + hanya Tim IT melihat + Audit Log tersaring, rollback ditolak bila ada akun Tim IT.
+- **Smoke DB dev (salinan go-live, rollback)**: Tim IT 103 link sidebar (99×200, 2×302, 2×404 sama dengan Owner), Owner 101 link sama seperti sebelumnya tanpa menu Tim IT, kasir tanpa menu Tim IT.
+- **Temuan baru (bug 17, dicatat untuk Tahap P)**: kasir **tanpa cabang** (akun contoh `kasir.o1`/`kasir.o2` di go-live) → Layout Meja & Antrian Kasir error 500 (`KasirMejaController::resolveCabangId()` mengembalikan null). Bug lama, bukan dari Tahap A.
+- **Temuan (belum diubah)**: role Owner bisa diberikan oleh Admin Pusat/Manajer Cabang di form User (dimsum 4.43 membatasinya ke Owner saja) — ditawarkan ke Owner bersama Tahap P.
+
+### 4.58 🟡 Porting Dimsum — Tahap B: Paket Modul + Masa Langganan (2026-11-16)
+
+Mengikuti dimsum 4.53 Tahap B–C. Satu commit bersama Tahap A (regresi Tahap A sempat tercampur edit Tahap B, jadi diuji sekaligus).
+
+- **`App\Support\Paket`**: 17 modul coffeeshop (`MODUL`: penjualan, **meja_qr**, antrian, loyalty, stok, produksi, kiriman, stok_opname, **roastery**, pembelian, keuangan, akuntansi, analisis, sdm, penggajian, evaluasi, aset) + ketergantungan; preset Dasar (Penjualan+Stok) / Menengah / Lengkap; peta `IZIN` & `ROUTE` (pola `Str::is`, izin/route di luar peta = **inti**, selalu aktif). Inti: Dashboard, Cabang, User, Role, Pengaturan Umum, **Kas & Transaksi** (`keuangan.*` izin), Panduan, Keamanan, Update Database, Notifikasi, Profil. Master Bumbu Pusat ikut Penjualan; Closing Periode ikut Keuangan Lanjutan; halaman menu QR pelanggan (`order.*`) ikut Meja & QR.
+- Tabel `lisensi` (migration `2026_11_16_200001`, isi awal = semua modul tanpa batas → tidak ada yang berubah), segel HMAC `APP_KEY`; segel rusak = **mode lunak** (tetap jalan, pita merah + notifikasi Tim IT sekali sehari, dicek `triggerPeriksaSegelIfNeeded` sekali per jam). Tanpa tabel (sebelum Update Database) = semua modul aktif (`Paket::siap()`).
+- Penolakan modul mati: `Gate::before`, `User::hasPermission`/`getPermissions` (juga Owner & Tim IT), middleware `CekPaket` (halaman/JSON 403 "tidak termasuk paket"), Role & Hak Akses menyembunyikan izinnya **dan mempertahankan centangan tersembunyi saat disimpan**, Transaksi Berulang / penyusutan aset / loyalty terjadwal berhenti. 9 link sidebar yang izinnya generik dibungkus `Paket::aktif()` (Dashboard Keuangan, Laporan Keuangan, laporan Keuangan/Transfer/Per Kategori/Audit Bukti/Saldo Kas, BEP, Cabang vs Cabang).
+- Masa langganan: `<x-pita-langganan />` (kuning H-14 untuk Owner/Tim IT, merah masa tenggang semua user, baca-saja), middleware `ModeBacaSaja` (non-GET ditolak, JSON 423; pengecualian logout, kata sandi, ganti cabang, notifikasi, `*.export*`, pratinjau/kalkulator; Tim IT tidak terkena).
+- Menu **Pengaturan → Paket & Langganan** (`paket.*`, `role:teknisi`), perubahan tercatat di Aktivitas Tim IT. Panduan `paket-langganan` + tambahan `<!-- PAKET-453 -->` di `role-hak-akses`, tooltip `paket.modul`, `paket.aktif_sampai`. `StokOpnameNotification` disalin (dipakai juga Tahap C). `TestCase::setUp` → `Paket::lupakan()`.
+- **Test** `tests/Feature/Paket/*` 14 (359 assertion): `PaketSidebarGuardTest` (setiap link sidebar terpetakan/inti + link modul mati tidak tampil untuk Owner), `PaketModulTest` (peta izin coffeeshop, semua izin DB terpetakan/inti, modul mati untuk semua termasuk Owner/Tim IT, menu QR pelanggan ikut tertutup, Role & Hak Akses, ketergantungan, halaman Tim IT, segel rusak), `PaketLanggananTest` (status bertahap, pita, baca-saja termasuk POS 423, Tim IT tidak terkena, tenggang normal). Uji tanpa tabel `lisensi` (migration dimundurkan): Branding/JenisPembeli/TimIt 19 lulus.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1414,6 +1440,15 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] `ResepBumbu::kodeUntukItem`, fix `RESEP_AWAL` null, 3 test — commit lokal
 - [ ] Owner: setuju push + deploy (tanpa migration, cukup Update from Remote → Deploy) di 3 tempat, lalu coba simpan lagi ICED PANDAN AREN LATTE di WONGKO PI
 - [ ] WONGKO PI: `.env` `APP_DEBUG=false` lalu Deploy
+
+### 12.25 Porting Dimsum 4.50–4.53 (2026-11-16, lihat 4.57, `RANCANGAN_PORTING_DIMSUM.md`)
+- [x] Langkah 0 audit + rancangan, disetujui Owner
+- [x] **Tahap A** Akun Tim IT + Aktivitas Tim IT
+- [x] **Tahap B** Paket modul + masa langganan (4.58)
+- [ ] **Tahap P** perbaikan bug 1–17
+- [ ] **Tahap C** Stok Opname lengkap
+- [ ] **Tahap D** Kamus Menu
+- [ ] **Tahap E** aturan permanen + skrip deploy gabungan (gladi → demo → go-live → WONGKO PI)
 
 ---
 

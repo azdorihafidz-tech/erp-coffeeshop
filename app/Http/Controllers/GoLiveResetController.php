@@ -35,11 +35,7 @@ class GoLiveResetController extends Controller
 
     private function assertOwner(): void
     {
-        $user = auth()->user();
-        $role = $user?->role;
-        $roleValue = $role instanceof RoleUser ? $role->value : (string) $role;
-
-        if ($roleValue !== RoleUser::Owner->value) {
+        if (! auth()->user()?->aksesPenuh()) {
             abort(403, 'Hanya Owner yang boleh menjalankan reset production.');
         }
     }

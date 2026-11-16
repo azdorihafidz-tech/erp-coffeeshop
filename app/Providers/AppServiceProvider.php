@@ -125,9 +125,13 @@ class AppServiceProvider extends ServiceProvider
         // $brand di semua view (data dimuat saat pertama dipakai, bukan di sini)
         \Illuminate\Support\Facades\View::share('brand', $this->app->make(\App\Support\Branding::class));
 
-        // Owner bypass semua gate check
+        // Owner & Tim IT bypass semua gate check
         Gate::before(function (User $user, string $ability) {
-            if ($user->role?->value === 'owner') {
+            // Paket: izin milik modul yang tidak termasuk paket ditolak untuk SEMUA user
+            if (! \App\Support\Paket::izinDiizinkan($ability)) {
+                return false;
+            }
+            if ($user->aksesPenuh()) {
                 return true;
             }
         });
@@ -171,12 +175,42 @@ class AppServiceProvider extends ServiceProvider
         // Pusher real-time: kirim signal ke bell lonceng setiap notifikasi database masuk
         Event::listen(NotificationSent::class, SendBellPusherSignal::class);
 
+        // Aktivitas Tim IT — catat setiap login akun Tim IT
+        Event::listen(\Illuminate\Auth\Events\Login::class, function ($e) {
+            if (method_exists($e->user, 'isTeknisi') && $e->user->isTeknisi()) {
+                try {
+                    activity('TimIT')->causedBy($e->user)->withProperties(['ip' => request()->ip()])->log('Login');
+                } catch (\Throwable $ex) {
+                    \Log::warning('Gagal mencatat login Tim IT: ' . $ex->getMessage());
+                }
+            }
+        });
+
         // On-request recurring trigger: generate sekali per hari tanpa perlu cron
         $this->triggerRecurringIfNeeded();
+        $this->triggerPeriksaSegelIfNeeded();
+    }
+
+    /** Mode lunak segel lisensi: Tim IT diberi tahu (dicek paling sering sekali per jam). */
+    private function triggerPeriksaSegelIfNeeded(): void
+    {
+        $kunci = 'periksa_segel_' . now()->format('YmdH');
+        if (Cache::has($kunci)) {
+            return;
+        }
+        Cache::put($kunci, true, now()->addHour());
+        try {
+            \App\Support\Paket::peringatkanSegelRusak();
+        } catch (\Throwable $e) {
+            Log::warning('Periksa segel lisensi gagal: ' . $e->getMessage());
+        }
     }
 
     private function triggerRecurringIfNeeded(): void
     {
+        if (! \App\Support\Paket::aktif('keuangan') || \App\Support\Paket::bacaSaja()) {
+            return; // Transaksi Berulang tidak termasuk paket / langganan habis (baca-saja)
+        }
         $cacheKey = 'recurring_run_' . now()->toDateString();
         if (Cache::has($cacheKey)) {
             return;

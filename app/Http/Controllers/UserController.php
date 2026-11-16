@@ -15,7 +15,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $authUser = $request->user();
-        $query = User::with('cabangs');
+        $query = User::with('cabangs')->pelanggan(); // akun Tim IT tidak tampil ke pelanggan
 
         // Manajer hanya lihat user di cabangnya sendiri
         if ($authUser->role === RoleUser::ManajerCabang) {
@@ -56,11 +56,11 @@ class UserController extends Controller
             ? Cabang::aktif()->orderBy('nama_cabang')->get()
             : $authUser->cabangs()->aktif()->get();
 
-        $roles = RoleUser::cases();
+        $roles = RoleUser::untukPelanggan();
 
         $stats = [
-            'total'  => User::count(),
-            'aktif'  => User::where('is_active', true)->count(),
+            'total'  => User::pelanggan()->count(),
+            'aktif'  => User::pelanggan()->where('is_active', true)->count(),
             'owner'  => User::where('role', 'owner')->count() + User::where('role', 'admin_pusat')->count(),
             'staff'  => User::whereIn('role', ['kasir', 'operator_produksi'])->count(),
         ];
@@ -71,7 +71,7 @@ class UserController extends Controller
     public function create(Request $request)
     {
         $authUser = $request->user();
-        $roles = RoleUser::cases();
+        $roles = RoleUser::untukPelanggan();
         $cabangs = $authUser->canAccessAllBranches()
             ? Cabang::aktif()->orderBy('nama_cabang')->get()
             : $authUser->cabangs()->aktif()->get();
@@ -110,12 +110,14 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        $this->tolakTimIt($user);
         $user->load('cabangs', 'karyawan');
         return view('user.show', compact('user'));
     }
 
     public function edit(Request $request, User $user)
     {
+        $this->tolakTimIt($user);
         $authUser = $request->user();
 
         // Manajer hanya bisa edit user di cabangnya
@@ -127,7 +129,7 @@ class UserController extends Controller
             }
         }
 
-        $roles   = RoleUser::cases();
+        $roles   = RoleUser::untukPelanggan();
         $cabangs = $authUser->canAccessAllBranches()
             ? Cabang::aktif()->orderBy('nama_cabang')->get()
             : $authUser->cabangs()->aktif()->get();
@@ -140,6 +142,7 @@ class UserController extends Controller
 
     public function update(UserRequest $request, User $user)
     {
+        $this->tolakTimIt($user);
         $data = $request->validated();
 
         $updateData = [
@@ -174,6 +177,7 @@ class UserController extends Controller
 
     public function destroy(User $user, CascadeDeleteService $cascadeService)
     {
+        $this->tolakTimIt($user);
         // Safety: tidak bisa hapus diri sendiri
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menghapus akun Anda sendiri.');
@@ -203,6 +207,7 @@ class UserController extends Controller
      */
     public function toggleAktif(User $user)
     {
+        $this->tolakTimIt($user);
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menonaktifkan akun sendiri.');
         }
@@ -218,6 +223,7 @@ class UserController extends Controller
      */
     public function resetPassword(Request $request, User $user)
     {
+        $this->tolakTimIt($user);
         $request->validate([
             'new_password' => ['required', 'confirmed', 'min:8'],
         ], [
@@ -229,5 +235,11 @@ class UserController extends Controller
         $user->update(['password' => Hash::make($request->new_password)]);
 
         return back()->with('success', "Password <strong>{$user->name}</strong> berhasil direset.");
+    }
+
+    /** Akun Tim IT dikelola di menu Tim IT, tidak terlihat dari Manajemen User. */
+    private function tolakTimIt(User $user): void
+    {
+        abort_if($user->isTeknisi(), 404);
     }
 }

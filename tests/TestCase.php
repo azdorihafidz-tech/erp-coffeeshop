@@ -15,5 +15,7 @@ abstract class TestCase extends BaseTestCase
         // proses phpunit → regresi penuh mati "Maximum execution time" di tengah.
         // Reset per test supaya hanya test itu sendiri yang dibatasi waktu.
         set_time_limit(0);
+
+        \App\Support\Paket::lupakan(); // status paket disimpan statis per proses
     }
 }

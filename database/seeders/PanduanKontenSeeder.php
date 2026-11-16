@@ -87,6 +87,90 @@ class PanduanKontenSeeder extends Seeder
         $this->kirimanCabangUpdate();
         // Retur Cabang (2026-11-06)
         $this->returCabangUpdate();
+        // Tim IT & Aktivitas Tim IT (porting dimsum 4.53, 2026-11-16)
+        $this->timItUpdate();
+    }
+
+    private function timItUpdate(): void
+    {
+        Panduan::updateOrCreate(['slug' => 'tim-it'], [
+            'judul'  => 'Tim IT (akun penyedia aplikasi)',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+Akun **Tim IT** dipakai tim penyedia aplikasi untuk merawat dan memantau aplikasi. Hak aksesnya penuh seperti Owner. Akun ini **tidak terlihat oleh pengguna usaha**: tidak ada di Manajemen User, Role & Hak Akses, atau pilihan role, dan tidak bisa diubah Owner.
+
+## Cara Pakai
+1. Akun Tim IT pertama dibuat oleh skrip deploy dari isian `.env` server (`TEKNISI_NAMA`, `TEKNISI_EMAIL`, `TEKNISI_PASSWORD`). Hapus baris itu dari `.env` setelah deploy.
+2. Login dengan akun itu, buka **Pengaturan → Tim IT**.
+3. **Tambah** satu akun untuk setiap orang IT (nama, email, kata sandi minimal 12 karakter berisi huruf dan angka).
+4. **Ganti kata sandi** atau **Nonaktifkan** akun orang yang sudah tidak bertugas.
+
+## Peringatan
+- Pakai kata sandi **berbeda di setiap instalasi**. Batas salah kata sandi tetap berlaku.
+- Semua login dan tindakan Tim IT tercatat di **Keamanan → Aktivitas Tim IT**. Hanya Tim IT yang bisa melihatnya; catatan Tim IT juga disembunyikan dari Audit Log untuk pengguna usaha.
+- Akun sendiri dan akun Tim IT aktif terakhir tidak bisa dinonaktifkan.
+- Verifikasi dua langkah belum ada. Jaga kata sandi baik-baik.
+MARKDOWN,
+            'modul'  => 'lainnya',
+            'urutan' => 140,
+            'aktif'  => true,
+        ]);
+
+        Panduan::updateOrCreate(['slug' => 'aktivitas-tim-it'], [
+            'judul'  => 'Aktivitas Tim IT',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+Catatan internal tim IT: kapan akun Tim IT masuk ke aplikasi ini dan apa yang dilakukan.
+
+## Cara Pakai
+1. Buka **Keamanan → Aktivitas Tim IT**.
+2. Pilih tanggal **Dari** – **Sampai** (bawaan 30 hari terakhir), klik **Tampilkan**.
+
+## Isi catatan
+- **Login**: waktu dan alamat IP.
+- **Tindakan**: setiap simpan/ubah/hapus — nama menu, alamat halaman, metode, alamat IP. Isi formulir (mis. kata sandi) tidak disimpan.
+
+## Peringatan
+- **Khusus Tim IT.** Owner tidak melihat menu ini. Catatan tidak bisa dihapus dari halaman ini.
+- Di **Audit Log**, pengguna usaha tidak melihat catatan Tim IT maupun perubahan data yang dilakukan akun Tim IT; Tim IT melihat semuanya.
+MARKDOWN,
+            'modul'  => 'lainnya',
+            'urutan' => 141,
+            'aktif'  => true,
+        ]);
+
+        Panduan::updateOrCreate(['slug' => 'paket-langganan'], [
+            'judul'  => 'Paket & Langganan',
+            'konten' => <<<'MARKDOWN'
+## Tentang
+Menentukan **modul** yang boleh dipakai usaha ini sesuai kesepakatan pembayaran, dan **masa langganan**. Hanya akun Tim IT yang bisa membuka halaman ini.
+
+## Cara Pakai
+1. Buka **Pengaturan → Paket & Langganan**.
+2. Klik **Dasar**, **Menengah**, atau **Lengkap** untuk mengisi centangan cepat, lalu sesuaikan per modul kalau perlu (tampil **Kustom**). Modul yang dibutuhkan ikut menyala otomatis; mematikan modul ikut mematikan modul yang membutuhkannya.
+3. Isi **Aktif sampai** (kosong = tanpa batas) dan **Masa tenggang** (bawaan 7 hari).
+4. Klik **Simpan**.
+
+## Akibat
+- **Modul mati**: menu, tombol, dan centangannya di Role & Hak Akses hilang untuk semua user, termasuk Owner. Alamatnya langsung menampilkan "Fitur … tidak termasuk paket Anda". Pekerjaan otomatis modul itu berhenti. **Data tidak dihapus.**
+- **Meja & Pesan QR** mati → halaman menu QR untuk pelanggan juga tertutup.
+- **Masa langganan**: 14 hari sebelum berakhir → pita kuning untuk Owner. Lewat tanggal → pita merah untuk semua user, aplikasi masih normal selama masa tenggang. Lewat masa tenggang → **baca-saja**: login, melihat data, dan mengunduh laporan tetap bisa; simpan/ubah/hapus dan transaksi POS ditolak. Tim IT tidak terkena baca-saja.
+- Semua perubahan tercatat di **Aktivitas Tim IT**.
+
+## Peringatan
+- Isi paket diberi **segel**. Kalau diubah langsung di database, segel tidak cocok: aplikasi tetap berjalan, tetapi Tim IT mendapat pita merah & notifikasi sampai paket disimpan ulang dari halaman ini.
+- Instalasi lama otomatis **Lengkap tanpa batas tanggal** sampai diatur.
+- Jangan mengganti `APP_KEY` di `.env` — segel ikut rusak.
+MARKDOWN,
+            'modul'  => 'lainnya',
+            'urutan' => 142,
+            'aktif'  => true,
+        ]);
+
+        $role = Panduan::where('slug', 'role-hak-akses')->first();
+        if ($role && ! str_contains((string) $role->konten, '<!-- PAKET-453 -->')) {
+            $role->update(['konten' => rtrim((string) $role->konten) . "\n\n<!-- PAKET-453 -->\n## Izin yang tidak tampil\nCentangan untuk modul yang **tidak termasuk paket** aplikasi usaha Anda tidak ditampilkan di halaman ini, dan menunya tidak muncul untuk siapa pun (termasuk Owner). Centangan lama tetap tersimpan dan muncul lagi kalau modul itu diaktifkan oleh tim IT penyedia aplikasi.\n"]);
+        }
     }
 
     /**

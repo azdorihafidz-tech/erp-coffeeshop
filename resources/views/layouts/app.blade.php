@@ -625,7 +625,7 @@
             <span>Pelanggan</span>
         </a>
         @endcan
-        @if(isset($authUser) && in_array($authUser->role?->value, ['owner', 'admin_pusat']))
+        @if(isset($authUser) && ($authUser->aksesPenuh() || $authUser->role?->value === 'admin_pusat'))
         <a href="{{ route('master.jenis-olahan.index') }}"
            class="nav-link {{ request()->routeIs('master.jenis-olahan.*') ? 'active' : '' }}">
             <i class="bi bi-list-check"></i>
@@ -876,20 +876,22 @@
         @canany(['keuangan.view', 'keuangan.create', 'setoran.view', 'kategori.view', 'bep.view', 'coa.view', 'transfer_antar_kas.view', 'closing.view'])
         <div class="nav-section-title">Keuangan</div>
         @can('keuangan.view')
+        @if(\App\Support\Paket::aktif('keuangan'))
         <a href="{{ route('keuangan.dashboard') }}" class="nav-link {{ request()->routeIs('keuangan.dashboard') ? 'active' : '' }}">
             <i class="bi bi-speedometer2"></i>
             <span>Dashboard Keuangan</span>
         </a>
+        @endif
         <a href="{{ route('keuangan.index') }}" class="nav-link {{ request()->routeIs('keuangan.index','keuangan.create','keuangan.edit') ? 'active' : '' }}">
             <i class="bi bi-cash-stack"></i>
             <span>Kas & Transaksi</span>
         </a>
-        @can('laporan.view')
+        @if(\App\Support\Paket::aktif('keuangan') && auth()->user()->can('laporan.view'))
         <a href="{{ route('keuangan.laporan') }}" class="nav-link {{ request()->routeIs('keuangan.laporan') ? 'active' : '' }}">
             <i class="bi bi-file-earmark-text"></i>
             <span>Laporan Keuangan</span>
         </a>
-        @endcan
+        @endif
         @endcan
         @can('closing.view')
         <a href="{{ route('closing.index') }}" class="nav-link {{ request()->routeIs('closing.*') ? 'active' : '' }}">
@@ -1104,11 +1106,11 @@
                 <i class="bi bi-boxes"></i><span>Stok</span>
             </a>
             @endcan
-            @can('keuangan.view')
+            @if(\App\Support\Paket::aktif('keuangan') && auth()->user()->can('keuangan.view'))
             <a href="{{ route('laporan.keuangan.laba-rugi') }}" class="nav-link {{ request()->routeIs('laporan.keuangan.*') ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i><span>Keuangan</span>
             </a>
-            @endcan
+            @endif
             @canany(['karyawan.view', 'absensi.view', 'penggajian.view'])
             <a href="{{ route('laporan.hr.absensi') }}" class="nav-link {{ request()->routeIs('laporan.hr.*') ? 'active' : '' }}">
                 <i class="bi bi-people"></i><span>HR / SDM</span>
@@ -1119,17 +1121,17 @@
                 <i class="bi bi-building-gear"></i><span>Aset</span>
             </a>
             @endcan
-            @can('bep.view')
+            @if(\App\Support\Paket::aktif('analisis') && auth()->user()->can('bep.view'))
             <a href="{{ route('laporan.bep') }}" class="nav-link {{ request()->routeIs('laporan.bep','laporan.bep.per-cabang') ? 'active' : '' }}">
                 <i class="bi bi-graph-up-arrow"></i><span>BEP</span>
             </a>
-            @endcan
+            @endif
             @can('laporan.bep_otomatis.view')
             <a href="{{ route('laporan.bep-otomatis.index') }}" class="nav-link {{ request()->routeIs('laporan.bep-otomatis.*') ? 'active' : '' }}">
                 <i class="bi bi-speedometer2"></i><span>BEP Otomatis</span>
             </a>
             @endcan
-            @can('keuangan.view')
+            @if(\App\Support\Paket::aktif('keuangan') && auth()->user()->can('keuangan.view'))
             <a href="{{ route('laporan.setoran') }}" class="nav-link {{ request()->routeIs('laporan.setoran') ? 'active' : '' }}">
                 <i class="bi bi-arrow-left-right"></i><span>Transfer / Perpindahan Dana</span>
             </a>
@@ -1142,7 +1144,7 @@
             <a href="{{ route('laporan.saldo-kas') }}" class="nav-link {{ request()->routeIs('laporan.saldo-kas') ? 'active' : '' }}">
                 <i class="bi bi-wallet2"></i><span>Saldo Kas</span>
             </a>
-            @endcan
+            @endif
             @can('laporan.setoran_harian.view')
             <a href="{{ route('laporan.setoran-harian.index') }}" class="nav-link {{ request()->routeIs('laporan.setoran-harian.*') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i><span>Setoran Harian</span>
@@ -1198,7 +1200,7 @@
                 <i class="bi bi-cash-coin"></i><span>Laporan Setoran Kasir</span>
             </a>
             @endcan
-            @if(auth()->check() && auth()->user()->canAccessAllBranches())
+            @if(auth()->check() && auth()->user()->canAccessAllBranches() && \App\Support\Paket::aktif('analisis'))
             <a href="{{ route('laporan.cabang-vs-cabang') }}" class="nav-link {{ request()->routeIs('laporan.cabang-vs-cabang') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart-steps"></i><span>Cabang vs Cabang</span>
             </a>
@@ -1207,7 +1209,7 @@
         @endcan
 
         <!-- PENGATURAN -->
-        @if(auth()->check() && (auth()->user()->can('cabang.view') || auth()->user()->can('user.view') || (isset($authUser) && $authUser->role?->value === 'owner')))
+        @if(auth()->check() && (auth()->user()->can('cabang.view') || auth()->user()->can('user.view') || (isset($authUser) && $authUser->aksesPenuh())))
         <div class="nav-section-title">Pengaturan</div>
         @endif
         @can('cabang.view')
@@ -1224,7 +1226,7 @@
             <span>Manajemen User</span>
         </a>
         @endcan
-        @if(isset($authUser) && $authUser->role?->value === 'owner')
+        @if(isset($authUser) && $authUser->aksesPenuh())
         <a href="{{ route('role.index') }}"
            class="nav-link {{ request()->routeIs('role.*') ? 'active' : '' }}">
             <i class="bi bi-shield-lock"></i>
@@ -1238,6 +1240,18 @@
             <span>Pengaturan Umum</span>
         </a>
         @endcan
+        @if(isset($authUser) && $authUser->isTeknisi())
+        <a href="{{ route('tim-it.index') }}"
+           class="nav-link {{ request()->routeIs('tim-it.*') ? 'active' : '' }}">
+            <i class="bi bi-person-gear"></i>
+            <span>Tim IT</span>
+        </a>
+        <a href="{{ route('paket.index') }}"
+           class="nav-link {{ request()->routeIs('paket.*') ? 'active' : '' }}">
+            <i class="bi bi-box2-heart"></i>
+            <span>Paket & Langganan</span>
+        </a>
+        @endif
         @can('pengaturan_penggajian')
         <a href="{{ route('pengaturan.penggajian') }}"
            class="nav-link {{ request()->routeIs('pengaturan.penggajian*') ? 'active' : '' }}">
@@ -1245,7 +1259,7 @@
             <span>Pengaturan Penggajian</span>
         </a>
         @endcan
-        @if(isset($authUser) && in_array($authUser->role?->value, ['owner', 'admin_pusat']))
+        @if(isset($authUser) && ($authUser->aksesPenuh() || $authUser->role?->value === 'admin_pusat'))
         <a href="{{ route('admin.tooltips.index') }}"
            class="nav-link {{ request()->routeIs('admin.tooltips.*') ? 'active' : '' }}">
             <i class="bi bi-question-circle"></i>
@@ -1269,6 +1283,13 @@
         <!-- KEAMANAN -->
         @if(isset($authUser) && $authUser->canAny(['lihat_audit_log', 'lihat_data_terhapus', 'lihat_backup']))
         <div class="nav-section-title mt-2">Keamanan</div>
+        @if($authUser->isTeknisi())
+        <a href="{{ route('aktivitas-tim-it.index') }}"
+           class="nav-link {{ request()->routeIs('aktivitas-tim-it.*') ? 'active' : '' }}">
+            <i class="bi bi-person-badge"></i>
+            <span>Aktivitas Tim IT</span>
+        </a>
+        @endif
         @can('lihat_audit_log')
         <a href="{{ route('audit-log.index') }}"
            class="nav-link {{ request()->routeIs('audit-log.*') ? 'active' : '' }}">
@@ -1290,7 +1311,7 @@
             <span>Backup Database</span>
         </a>
         @endcan
-        @if(auth()->user()->role === \App\Enums\RoleUser::Owner)
+        @if(auth()->user()->aksesPenuh())
         <a href="{{ route('update-database.form') }}"
            class="nav-link {{ request()->routeIs('update-database.*') ? 'active' : '' }}">
             <i class="bi bi-database-up"></i>
@@ -1375,6 +1396,8 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     @endif
+
+    <x-pita-langganan />
 
     @yield('content')
 </main>

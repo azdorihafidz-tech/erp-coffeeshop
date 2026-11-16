@@ -20,7 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'cabang' => CabangMiddleware::class,
         ]);
-        $middleware->web(append: [\App\Http\Middleware\TerapkanBranding::class]);
+        $middleware->web(append: [
+            \App\Http\Middleware\TerapkanBranding::class,
+            \App\Http\Middleware\CatatAktivitasTeknisi::class, // Aktivitas Tim IT
+            \App\Http\Middleware\CekPaket::class,              // modul di luar paket → "tidak termasuk paket"
+            \App\Http\Middleware\ModeBacaSaja::class,          // langganan habis → simpan/ubah ditolak
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Sprint Closing Periode — periode terkunci tampil sebagai pesan biasa,

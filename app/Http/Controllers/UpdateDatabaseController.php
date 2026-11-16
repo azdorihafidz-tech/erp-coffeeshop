@@ -19,9 +19,7 @@ class UpdateDatabaseController extends Controller
 
     private function assertOwner(): void
     {
-        $role = auth()->user()?->role;
-        $roleValue = $role instanceof RoleUser ? $role->value : (string) $role;
-        abort_if($roleValue !== RoleUser::Owner->value, 403, 'Hanya Owner yang boleh menjalankan update database.');
+        abort_unless(auth()->user()?->aksesPenuh(), 403, 'Hanya Owner yang boleh menjalankan update database.');
     }
 
     public function form()

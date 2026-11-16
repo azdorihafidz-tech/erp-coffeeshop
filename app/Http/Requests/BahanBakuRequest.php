@@ -13,7 +13,7 @@ class BahanBakuRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()?->role?->value, ['owner', 'admin_pusat', 'admin_gudang', 'manajer_cabang']);
+        return in_array($this->user()?->role?->value, ['owner', 'teknisi', 'admin_pusat', 'admin_gudang', 'manajer_cabang']);
     }
 
     protected function prepareForValidation(): void

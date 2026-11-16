@@ -1263,6 +1263,13 @@ class TooltipKontenSeeder extends Seeder
              'content' => 'Isi jumlah yang benar-benar datang. Kalau kurang dari yang dikirim, sisanya otomatis kembali ke stok pengirim dan total yang dibayar cabang ikut turun.'],
             ['key' => 'kiriman.tolak', 'title' => 'Tolak kiriman', 'modul' => 'stok', 'urutan' => 91,
              'content' => 'Semua barang kembali ke stok pengirim dengan modal semula, tidak ada uang yang berpindah. Untuk barang yang sudah diterima, gunakan Retur.'],
+            // Tim IT (porting dimsum 4.53)
+            ['key' => 'tim_it.password', 'title' => 'Kata sandi Tim IT', 'modul' => 'lainnya', 'urutan' => 1,
+             'content' => 'Minimal 12 karakter, berisi huruf dan angka. Pakai kata sandi yang berbeda di setiap instalasi usaha.'],
+            ['key' => 'paket.modul', 'title' => 'Modul aktif', 'modul' => 'lainnya', 'urutan' => 2,
+             'content' => 'Modul yang boleh dipakai usaha ini. Modul mati: menu & izin hilang untuk semua user (termasuk Owner), data tetap aman.'],
+            ['key' => 'paket.aktif_sampai', 'title' => 'Aktif sampai', 'modul' => 'lainnya', 'urutan' => 3,
+             'content' => 'Hari terakhir langganan berlaku. Kosong = tanpa batas. Sesudahnya masa tenggang, lalu baca-saja. Tim IT tidak terkena baca-saja.'],
         ];
         foreach ($kiriman as $d) {
             Tooltip::updateOrCreate(['key' => $d['key']], array_merge($d, ['aktif' => true]));

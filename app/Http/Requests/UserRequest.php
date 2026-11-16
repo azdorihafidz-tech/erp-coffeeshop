@@ -35,7 +35,7 @@ class UserRequest extends FormRequest
                 Rule::unique('users', 'email')->ignore($userId),
             ],
             'telepon'     => ['nullable', 'string', 'max:20'],
-            'role'        => ['required', Rule::enum(RoleUser::class)],
+            'role'        => ['required', Rule::in(RoleUser::nilaiUntukPelanggan())], // Tim IT tidak bisa dipilih pelanggan
             'is_active'   => ['sometimes', 'boolean'],
             'cabang_ids'  => ['nullable', 'array'],
             'cabang_ids.*'=> ['exists:cabangs,id'],
