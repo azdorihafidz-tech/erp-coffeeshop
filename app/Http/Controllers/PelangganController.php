@@ -122,7 +122,8 @@ class PelangganController extends Controller
     {
         abort_unless(auth()->user()->can('pelanggan.edit'), 403);
 
-        $pelanggan->update($request->validated());
+        // Porting dimsum 4.50 — Nonaktif = tidak muncul di pilihan pelanggan POS; riwayat & order tetap.
+        $pelanggan->update($request->validated() + ['is_active' => $request->boolean('is_active')]);
 
         return redirect()->route('pelanggan.index')
             ->with('success', 'Data pelanggan berhasil diperbarui.');
@@ -140,7 +141,7 @@ class PelangganController extends Controller
             $ringkasan = collect($deleted)->map(fn($c, $k) => "{$c} " . ($labels[$k] ?? $k))->filter()->join(', ');
 
             return redirect()->route('pelanggan.index')
-                ->with('success', "Pelanggan <strong>{$nama}</strong> beserta data terkait berhasil dihapus. ({$ringkasan})");
+                ->with('success', "Pelanggan <strong>{$nama}</strong> berhasil dihapus. Riwayat order-nya tetap tersimpan.");
         } catch (\Exception $e) {
             return back()->with('error', "Gagal menghapus pelanggan: " . $e->getMessage());
         }

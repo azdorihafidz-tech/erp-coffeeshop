@@ -94,6 +94,19 @@
                                 <input type="text" name="satuan" class="form-control @error('satuan') is-invalid @enderror"
                                     value="{{ old('satuan', $item->satuan ?? 'pcs') }}" required>
                             </div>
+                            {{-- Porting dimsum 4.50 — Jenis Menu (opsional): dipakai Laporan Laba Rugi "Per Jenis Menu" --}}
+                            @php $jenisMenuList = \App\Models\JenisOlahan::where('is_active', true)->orWhere('id', $item->jenis_olahan_id ?? 0)->orderBy('nama')->get(); @endphp
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold">Jenis Menu <span class="text-muted fw-normal">(opsional)</span>
+                                    <x-tooltip key="master_produk_jual.jenis_menu" placement="top" /></label>
+                                <select name="jenis_olahan_id" class="form-select @error('jenis_olahan_id') is-invalid @enderror">
+                                    <option value="">— Tidak dikelompokkan —</option>
+                                    @foreach($jenisMenuList as $jm)
+                                    <option value="{{ $jm->id }}" @selected(old('jenis_olahan_id', $item->jenis_olahan_id ?? null) == $jm->id)>{{ $jm->nama }}</option>
+                                    @endforeach
+                                </select>
+                                @error('jenis_olahan_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">

@@ -197,13 +197,14 @@ class StokService
             $nilaiTransaksi = 0.0;
 
             // ── Tentukan apakah adjustment ini catat transaksi keuangan ──
-            // 'salah_hitung'/'audit' = murni koreksi data, stok fisik sebenarnya
-            // tidak pernah berubah → JANGAN catat sebagai biaya/pemasukan.
             // 'susut'/'rusak'/'hilang' = kejadian ekonomi riil → tetap dicatat.
+            // Porting dimsum 4.52 (bug 15) — 'salah_hitung'/'audit' yang MENURUNKAN stok
+            // → Selisih Persediaan (6-1406; dulu tidak tercatat sehingga kerugian tidak
+            // terlihat). Yang MENAIKKAN stok tetap tidak dicatat (seperti dulu).
             // 'lainnya' ambigu → default TIDAK dicatat (aman), kecuali user
             // eksplisit centang "Catat sebagai biaya rugi?" di form.
-            $alasanTanpaKeuangan = ['salah_hitung', 'audit'];
-            $catatKeKeuangan = !in_array($alasan, $alasanTanpaKeuangan, true);
+            $alasanSelisih   = in_array($alasan, ['salah_hitung', 'audit'], true);
+            $catatKeKeuangan = ! $alasanSelisih || $qtyBaru < $stokSaat;
             if ($alasan === 'lainnya') {
                 $catatKeKeuangan = (bool) ($options['catat_sebagai_biaya'] ?? false);
             }
@@ -224,11 +225,13 @@ class StokService
                 ]);
 
                 if ($nilaiTransaksi > 0 && $catatKeKeuangan) {
-                    $kategori = KategoriTransaksi::firstOrCreate(
-                        ['kode' => 'BEBAN-STOK'],
-                        ['nama' => 'Beban Kerugian Stok', 'tipe' => 'pengeluaran',
-                         'is_system' => true, 'is_active' => true, 'urutan' => 17]
-                    );
+                    $kategori = $alasanSelisih
+                        ? KategoriTransaksi::findOrFail(\App\Support\StokOpnameAkun::kategoriId('OPN-SELISIH'))
+                        : KategoriTransaksi::firstOrCreate(
+                            ['kode' => 'BEBAN-STOK'],
+                            ['nama' => 'Beban Kerugian Stok', 'tipe' => 'pengeluaran',
+                             'is_system' => true, 'is_active' => true, 'urutan' => 17]
+                        );
                     TransaksiKeuangan::create([
                         'cabang_id'         => $lokasiId,
                         'kas_id'            => null,

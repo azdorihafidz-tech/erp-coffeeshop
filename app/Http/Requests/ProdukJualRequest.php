@@ -32,6 +32,7 @@ class ProdukJualRequest extends FormRequest
             'kode_item'        => ['required', 'string', 'max:30', Rule::unique('items', 'kode_item')->ignore($itemId)],
             'nama_item'        => ['required', 'string', 'max:150'],
             'item_category_id' => ['nullable', 'exists:item_categories,id'],
+            'jenis_olahan_id'  => ['nullable', 'exists:jenis_olahans,id'], // Porting dimsum 4.50
             'tipe'             => ['required', Rule::in(['produk_jual', 'produk_tambahan'])],
             'satuan'           => ['required', 'string', 'max:20'],
             'harga_jual'       => ['required', 'numeric', 'min:0'],

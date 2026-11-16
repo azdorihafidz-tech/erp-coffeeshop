@@ -24,6 +24,7 @@ class Item extends Model
         'kode_item',
         'nama_item',
         'item_category_id',
+        'jenis_olahan_id', // Porting dimsum 4.50 — Jenis Menu (opsional, Produk Jual)
         'tipe',
         'satuan',
         'harga_jual',
@@ -83,6 +84,30 @@ class Item extends Model
     public function category()
     {
         return $this->belongsTo(ItemCategory::class, 'item_category_id');
+    }
+
+    /** Porting dimsum 4.50 — Jenis Menu (dipakai Laporan Laba Rugi "Per Jenis Menu") */
+    public function jenisOlahan()
+    {
+        return $this->belongsTo(JenisOlahan::class, 'jenis_olahan_id');
+    }
+
+    /**
+     * Porting dimsum 4.50 — Item tanpa komposisi yang dijual di POS: apakah stoknya sendiri
+     * dipotong (dan dicek "Habis")? Satu aturan untuk POS, pengecekan saat Bayar, & potong stok.
+     * - Bahan Baku, Kemasan, Produk Jual, Produk Tambahan → ya.
+     * - Tambahan Gratis (sedotan, sachet gula) → ikut centang "Lacak Stok".
+     * Item ber-komposisi selalu memotong bahan komposisinya (dicek terpisah).
+     */
+    public function dipotongStokSendiri(): bool
+    {
+        $tipe = $this->tipe instanceof \BackedEnum ? $this->tipe->value : (string) $this->tipe;
+
+        return match ($tipe) {
+            'bahan_baku', 'kemasan', 'produk_jual', 'produk_tambahan' => true,
+            'tambahan_gratis' => (bool) $this->track_stok,
+            default => false,
+        };
     }
 
     public function stocks()
@@ -183,7 +208,7 @@ class Item extends Model
             return true;
         }
 
-        if (! in_array($this->tipe, ['bahan_baku', 'kemasan', 'produk_jual'], true)) return true;
+        if (! $this->dipotongStokSendiri()) return true; // Porting dimsum 4.50 — aturan bersama
 
         return $this->stokDiLokasi($cabangId) > 0;
     }

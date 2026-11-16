@@ -89,6 +89,113 @@ class PanduanKontenSeeder extends Seeder
         $this->returCabangUpdate();
         // Tim IT & Aktivitas Tim IT (porting dimsum 4.53, 2026-11-16)
         $this->timItUpdate();
+        // Tahap P — perbaikan bug (porting dimsum 4.50/4.51, 2026-11-17)
+        $this->perbaikanPortingUpdate();
+    }
+
+    /**
+     * Tahap P porting dimsum — bagian panduan yang berubah karena perbaikan bug.
+     * Ditempel SETELAH konten panduan (marker), jadi aman walau panduan induknya diisi ulang.
+     */
+    private function perbaikanPortingUpdate(): void
+    {
+        $bagian = [
+            '<!-- PERBAIKAN-450 -->' => [
+                'riwayat-order' => <<<'MD'
+## 🔄 Update — Edit order yang sudah dibayar
+- Order yang sudah **Selesai** (sudah dibayar) atau **Dibatalkan**: di halaman Edit hanya **nama/telepon pelanggan dan catatan** yang bisa diubah. **Diskon dan metode bayar dikunci** — uangnya sudah tercatat di kas dan Setoran Kasir. Berlaku juga untuk Owner.
+- Kalau diskon/metode bayar salah: **Batalkan** order, buat order baru yang benar di POS, lalu **Tandai Pengganti**.
+- Bill yang belum dibayar (Pending) tetap bisa diubah diskon & metode bayarnya; service charge ikut menyesuaikan diskon.
+MD,
+                'pelanggan' => <<<'MD'
+## 🔄 Update — Nonaktifkan pelanggan
+- Di **Edit Pelanggan** ada saklar **Aktif**. Matikan kalau pelanggan sudah tidak dipakai: tidak muncul lagi di pilihan pelanggan POS, tetapi riwayat belanja, laporan, dan progres loyalty tetap ada.
+- Kalau data pelanggan dihapus, **order-order pelanggan itu tidak ikut terhapus** dan tetap dihitung di laporan.
+MD,
+                'bahan-baku' => <<<'MD'
+## 🔄 Update — Aturan hapus barang
+- Hapus hanya bisa untuk barang yang **belum pernah dipakai**. Ditolak kalau barang masih punya stok, dipakai di komposisi produk / Bumbu Pusat / Resep Produksi, atau ada di PO yang belum selesai — pesan menyebut alasannya. Untuk barang seperti itu, hilangkan centang **Aktif** saja.
+- Riwayat barang (baris di order dan PO lama) tidak ikut terhapus.
+- **Tambahan Gratis** (sedotan, sachet gula) yang **Lacak Stok**-nya dicentang sekarang **terpotong stoknya saat dipilih di POS**, dan bertanda "Habis" kalau stok di cabang itu kosong. Hilangkan centang Lacak Stok kalau tidak ingin dihitung.
+MD,
+                'produk-jual' => <<<'MD'
+## 🔄 Update — Jenis Menu, Produk Tambahan, hapus produk
+- Pilihan **Jenis Menu** (opsional) di form produk — dipakai Laporan Laba Rugi "Per Jenis Menu". Daftarnya diatur di Penjualan → Jenis Menu.
+- **Produk Tambahan** sekarang diperlakukan seperti Produk Jual: kalau punya komposisi, bahannya dipotong saat terjual; tanpa komposisi, stoknya sendiri yang dipotong (dan "Habis" kalau 0).
+- Hapus produk hanya untuk produk yang belum pernah dipakai; riwayat order tidak ikut terhapus dan **foto tidak dihapus** (produk bisa dipulihkan dari Data Terhapus lengkap dengan fotonya).
+MD,
+                'pos' => <<<'MD'
+## 🔄 Update — Item Tambahan memotong stok
+- **Tambahan Gratis** yang Lacak Stok-nya dicentang dan **Produk Tambahan** sekarang memotong stok saat order dibayar, dan bertanda "Habis" di POS kalau stoknya kurang — sama seperti produk jual.
+MD,
+                'laporan-laba-rugi' => <<<'MD'
+## 🔄 Update — Per Jenis Menu terisi
+- Pilihan **Per Jenis Menu** sekarang mengelompokkan penjualan berdasarkan **Jenis Menu produk** (Produk Jual → Jenis Menu). Order baru menyimpan nama Jenis Menu saat dijual; order lama memakai Jenis Menu produknya yang sekarang. Produk tanpa Jenis Menu masuk "-".
+MD,
+                'jenis-olahan' => <<<'MD'
+## 🔄 Update — Jenis Menu di Produk Jual
+- Jenis Menu sekarang juga bisa dipilih di form **Produk Jual** — dipakai Laporan Laba Rugi "Per Jenis Menu". Tetap tidak mengubah harga, stok, atau tampilan POS.
+MD,
+            ],
+            '<!-- PERBAIKAN-451 -->' => [
+                'penggajian' => <<<'MD'
+## 🔄 Update — Bayar gaji tercatat di kas, potongan telat, slip terkunci
+- Tombol **Bayar** sekarang meminta **kas** yang dipakai membayar (kas cabang karyawan atau kas Gudang Pusat) dan tanggal bayar. Saldo kas itu **berkurang** sebesar total gaji dan otomatis tercatat di Kas & Transaksi (kategori Gaji Karyawan) — **tidak perlu dicatat manual lagi**.
+- Salah bayar? Klik **Batal Bayar**: uang kembali ke kas, slip kembali Disetujui/Draft.
+- Slip yang sudah **Disetujui/Dibayar** tidak ikut dihitung ulang saat Generate (dilewati dan disebutkan namanya). Dulu nominalnya tertimpa dan statusnya kembali Draft.
+- **Potongan telat** = total menit telat (dari Scan Absensi) × "Potongan telat per menit" di Pengaturan Penggajian. Tampil di slip sebagai baris tersendiri.
+- Slip lama yang ditandai Dibayar sebelum pembaruan ini tidak tercatat di kas — pastikan sudah dicatat manual di Kas & Transaksi.
+MD,
+                'recurring' => <<<'MD'
+## 🔄 Update — Frekuensi berfungsi & tidak dobel
+- Frekuensi **Harian, Mingguan, Bulanan, Tahunan** sekarang benar-benar dipakai (dulu semua berjalan bulanan).
+- Setiap template dibuat **1 kali per periode** — dari jadwal otomatis, saat aplikasi dibuka, maupun tombol **Generate** (tombol menolak kalau periode itu sudah dibuat).
+- Tanggal 29–31 dipakai sebagai hari terakhir di bulan pendek. Jatuh tempo yang terlewat (tidak ada yang membuka aplikasi) dibuat saat aplikasi dibuka berikutnya, bertanggal jatuh temponya.
+- Pilihan "Auto-approve" dihapus karena tidak berfungsi.
+MD,
+                'cabang' => <<<'MD'
+## 🔄 Update — Hapus cabang
+- Cabang yang sudah punya order, PO, transaksi kas, pergerakan stok, absensi, atau slip gaji **tidak bisa dihapus** (dulu semua data itu ikut tersembunyi dan hilang dari laporan). Pakai **Nonaktifkan**. Hapus hanya untuk cabang yang salah dibuat dan masih kosong.
+MD,
+                'laporan-keuangan' => <<<'MD'
+## 🔄 Update — Transfer internal tidak dihitung
+- **Laba Rugi** di laporan ini tidak lagi menghitung transfer antar kas, setoran kasir, transfer dana, dan saldo awal kas (uang yang hanya pindah tempat). Jumlahnya ditampilkan sebagai keterangan di bawah kotak ringkasan.
+- **Arus Kas** tetap menghitung semua uang yang bergerak, tetapi bagian transfer internal & saldo awal ditampilkan terpisah.
+- User yang hanya boleh melihat cabangnya sendiri selalu melihat cabangnya (tidak bisa membuka cabang lain lewat alamat).
+MD,
+                'keuangan-laporan' => <<<'MD'
+## 🔄 Update — Pemasukan & Pengeluaran Usaha
+- Halaman ini sekarang berjudul **Pemasukan & Pengeluaran Usaha** dan tidak menghitung transfer antar kas, setoran kasir, transfer dana, serta saldo awal kas (ditampilkan sebagai keterangan). Angkanya berbasis kas — untuk laba dengan modal barang pakai Laba Rugi Formal atau Closing.
+MD,
+                'laporan-cabang' => <<<'MD'
+## 🔄 Update — Pemasukan/pengeluaran usaha
+- Kolom pemasukan & pengeluaran per cabang tidak lagi ikut menghitung transfer antar kas, setoran kasir, transfer dana, dan saldo awal kas. Setoran tetap tampil di kolom setoran.
+MD,
+                'laporan-neraca' => <<<'MD'
+## 🔄 Update — Persediaan barang yang dihapus
+- Persediaan tidak lagi menghitung sisa stok milik barang yang sudah dihapus (sama dengan Dashboard & Laporan Stok). Kalau selisih neraca berubah setelah pembaruan ini, sesuaikan Modal Owner.
+MD,
+                'user' => <<<'MD'
+## 🔄 Update — Akun Owner
+- Role **Owner** hanya bisa diberikan oleh Owner, dan akun Owner hanya bisa diubah, dinonaktifkan, di-reset kata sandinya, atau dihapus oleh Owner. Admin Pusat dan Manajer Cabang tidak melihat pilihan role Owner.
+MD,
+                'karyawan' => <<<'MD'
+## 🔄 Update — Akun login karyawan
+- Membuat akun login dari form Karyawan butuh centangan **Tambah User**; mengubah email/role akun login butuh **Edit User** (sama dengan menu Manajemen User).
+- Akun login milik **Owner** tidak bisa diubah dari form Karyawan — ubah lewat Pengaturan → Manajemen User oleh Owner.
+MD,
+            ],
+        ];
+
+        foreach ($bagian as $marker => $daftar) {
+            foreach ($daftar as $slug => $konten) {
+                $panduan = Panduan::where('slug', $slug)->first();
+                if (! $panduan || str_contains((string) $panduan->konten, $marker)) {
+                    continue;
+                }
+                $panduan->update(['konten' => rtrim((string) $panduan->konten) . "\n\n" . $marker . "\n" . trim($konten) . "\n"]);
+            }
+        }
     }
 
     private function timItUpdate(): void

@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             JenisOlahanSeeder::class,
             KategoriTransaksiSeeder::class, // Buat kategori keuangan dinamis
             ChartOfAccountsSeeder::class, // COA (wajib utk Laba Rugi Formal/Neraca/Buku Besar; idempotent)
+            KategoriCoaBackfillSeeder::class, // Tahap P bug 16 — akun COA per kategori (dulu tidak pernah jalan)
             KategoriPengeluaranBackfillSeeder::class, // Backfill kategori_pengeluaran dari data lama (idempotent)
             UserSeeder::class,
             EvaluationAspectSeeder::class,

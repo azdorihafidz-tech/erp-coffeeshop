@@ -71,7 +71,7 @@ class UserController extends Controller
     public function create(Request $request)
     {
         $authUser = $request->user();
-        $roles = RoleUser::untukPelanggan();
+        $roles = RoleUser::untukPelanggan($authUser->aksesPenuh()); // role Owner hanya diberikan Owner/Tim IT
         $cabangs = $authUser->canAccessAllBranches()
             ? Cabang::aktif()->orderBy('nama_cabang')->get()
             : $authUser->cabangs()->aktif()->get();
@@ -117,7 +117,7 @@ class UserController extends Controller
 
     public function edit(Request $request, User $user)
     {
-        $this->tolakTimIt($user);
+        $this->pastikanBolehKelola($user);
         $authUser = $request->user();
 
         // Manajer hanya bisa edit user di cabangnya
@@ -129,7 +129,7 @@ class UserController extends Controller
             }
         }
 
-        $roles   = RoleUser::untukPelanggan();
+        $roles   = RoleUser::untukPelanggan($authUser->aksesPenuh()); // role Owner hanya diberikan Owner/Tim IT
         $cabangs = $authUser->canAccessAllBranches()
             ? Cabang::aktif()->orderBy('nama_cabang')->get()
             : $authUser->cabangs()->aktif()->get();
@@ -142,7 +142,7 @@ class UserController extends Controller
 
     public function update(UserRequest $request, User $user)
     {
-        $this->tolakTimIt($user);
+        $this->pastikanBolehKelola($user);
         $data = $request->validated();
 
         $updateData = [
@@ -177,7 +177,7 @@ class UserController extends Controller
 
     public function destroy(User $user, CascadeDeleteService $cascadeService)
     {
-        $this->tolakTimIt($user);
+        $this->pastikanBolehKelola($user);
         // Safety: tidak bisa hapus diri sendiri
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menghapus akun Anda sendiri.');
@@ -207,7 +207,7 @@ class UserController extends Controller
      */
     public function toggleAktif(User $user)
     {
-        $this->tolakTimIt($user);
+        $this->pastikanBolehKelola($user);
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menonaktifkan akun sendiri.');
         }
@@ -223,7 +223,7 @@ class UserController extends Controller
      */
     public function resetPassword(Request $request, User $user)
     {
-        $this->tolakTimIt($user);
+        $this->pastikanBolehKelola($user);
         $request->validate([
             'new_password' => ['required', 'confirmed', 'min:8'],
         ], [
@@ -241,5 +241,15 @@ class UserController extends Controller
     private function tolakTimIt(User $user): void
     {
         abort_if($user->isTeknisi(), 404);
+    }
+
+    /**
+     * Ubah/hapus/aktifkan/reset akun: akun Tim IT tidak terlihat (404), dan akun Owner hanya boleh
+     * dikelola Owner/Tim IT (porting dimsum 4.43, bug 18 — dulu Admin Pusat/Manajer bisa mengubahnya).
+     */
+    private function pastikanBolehKelola(User $user): void
+    {
+        $this->tolakTimIt($user);
+        abort_if($user->role === RoleUser::Owner && ! auth()->user()->aksesPenuh(), 403, 'Hanya Owner yang boleh mengubah akun Owner.');
     }
 }

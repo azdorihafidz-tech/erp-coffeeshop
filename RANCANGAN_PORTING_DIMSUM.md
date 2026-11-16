@@ -1,7 +1,7 @@
 # Rancangan Porting dari ERP Dimsum 4.50–4.53 ke ERP Coffeeshop
 
 Sumber: `D:\xampp\htdocs\erp-dimsum\PORTING_DIMSUM_4.50-4.53.md` (folder dimsum hanya dibaca).
-Status: **DISETUJUI OWNER 2026-11-16** ("setuju semua saran" K1–K4). Tahap A selesai (CLAUDE.md 4.57), Tahap B selesai (4.58).
+Status: **DISETUJUI OWNER 2026-11-16** ("setuju semua saran" K1–K4). Tahap A selesai (CLAUDE.md 4.57), Tahap B selesai (4.58), Tahap P selesai (4.59).
 Tanggal audit: 2026-11-16, program di commit `e3bc8c9`, data = salinan go-live di DB lokal `erp_coffeeshop`.
 
 Keputusan bisnis di dokumen dimsum bagian 7 dianggap **sudah final** dan tidak ditanyakan ulang. Yang ditanyakan di bagian 9 hanya hal yang kondisinya **berbeda** di coffeeshop.
@@ -67,6 +67,12 @@ Semua dicek langsung di kode coffeeshop.
 | **16 (baru)** | **Semua kategori transaksi tidak punya akun COA** (`kode_akun_coa` kosong di 20 kategori, termasuk Gaji, Sewa, Operasional, Lainnya, Beban Kerugian Stok). Penyebabnya: `KategoriCoaBackfillSeeder` tidak pernah terdaftar di DatabaseSeeder maupun Update Database. **Akibatnya Laba Rugi Formal, Buku Besar & Laporan Eksekutif tidak memuat beban apa pun yang dicatat lewat Kas & Transaksi**, hanya penjualan dan HPP. | **Ada di semua instalasi** (juga DB tes) | go-live: 1 transaksi berkategori | Jalankan seeder itu (aman, hanya mengisi yang masih kosong) di deploy & DatabaseSeeder. Tes yang memastikan beban muncul di Laba Rugi Formal. |
 
 | **17 (baru, ditemukan saat Tahap A)** | Kasir **tanpa cabang** membuka Layout Meja / Antrian Kasir → error 500 (`KasirMejaController::resolveCabangId()` mengembalikan null) | **Ada** | 2 akun kasir contoh (`kasir.o1`, `kasir.o2`) tanpa cabang | Tampilkan pesan "akun belum punya cabang", bukan error. |
+
+| **18 (Owner 2026-11-16)** | Role **Owner** bisa diberikan Admin Pusat / Manajer Cabang lewat form User | **Ada** | — | Role Owner hanya bisa diberikan & akun Owner hanya bisa diubah oleh Owner/Tim IT (pola dimsum 4.43). |
+
+**Temuan saat mengerjakan bug 16 (2026-11-17):** `KategoriCoaBackfillSeeder` sendiri tidak memuat MUTASI-IN/OUT, SETORKSR-IN/OUT, RETUR-BELI, sehingga kategori itu ikut terpetakan ke Beban/Pendapatan Lain-lain dan transfer internal akan terhitung di Laba Rugi Formal. Di coffeeshop ditambahkan sebagai "tanpa akun" sebelum seeder dijalankan. **DB lokal dimsum sudah terkena** (MUTASI-OUT/SETORKSR-OUT → 6-1999, MUTASI-IN/SETORKSR-IN/RETUR-BELI → 4-1199) — dilaporkan ke Owner, dimsum tidak diubah.
+
+**Keputusan bug 4 (Owner 2026-11-17):** diperbaiki. Data go-live (salinan 2026-11-05): **ICE** (Produk Tambahan Rp4.000, `PJ-KOP-008`) diberi komposisi **ES BATU** (`BB-CAF-040`, gram — takaran ditanyakan ke Owner saat deploy); **TISU** (Tambahan Gratis, `BB-CAF-029`) Lacak Stok dimatikan. Dilakukan skrip deploy Tahap E di go-live (cek dulu item masih ada & belum diubah Owner).
 
 **Usulan:** semua diperbaiki dalam **Tahap P**, sebelum Stok Opname. Alasannya:
 - Stok Opname bergantung pada no. 8 (ganti rugi potong gaji), no. 15, dan no. 16 (akun COA beban).

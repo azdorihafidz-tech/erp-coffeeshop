@@ -53,6 +53,15 @@ class KategoriCoaBackfillSeeder extends Seeder
             'OPS'        => ['6-1301', 'variabel'],
             'ASET'       => ['1-2199', null],
             'SETOR-OUT'  => [null, null],
+            // Tahap P (bug 16) — kategori transfer internal & retur pembelian SENGAJA tanpa akun.
+            // Dulu tidak ada di daftar ini → ikut "sisa" di bawah → Mutasi Kas / Setoran Kasir
+            // terhitung sebagai Beban (6-1999) / Pendapatan Lainnya (4-1199) di Laba Rugi Formal.
+            // Retur pembelian = pengurang persediaan (HPP sudah dari modal FIFO), bukan pendapatan.
+            'MUTASI-IN'    => [null, null],
+            'MUTASI-OUT'   => [null, null],
+            'SETORKSR-IN'  => [null, null],
+            'SETORKSR-OUT' => [null, null],
+            'RETUR-BELI'   => [null, null],
             'BEBAN-STOK' => ['6-1401', 'variabel'],
             'LNY'        => ['6-1999', null],
             'MRT'        => ['6-1999', 'variabel'],
@@ -103,7 +112,9 @@ class KategoriCoaBackfillSeeder extends Seeder
             ->whereNull('kode_akun_coa')
             ->update(['kode_akun_coa' => '4-1199']);
 
-        $this->command->info("  KategoriCoaBackfillSeeder: {$updated} kategori dipetakan eksplisit, "
+        \App\Support\StokOpnameAkun::pastikan(); // Tahap P (bug 15) — akun & kategori kerugian/selisih stok
+
+        $this->command?->info("  KategoriCoaBackfillSeeder: {$updated} kategori dipetakan eksplisit, "
             . ($sisaPengeluaran + $sisaPemasukan) . " kategori sisa (custom) dipetakan ke default.");
     }
 }

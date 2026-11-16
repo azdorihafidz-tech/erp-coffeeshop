@@ -1268,6 +1268,15 @@ class TooltipKontenSeeder extends Seeder
              'content' => 'Minimal 12 karakter, berisi huruf dan angka. Pakai kata sandi yang berbeda di setiap instalasi usaha.'],
             ['key' => 'paket.modul', 'title' => 'Modul aktif', 'modul' => 'lainnya', 'urutan' => 2,
              'content' => 'Modul yang boleh dipakai usaha ini. Modul mati: menu & izin hilang untuk semua user (termasuk Owner), data tetap aman.'],
+            // Tahap P porting dimsum (perbaikan bug)
+            ['key' => 'master_produk_jual.jenis_menu', 'title' => 'Jenis Menu (opsional)', 'modul' => 'master_produk_jual', 'urutan' => 90,
+             'content' => 'Kelompok produk untuk Laporan Laba Rugi pilihan "Per Jenis Menu" (mis. Racikan Kopi, Kitchen). Daftar Jenis Menu diatur di menu Penjualan → Jenis Menu. Tidak mengubah harga, stok, atau tampilan POS.'],
+            ['key' => 'penggajian.bayar_kas', 'title' => 'Dibayar dari kas', 'modul' => 'penggajian', 'urutan' => 90,
+             'content' => 'Kas yang uangnya dipakai membayar gaji. Saldo kas ini berkurang sebesar total gaji dan tercatat di Kas & Transaksi (kategori Gaji Karyawan). Pilihan: kas cabang karyawan atau kas Gudang Pusat. Salah pilih? Klik Batal Bayar lalu bayar ulang.'],
+            ['key' => 'recurring.frekuensi', 'title' => 'Frekuensi', 'modul' => 'keuangan', 'urutan' => 6,
+             'content' => 'Harian = setiap hari; Mingguan = setiap hari yang sama dengan Tanggal Mulai; Bulanan = setiap tanggal jatuh tempo (29–31 → hari terakhir bulan pendek); Tahunan = tanggal jatuh tempo di bulan Tanggal Mulai. Dibuat 1 kali per periode — tidak akan dobel.'],
+            ['key' => 'recurring.tanggal_jatuh_tempo', 'title' => 'Tanggal Jatuh Tempo', 'modul' => 'keuangan', 'urutan' => 7,
+             'content' => 'Untuk frekuensi Bulanan & Tahunan. Kalau hari itu tidak ada yang membuka aplikasi, transaksi tetap dibuat saat aplikasi dibuka berikutnya (bertanggal jatuh tempo).'],
             ['key' => 'paket.aktif_sampai', 'title' => 'Aktif sampai', 'modul' => 'lainnya', 'urutan' => 3,
              'content' => 'Hari terakhir langganan berlaku. Kosong = tanpa batas. Sesudahnya masa tenggang, lalu baca-saja. Tim IT tidak terkena baca-saja.'],
         ];

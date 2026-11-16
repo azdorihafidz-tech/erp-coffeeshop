@@ -53,7 +53,7 @@ class UpdateDatabaseService
         'order.ubah_harga' => [],
     ];
 
-    public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder'];
+    public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder', 'KategoriCoaBackfillSeeder'];
 
     /** Tabel yang jumlah barisnya ditampilkan sebelum/sesudah, bukti data tidak hilang. */
     public const TABEL_CEK = ['orders', 'order_items', 'transaksi_keuangans', 'stocks', 'kas', 'users', 'cabangs'];

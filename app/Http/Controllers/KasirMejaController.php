@@ -19,6 +19,9 @@ class KasirMejaController extends Controller
         abort_unless(auth()->user()->can('kasir.layout-meja.view'), 403);
 
         $cabangId = $this->resolveCabangId($cabang);
+        if (! $cabangId) {
+            return $this->tanpaCabang();
+        }
         $cabangModel = Cabang::findOrFail($cabangId);
 
         $mejas = Meja::with(['bills' => fn ($q) => $q->whereIn('status', ['open', 'waiting_payment'])->with('items')])
@@ -44,6 +47,7 @@ class KasirMejaController extends Controller
     public function pollNotifikasi(int $cabang)
     {
         abort_unless(auth()->user()->can('kasir.layout-meja.view'), 403);
+        abort_unless(\App\Support\CabangLaporan::bolehAkses($cabang), 403); // hanya cabang sendiri
 
         $queuePendingCount = OrderQueue::forCabang($cabang)->pending()->count();
 
@@ -62,6 +66,9 @@ class KasirMejaController extends Controller
         abort_unless(auth()->user()->can('kasir.queue.view'), 403);
 
         $cabangId = $this->resolveCabangId($request->integer('cabang') ?: null);
+        if (! $cabangId) {
+            return $this->tanpaCabang();
+        }
 
         $queues = OrderQueue::with('meja')
             ->forCabang($cabangId)
@@ -222,7 +229,18 @@ class KasirMejaController extends Controller
      * customer), jadi beda dari pola "owner = semua cabang" di StokController
      * -- owner/admin_pusat TETAP harus resolve ke 1 outlet spesifik.
      */
-    private function resolveCabangId(?int $requested): int
+    /**
+     * Bug 17 (Tahap P) — akun tanpa cabang (mis. kasir yang belum ditugaskan) dulu error 500
+     * di Layout Meja & Antrian Kasir. Sekarang kembali ke Dashboard dengan pesan jelas.
+     */
+    private function tanpaCabang()
+    {
+        return redirect()->route('dashboard')->with('error', auth()->user()->canAccessAllBranches()
+            ? 'Belum ada cabang (outlet) aktif untuk Layout Meja / Antrian Kasir. Tambahkan cabang di menu Cabang.'
+            : 'Akun Anda belum ditugaskan ke cabang mana pun, jadi Layout Meja / Antrian Kasir tidak bisa dibuka. Minta Owner/Admin mengatur cabang akun Anda di Manajemen User.');
+    }
+
+    private function resolveCabangId(?int $requested): ?int
     {
         $user = auth()->user();
 

@@ -984,6 +984,28 @@ Mengikuti dimsum 4.53 Tahap B–C. Satu commit bersama Tahap A (regresi Tahap A 
 - Menu **Pengaturan → Paket & Langganan** (`paket.*`, `role:teknisi`), perubahan tercatat di Aktivitas Tim IT. Panduan `paket-langganan` + tambahan `<!-- PAKET-453 -->` di `role-hak-akses`, tooltip `paket.modul`, `paket.aktif_sampai`. `StokOpnameNotification` disalin (dipakai juga Tahap C). `TestCase::setUp` → `Paket::lupakan()`.
 - **Test** `tests/Feature/Paket/*` 14 (359 assertion): `PaketSidebarGuardTest` (setiap link sidebar terpetakan/inti + link modul mati tidak tampil untuk Owner), `PaketModulTest` (peta izin coffeeshop, semua izin DB terpetakan/inti, modul mati untuk semua termasuk Owner/Tim IT, menu QR pelanggan ikut tertutup, Role & Hak Akses, ketergantungan, halaman Tim IT, segel rusak), `PaketLanggananTest` (status bertahap, pita, baca-saja termasuk POS 423, Tim IT tidak terkena, tenggang normal). Uji tanpa tabel `lisensi` (migration dimundurkan): Branding/JenisPembeli/TimIt 19 lulus.
 
+### 4.59 🟡 Porting Dimsum — Tahap P: Perbaikan Bug 1–18 (2026-11-17)
+
+Mengikuti dimsum 4.50/4.51 (+ perbaikan Penyesuaian Stok dari 4.52) dan 3 temuan coffeeshop. File yang identik dengan versi dimsum sebelum perbaikan diambil dari versi dimsum sesudahnya (`CascadeDeleteService`, `penjualan/edit`, `pelanggan/index`, penggajian, recurring, laporan keuangan); `CabangAktif` dimsum → `CabangLaporan` coffeeshop. Panduan: `PanduanKontenSeeder::perbaikanPortingUpdate()` (marker `<!-- PERBAIKAN-450 -->` / `<!-- PERBAIKAN-451 -->`); tooltip `master_produk_jual.jenis_menu`, `penggajian.bayar_kas`, `recurring.frekuensi`/`tanggal_jatuh_tempo` diperbarui.
+
+- **1 Edit order dibayar**: diskon & metode bayar hanya untuk Pending (Owner juga); service charge ikut diskon; `OrderObserver` hanya menyamakan keterangan TK (akhiran split dipertahankan), jumlah tidak disentuh.
+- **2 Hapus pelanggan**: order tidak ikut terhapus; restore hanya yang ber-`deleted_at` sama; `Order::pelanggan()` `withTrashed`; saklar **Aktif** di Edit Pelanggan + badge Nonaktif.
+- **3 Hapus barang**: `alasanItemTidakBolehDihapus()` (stok, komposisi/Bumbu Pusat, Resep Produksi, PO aktif); riwayat order/PO tetap; foto produk tidak dihapus.
+- **4 Item Tambahan memotong stok**: `Item::dipotongStokSendiri()` (Produk Tambahan selalu; Tambahan Gratis ikut Lacak Stok) di `bisaDijualDiCabang`, cek stok & potong stok POS. **Keputusan Owner**: data go-live — ICE (`PJ-KOP-008`) diberi komposisi ES BATU (`BB-CAF-040`, takaran ditanyakan saat deploy), TISU (`BB-CAF-029`) Lacak Stok dimatikan — lewat skrip deploy Tahap E.
+- **5 Jenis Menu**: migration `2026_11_17_100001` `items.jenis_olahan_id`; dropdown di Produk Jual; snapshot ke `order_items.jenis_olahan`; Laba Rugi "Per Jenis Menu" fallback ke Jenis Menu produk. Controller/laporan aman sebelum migration.
+- **6 Dashboard**: `/dashboard/pusat` hanya akses semua cabang, `/dashboard/gudang` hanya yang boleh akses gudang.
+- **7 Form Karyawan**: buat akun butuh `user.create`, ubah email/role butuh `user.edit`, akun Owner/Tim IT tidak diubah dari form Karyawan.
+- **8–10 Penggajian**: migration `2026_11_17_100002` (`menit_telat_total`, `potongan_telat`, `kas_id`, `transaksi_keuangan_id`); Bayar = pilih kas → TK Pengeluaran kategori GAJI (`GAJI-Ymd-####`, `referensi_type=penggajian`), **Batal Bayar** (route `penggajian.batal-bayar`); generate ulang melewati slip Disetujui/Dibayar; potongan telat per menit dipakai.
+- **11 Transaksi Berulang**: `RecurringTransaksi::jalankanYangJatuhTempo()` per frekuensi, 1 per periode (pemicu on-request, cron, tombol Generate).
+- **12 Hapus cabang** ditolak kalau sudah beroperasi. **13** Neraca & Closing (stok) tanpa barang terhapus.
+- **14 Laporan kas**: `App\Support\TransaksiInternal` (kode = `ClosingService::KODE_MUTASI` + SALDO; coffeeshop `KODE_MUTASI` berupa daftar) dikecualikan dari Laporan → Keuangan, Keuangan → Laporan ("Pemasukan & Pengeluaran Usaha"), Cabang vs Cabang; `?cabang_id=` dipaksa sesuai akses.
+- **15 Penyesuaian Stok**: salah hitung/audit yang menurunkan stok → kategori OPN-SELISIH (akun **6-1406 Selisih Persediaan**, tanpa kas). `App\Support\StokOpnameAkun` (8 akun 6-1402…6-1406, 6-1501, 7-1103, 7-1104 + 9 kategori OPN-*) dibawa dari Tahap C.
+- **16 Akun COA kategori**: `KategoriCoaBackfillSeeder` didaftarkan di `DatabaseSeeder` & `UpdateDatabaseService::SEEDERS` (+ memanggil `StokOpnameAkun::pastikan()`). **Temuan saat porting**: daftar seeder tidak memuat MUTASI-IN/OUT, SETORKSR-IN/OUT, RETUR-BELI → ikut "sisa" → transfer antar kas & setoran kasir akan terhitung Beban/Pendapatan Lain-lain di Laba Rugi Formal. Ditambahkan sebagai "sengaja tanpa akun". **Dimsum (DB lokal) sudah kena** — MUTASI/SETORKSR berakun 6-1999/4-1199 (dilaporkan ke Owner, dimsum tidak diubah).
+- **17 Kasir tanpa cabang**: Layout Meja & Antrian Kasir → kembali ke Dashboard dengan pesan (dulu 500); polling notifikasi meja dicek akses cabang.
+- **18 Role Owner** (Owner 2026-11-16 "ya"): pilihan/validasi role Owner hanya untuk Owner/Tim IT; edit/aktif/reset/hapus akun Owner oleh non-Owner → 403.
+- **Test** `PerbaikanP1Test` 13, `PerbaikanP2Test` 5, `PerbaikanP3Test` 12 (173 assertion).
+- **Insiden lokal 2026-11-17**: MariaDB XAMPP tidak mau menyala ("Aria recovery failed", komputer mati tidak normal). Atas izin Owner, `aria_log.00000001` + `aria_log_control` dipindah ke `D:\xampp\mysql\aria_backup_20261117`, MySQL dinyalakan ulang; semua DB terbaca (CHECK TABLE OK). MySQL saat ini dijalankan dari sesi Claude — nyalakan lewat XAMPP Control Panel kalau sesi ditutup.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1445,7 +1467,8 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] Langkah 0 audit + rancangan, disetujui Owner
 - [x] **Tahap A** Akun Tim IT + Aktivitas Tim IT
 - [x] **Tahap B** Paket modul + masa langganan (4.58)
-- [ ] **Tahap P** perbaikan bug 1–17
+- [x] **Tahap P** perbaikan bug 1–18 (4.59)
+- [ ] Deploy go-live: takaran ES BATU untuk ICE (tanya Owner), matikan Lacak Stok TISU
 - [ ] **Tahap C** Stok Opname lengkap
 - [ ] **Tahap D** Kamus Menu
 - [ ] **Tahap E** aturan permanen + skrip deploy gabungan (gladi → demo → go-live → WONGKO PI)

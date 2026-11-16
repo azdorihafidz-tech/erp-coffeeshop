@@ -70,10 +70,11 @@ class MasterProdukJualController extends Controller
         abort_unless(auth()->user()->can('master.produk_jual.create'), 403);
 
         $data = $request->safe()->only([
-            'kode_item', 'nama_item', 'item_category_id', 'tipe', 'satuan',
+            'kode_item', 'nama_item', 'item_category_id', 'jenis_olahan_id', 'tipe', 'satuan',
             'harga_jual', 'deskripsi', 'waktu_siap_menit',
         ]);
         $data['kode_item']       = strtoupper($data['kode_item']);
+        $this->buangKolomBelumAda($data);
         $data['is_active']       = $request->boolean('is_active', true);
         $data['punya_varian']    = $request->boolean('punya_varian') && filled($request->input('atribut'));
         $data['stok_per_varian'] = $request->boolean('stok_per_varian');
@@ -124,10 +125,11 @@ class MasterProdukJualController extends Controller
         abort_unless(in_array($produkJual->tipe, self::TIPE_SCOPE, true), 404);
 
         $data = $request->safe()->only([
-            'kode_item', 'nama_item', 'item_category_id', 'tipe', 'satuan',
+            'kode_item', 'nama_item', 'item_category_id', 'jenis_olahan_id', 'tipe', 'satuan',
             'harga_jual', 'deskripsi', 'waktu_siap_menit',
         ]);
         $data['kode_item']       = strtoupper($data['kode_item']);
+        $this->buangKolomBelumAda($data);
         $data['is_active']       = $request->boolean('is_active', true);
         $data['stok_per_varian'] = $request->boolean('stok_per_varian');
 
@@ -167,9 +169,8 @@ class MasterProdukJualController extends Controller
 
         try {
             $nama = $produkJual->nama_item;
-            if ($produkJual->foto) {
-                Storage::disk('public')->delete($produkJual->foto);
-            }
+            // Porting dimsum 4.50 — file foto TIDAK dihapus: produk hanya masuk Data Terhapus dan bisa
+            // dipulihkan (dulu fotonya hilang permanen walau produknya dipulihkan).
             $cascadeService->deleteItemCascade($produkJual);
 
             return redirect()->route('master.produk-jual.index')
@@ -481,6 +482,14 @@ class MasterProdukJualController extends Controller
      * (2026-09-17) — 1 baris resep sekarang bisa item_id LANGSUNG (bahan
      * manual) ATAU resep_bumbu_ref_id (link ke Master Bumbu Pusat).
      */
+    /** Kolom dari migration yang mungkin belum dijalankan (program sudah di-deploy, Update Database belum). */
+    private function buangKolomBelumAda(array &$data): void
+    {
+        if (array_key_exists('jenis_olahan_id', $data) && ! \Illuminate\Support\Facades\Schema::hasColumn('items', 'jenis_olahan_id')) {
+            unset($data['jenis_olahan_id']);
+        }
+    }
+
     private function syncResep(Item $item, array $resepInput): void
     {
         $resep = $item->resep()->first();

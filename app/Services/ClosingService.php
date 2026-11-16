@@ -426,6 +426,7 @@ class ClosingService
             ->join('items', 'items.id', '=', 'stocks.item_id')
             ->join('cabangs', 'cabangs.id', '=', 'stocks.lokasi_id')
             ->whereNull('stocks.deleted_at')
+            ->whereNull('items.deleted_at') // porting dimsum 4.51 (bug 13) — sama dgn NeracaService
             ->whereIn('stocks.lokasi_id', $ids)
             ->select('stocks.item_id', 'stocks.lokasi_id', 'stocks.qty', 'items.kode_item', 'items.nama_item',
                 'items.satuan', 'items.harga_beli_terakhir', 'cabangs.nama_cabang')
