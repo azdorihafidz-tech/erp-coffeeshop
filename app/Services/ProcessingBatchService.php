@@ -25,7 +25,7 @@ class ProcessingBatchService
 
     public static function roasteryCabangId(): int
     {
-        return (int) Cabang::where('kode_cabang', 'RST001')->value('id');
+        return RoastingBatchService::roasteryCabangId(); // bug 21 — satu penentu lokasi Roastery
     }
 
     public function startBatch(array $data, int $userId): ProcessingBatch
@@ -37,7 +37,7 @@ class ProcessingBatchService
             throw new \Exception('Qty cherry harus lebih dari 0.');
         }
 
-        $stokTersedia = $item->stokDiLokasi(self::roasteryCabangId());
+        $stokTersedia = $item->stokDiLokasi(RoastingBatchService::pastikanLokasiRoastery());
         if ($stokTersedia < $qty) {
             throw new \Exception("Stok cherry '{$item->nama_item}' tidak mencukupi. Tersedia: {$stokTersedia} kg, dibutuhkan: {$qty} kg.");
         }

@@ -5,7 +5,7 @@
  * Fakta diambil dari kode (RoastingBatchService, CherryPurchaseService, ProcessingBatchService,
  * GrindingBatchService, PackingBatchService). Kalau perilaku berubah, ubah juga teks di sini.
  */
-$lokasi = "Semua transaksi Roastery baru dicatat di lokasi berkode **RST001** (cabang tipe Roastery). Lokasi itu harus ada di Pengaturan → Cabang & Gudang.";
+$lokasi = "Semua transaksi Roastery dicatat di cabang bertipe **Roastery** (yang sedang dipilih di pojok kanan atas kalau bertipe Roastery; kalau tidak, Roastery pertama). Lokasi yang dipakai tertulis di atas halaman. Tanpa cabang Roastery, transaksi tidak bisa disimpan.";
 $tanpaKas = "Menu ini **tidak mengubah kas** — biaya (beli buah, gas, upah) dicatat sendiri di Kas & Transaksi.";
 
 return [

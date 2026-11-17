@@ -185,6 +185,24 @@ MD,
 - Akun login milik **Owner** tidak bisa diubah dari form Karyawan — ubah lewat Pengaturan → Manajemen User oleh Owner.
 MD,
             ],
+            // 2026-11-17 — temuan saat menulis Kamus Menu (Tahap D)
+            '<!-- PERBAIKAN-TAHAP-D -->' => [
+                'meja' => <<<'MD'
+## 🔄 Update — Menyalakan pesan lewat QR
+- Pesan lewat QR di meja sekarang dinyalakan per outlet di **Pengaturan → Cabang & Gudang → Edit → Config POS → "Aktifkan pesan lewat QR di meja"**. Bawaannya **mati**: pelanggan yang memindai QR melihat "QR ordering belum aktif".
+- Setelah dinyalakan, pesanan dari HP masuk ke **Penjualan → Antrian Kasir** untuk disetujui.
+MD,
+                'cabang' => <<<'MD'
+## 🔄 Update — Saklar pesan lewat QR & lokasi Roastery
+- **Config POS → Aktifkan pesan lewat QR di meja**: menyalakan pesan dari HP pelanggan lewat QR meja (Master Meja). Bawaan mati.
+- Menu **Roastery** mencatat semua transaksinya di cabang bertipe **Roastery** (cabang yang sedang dipilih kalau bertipe Roastery; kalau tidak, cabang Roastery pertama). Tanpa cabang Roastery, transaksi Roastery tidak bisa disimpan.
+MD,
+                'roastery-batch' => <<<'MD'
+## 🔄 Update — Lokasi Roastery
+- Semua transaksi Roastery dicatat di cabang bertipe **Roastery**. Lokasi yang dipakai tertulis di atas halaman. Kalau usaha punya lebih dari satu Roastery, pilih Roastery itu di pojok kanan atas.
+- Belum ada cabang Roastery → buat dulu di Pengaturan → Cabang & Gudang (tipe Roastery).
+MD,
+            ],
         ];
 
         foreach ($bagian as $marker => $daftar) {

@@ -53,7 +53,7 @@ class PackingBatchService
             throw new \Exception('Qty sumber harus lebih dari 0.');
         }
 
-        $cabangId = RoastingBatchService::roasteryCabangId();
+        $cabangId = RoastingBatchService::pastikanLokasiRoastery();
         $stokTersedia = $item->stokDiLokasi($cabangId);
         if ($stokTersedia < $qty) {
             throw new \Exception("Stok '{$item->nama_item}' tidak mencukupi. Tersedia: {$stokTersedia} kg, dibutuhkan: {$qty} kg.");

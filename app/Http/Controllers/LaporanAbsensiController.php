@@ -13,15 +13,18 @@ class LaporanAbsensiController extends Controller
     public function index(Request $request)
     {
         $authUser       = auth()->user();
+        // Bug 20 (2026-11-17) — dulu tanpa cek izin: siapa pun yang login bisa membuka lewat alamat
+        abort_unless($authUser->can('laporan_absensi'), 403);
         $canAllBranches = $authUser->canAccessAllBranches();
 
         $cabangs  = $canAllBranches
             ? Cabang::aktif()->orderBy('nama_cabang')->get()
             : collect();
 
+        // Bug 20 — role cabang selalu cabangnya sendiri; tanpa cabang = -1 (kosong), bukan semua cabang
         $cabangId    = $canAllBranches
             ? $request->input('cabang_id')
-            : session('active_cabang_id');
+            : \App\Support\CabangLaporan::id($authUser);
 
         $dari        = $request->input('dari',    now()->startOfMonth()->toDateString());
         $sampai      = $request->input('sampai',  now()->endOfMonth()->toDateString());
@@ -153,8 +156,9 @@ class LaporanAbsensiController extends Controller
     private function getExportData(Request $request): array
     {
         $authUser       = auth()->user();
+        abort_unless($authUser->can('laporan_absensi'), 403); // bug 20 — export ikut dicek
         $canAllBranches = $authUser->canAccessAllBranches();
-        $cabangId       = $canAllBranches ? $request->input('cabang_id') : session('active_cabang_id');
+        $cabangId       = $canAllBranches ? $request->input('cabang_id') : \App\Support\CabangLaporan::id($authUser);
         $dari           = $request->input('dari',   now()->startOfMonth()->toDateString());
         $sampai         = $request->input('sampai', now()->endOfMonth()->toDateString());
         $statusFil      = $request->input('status', 'all');

@@ -17,7 +17,7 @@ class CherryPurchaseService
 
     public static function roasteryCabangId(): int
     {
-        return (int) Cabang::where('kode_cabang', 'RST001')->value('id');
+        return RoastingBatchService::roasteryCabangId(); // bug 21 — satu penentu lokasi Roastery
     }
 
     public function createDraft(array $data, int $userId): CherryPurchase
@@ -30,7 +30,7 @@ class CherryPurchaseService
             'kode_transaksi' => $this->nomorBerikutnya(),
             'tanggal'        => $data['tanggal'],
             'petani_id'      => $data['petani_id'],
-            'cabang_id'      => self::roasteryCabangId(),
+            'cabang_id'      => RoastingBatchService::pastikanLokasiRoastery(),
             'cherry_item_id' => $data['cherry_item_id'],
             'jenis_buah'     => $data['jenis_buah'],
             'qty_kg'         => $data['qty_kg'],

@@ -3,6 +3,7 @@
 @section('title', 'Packing Batch')
 
 @section('content')
+<x-roastery-lokasi />
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
     <h5 class="mb-0 fw-bold"><i class="bi bi-box-seam me-2 text-success"></i>Packing Batch</h5>
     <div class="d-flex gap-2 align-items-center">

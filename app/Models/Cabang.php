@@ -189,6 +189,23 @@ class Cabang extends Model
         return $query->where('is_active', true);
     }
 
+    /**
+     * Lokasi tempat semua transaksi Roastery (beli buah, processing, roasting, grinding, packing) dicatat.
+     * Bug 21 (2026-11-17): dulu terkunci ke kode 'RST001' → instalasi tanpa kode itu (go-live, WONGKO PI)
+     * tidak punya lokasi Roastery. Urutan: cabang aktif di pojok kanan atas kalau bertipe Roastery →
+     * cabang berkode RST001 (data lama/demo) → cabang Roastery aktif pertama. Null = belum ada.
+     */
+    public static function lokasiRoastery(): ?self
+    {
+        $aktif = session('active_cabang_id');
+        $roastery = static::query()->where('is_active', true)->where('tipe', TipeCabang::Roastery->value);
+        if ($aktif && ($c = (clone $roastery)->whereKey($aktif)->first())) {
+            return $c;
+        }
+
+        return (clone $roastery)->where('kode_cabang', 'RST001')->first() ?? (clone $roastery)->orderBy('id')->first();
+    }
+
     /** Lokasi yang bisa di-Stok Opname: aktif, selain Head Office (kantor, tidak menyimpan barang). */
     public function scopeBisaOpname($query)
     {

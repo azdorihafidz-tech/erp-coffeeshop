@@ -1263,6 +1263,8 @@ class TooltipKontenSeeder extends Seeder
              'content' => 'Isi jumlah yang benar-benar datang. Kalau kurang dari yang dikirim, sisanya otomatis kembali ke stok pengirim dan total yang dibayar cabang ikut turun.'],
             ['key' => 'kiriman.tolak', 'title' => 'Tolak kiriman', 'modul' => 'stok', 'urutan' => 91,
              'content' => 'Semua barang kembali ke stok pengirim dengan modal semula, tidak ada uang yang berpindah. Untuk barang yang sudah diterima, gunakan Retur.'],
+            ['key' => 'cabang.qr_ordering_active', 'title' => 'Pesan lewat QR di meja', 'modul' => 'cabang', 'urutan' => 31,
+             'content' => 'ON: pelanggan yang memindai QR meja (Master Meja) bisa memilih menu dari HP dan mengirim pesanan; pesanan menunggu disetujui di Penjualan → Antrian Kasir. OFF (bawaan): QR menampilkan "QR ordering belum aktif, silakan pesan lewat kasir". Meja & Layout Meja tetap bisa dipakai kasir.'],
             // Tim IT (porting dimsum 4.53)
             ['key' => 'tim_it.password', 'title' => 'Kata sandi Tim IT', 'modul' => 'lainnya', 'urutan' => 1,
              'content' => 'Minimal 12 karakter, berisi huruf dan angka. Pakai kata sandi yang berbeda di setiap instalasi usaha.'],

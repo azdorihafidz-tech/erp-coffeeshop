@@ -31,7 +31,7 @@ class GrindingBatchService
             throw new \Exception('Qty roasted bean harus lebih dari 0.');
         }
 
-        $cabangId = \App\Services\RoastingBatchService::roasteryCabangId();
+        $cabangId = \App\Services\RoastingBatchService::pastikanLokasiRoastery();
         $stokTersedia = $item->stokDiLokasi($cabangId);
         if ($stokTersedia < $qty) {
             throw new \Exception("Stok roasted '{$item->nama_item}' tidak mencukupi. Tersedia: {$stokTersedia} kg, dibutuhkan: {$qty} kg.");

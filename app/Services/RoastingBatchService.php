@@ -30,7 +30,19 @@ class RoastingBatchService
      */
     public static function roasteryCabangId(): int
     {
-        return (int) Cabang::where('kode_cabang', 'RST001')->value('id');
+        // Bug 21 — bukan lagi kode 'RST001' yang ditulis langsung (lihat Cabang::lokasiRoastery()).
+        return (int) (Cabang::lokasiRoastery()?->id ?? 0);
+    }
+
+    /** Untuk menyimpan transaksi Roastery: tolak dengan pesan jelas kalau belum ada lokasi Roastery. */
+    public static function pastikanLokasiRoastery(): int
+    {
+        $id = self::roasteryCabangId();
+        if (! $id) {
+            throw new \RuntimeException('Belum ada lokasi Roastery aktif. Buat cabang bertipe Roastery di Pengaturan → Cabang & Gudang, lalu coba lagi.');
+        }
+
+        return $id;
     }
 
     /**
@@ -66,7 +78,7 @@ class RoastingBatchService
             return RoastingBatch::create([
                 'nomor_batch'           => $this->nomorBatchBerikutnya(),
                 'tanggal'               => $data['tanggal'],
-                'cabang_id'             => self::roasteryCabangId(),
+                'cabang_id'             => self::pastikanLokasiRoastery(),
                 'user_id'               => $userId,
                 'profile_id'            => $data['profile_id'],
                 'green_bean_item_id'    => $data['green_bean_item_id'],

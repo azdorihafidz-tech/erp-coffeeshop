@@ -42,10 +42,11 @@ Mendaftarkan lokasi usaha. Banyak fitur di menu lain **hanya muncul kalau diakti
 | Footer struk, izinkan sembunyi harga per item | Struk POS |
 | **Label Cup**: aktif, kategori yang dicetak, ukuran stiker, geser posisi | Label gelas di POS, Layout Meja, Antrian Kasir QR, Detail Order |
 | **Config POS**: Dine-in / Takeaway / Frozen, input nomor meja, take away fee, service charge | Pilihan tipe & total POS |
+| **Aktifkan pesan lewat QR di meja** (bawaan mati) | Pelanggan bisa memesan dari HP lewat QR meja; mati = QR menampilkan "belum aktif" |
 | **Jenis Pembeli di POS** (hanya Gudang Pusat & Roastery, bawaan mati) | Pilihan Retail / Wholesale / Kirim ke Cabang di POS lokasi itu |
 | Kepala cabang, user di cabang ini | Siapa yang bisa memilih cabang ini di pojok kanan atas; penerima pengingat Stok Opname |
 
-⚠️ **Pesan lewat QR di meja** juga harus dinyalakan per outlet, tapi saklarnya **tidak ada** di halaman ini — hubungi tim IT. Selama mati, pelanggan yang memindai QR melihat pesan "QR ordering belum aktif".
+Menu **Roastery** mencatat semua transaksinya di cabang bertipe **Roastery** (yang sedang dipilih di pojok kanan atas, atau Roastery pertama).
 
 ## Wajib setelah membuat cabang baru
 1. Buat 3 kas (Default untuk Tunai, Transfer, QRIS) di Kas & Transaksi → Kelola Kas.

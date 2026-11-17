@@ -63,7 +63,7 @@ Pelanggan memindai QR di meja → memilih menu di HP (tanpa login) → **Kirim**
 ## Supaya menu ini muncul & bisa dipakai
 - Centangan **Lihat Antrian Order (Kasir)**; menyetujui: **Approve Order (Kasir)**; menolak: **Reject Order (Kasir)**.
 - Meja harus ada di **Master Meja** dengan QR yang masih berlaku (QR sementara punya batas waktu).
-- ⚠️ **Pesan lewat QR harus dinyalakan per outlet** — saklarnya belum ada di layar mana pun (hubungi tim IT). Selama mati, pelanggan melihat "QR ordering belum aktif".
+- **Pesan lewat QR harus dinyalakan per outlet**: Cabang → Edit → Config POS → **Aktifkan pesan lewat QR di meja** (bawaan mati). Selama mati, pelanggan melihat "QR ordering belum aktif".
 - Produk yang tampil di HP pelanggan = produk yang tersedia & tidak Habis di outlet itu, dengan harga outlet itu.
 
 ## Apa yang terjadi kalau tombol diklik
@@ -126,6 +126,7 @@ Mendaftarkan meja di setiap outlet. Meja dipakai di POS (Dine-in), Layout Meja, 
 ## Supaya menu ini muncul & bisa dipakai
 - Centangan **Lihat / Tambah / Edit / Hapus Meja**, **Print QR Meja**. Hanya meja di outlet yang boleh Anda akses.
 - Nomor meja **unik per outlet**.
+- QR baru bisa dipakai pelanggan kalau outlet menyalakan **Aktifkan pesan lewat QR di meja** (Cabang → Edit → Config POS).
 
 ## Apa yang terjadi kalau tombol diklik
 | Tombol | Akibat |

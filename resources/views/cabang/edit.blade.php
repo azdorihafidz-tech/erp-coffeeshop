@@ -440,6 +440,18 @@
                                 </div>
                             </div>
                         </div>
+                        {{-- 2026-11-17 — saklar pesan lewat QR di meja (kolom sudah ada sejak E1, dulu tidak ada di layar) --}}
+                        <div class="border-top pt-2 mb-2">
+                            <div class="form-check form-switch">
+                                <input type="hidden" name="qr_ordering_active" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="qrOrderingActive" name="qr_ordering_active" value="1"
+                                    {{ old('qr_ordering_active', $cabang->qr_ordering_active ?? false) ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="qrOrderingActive">
+                                    Aktifkan pesan lewat QR di meja <x-tooltip key="cabang.qr_ordering_active" />
+                                </label>
+                            </div>
+                            <div class="form-text">Pelanggan memindai QR meja (Stok &amp; Gudang → Master Meja), pesanan masuk ke Penjualan → Antrian Kasir. Mati = QR menampilkan "belum aktif".</div>
+                        </div>
                         {{-- 2026-11-10 — saklar Jenis Pembeli di POS (hanya Gudang Pusat / Roastery, bawaan OFF) --}}
                         @php $tipeJenisPembeli = \App\Models\Cabang::TIPE_JENIS_PEMBELI; @endphp
                         <div id="wrapJenisPembeliAktif" class="border-top pt-2 mb-2 {{ in_array(old('tipe', $cabang->tipe?->value), $tipeJenisPembeli, true) ? '' : 'd-none' }}"

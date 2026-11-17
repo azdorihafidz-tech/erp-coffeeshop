@@ -42,6 +42,7 @@ class CabangRequest extends FormRequest
             'frozen_aktif'            => ['sometimes', 'boolean'],
             'jenis_pembeli_aktif'     => ['sometimes', 'boolean'],
             'nomor_meja_aktif'        => ['sometimes', 'boolean'],
+            'qr_ordering_active'      => ['sometimes', 'boolean'], // 2026-11-17 — saklar pesan lewat QR (dulu tidak ada di layar)
             'take_away_fee'           => ['nullable', 'numeric', 'min:0'],
             'service_charge_persen'   => ['nullable', 'numeric', 'min:0', 'max:100'],
             // Sprint Label Cup (2026-10-19)
