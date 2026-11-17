@@ -46,7 +46,7 @@ class PaketSidebarGuardTest extends TestCase
     {
         // Link sidebar yang tidak dipetakan = inti. Daftar ini mengunci inti supaya menu baru tidak lupa dipetakan.
         $inti = ['dashboard', 'keuangan.index', 'cabang.index', 'user.index', 'role.index', 'pengaturan.umum', 'tim-it.index', 'paket.index',
-            'admin.tooltips.index', 'admin.panduan.index', 'panduan.index', 'aktivitas-tim-it.index', 'audit-log.index', 'trash.index',
+            'admin.tooltips.index', 'admin.panduan.index', 'panduan.index', 'kamus-menu.index', 'aktivitas-tim-it.index', 'audit-log.index', 'trash.index',
             'backup.index', 'update-database.form', 'profile.edit', 'logout', 'dashboard.pusat', 'laporan.view'];
         $lepas = array_values(array_filter($this->routeSidebar(), fn ($r) => Paket::modulUntukRoute($r) === null && ! in_array($r, $inti, true)));
         $this->assertSame([], $lepas, 'Link sidebar belum dipetakan ke modul (atau tambahkan ke daftar inti)');

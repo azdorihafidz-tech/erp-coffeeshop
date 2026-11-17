@@ -62,7 +62,7 @@ class UpdateDatabaseService
         'stok_opname.laporan'    => ['admin_pusat', 'manajer_cabang'],
     ];
 
-    public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder', 'KategoriCoaBackfillSeeder', 'StokOpnameSeeder'];
+    public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder', 'KategoriCoaBackfillSeeder', 'StokOpnameSeeder', 'KamusMenuSeeder'];
 
     /** Tabel yang jumlah barisnya ditampilkan sebelum/sesudah, bukti data tidak hilang. */
     public const TABEL_CEK = ['orders', 'order_items', 'transaksi_keuangans', 'stocks', 'kas', 'users', 'cabangs'];

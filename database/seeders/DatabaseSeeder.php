@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
             PanduanKontenSeeder::class,     // Isi konten nyata 46 panduan dari stub
             TooltipKontenSeeder::class,     // Tooltip field-field bermakna seluruh aplikasi
             StokOpnameSeeder::class,        // Porting dimsum 4.52 — akun COA opname, panduan & tooltip Stok Opname
+            KamusMenuSeeder::class,         // Porting dimsum 4.50 — Kamus Menu (isi dari database/seeders/kamus/*.php)
             StokTestingSeeder::class,       // Stok awal testing 6 cabang x 44 item (butuh ItemSeeder & CabangSeeder)
             MejaSeeder::class,              // Fase E1 (2026-09-23) — 50 meja testing (5 outlet x 10, butuh CabangSeeder)
             KasSeeder::class,                // Fase E3 (2026-09-23) — 5 Kas Tunai testing (1 per outlet, blocker closeBill())

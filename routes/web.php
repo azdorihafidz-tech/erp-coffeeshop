@@ -1034,6 +1034,9 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
     // ===== PANDUAN PENGGUNA (semua user login) =====
     Route::get('/panduan', [PanduanController::class, 'index'])->name('panduan.index');
     Route::get('/panduan/{slug}', [PanduanController::class, 'show'])->name('panduan.show');
+    // Kamus Menu (porting dimsum 4.50) — semua user login, entri tanpa hak → 404
+    Route::get('/kamus-menu', [\App\Http\Controllers\KamusMenuController::class, 'index'])->name('kamus-menu.index');
+    Route::get('/kamus-menu/{slug}', [\App\Http\Controllers\KamusMenuController::class, 'show'])->name('kamus-menu.show');
 
     // ===== ADMIN: PANDUAN =====
     Route::middleware('role:owner,admin_pusat')->prefix('admin/panduan')->name('admin.panduan.')->group(function () {

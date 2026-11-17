@@ -10,6 +10,9 @@
         <p class="text-muted mb-4">Menu ini belum aktif di paket aplikasi usaha Anda. Data yang pernah dibuat tetap aman.
             Untuk mengaktifkannya, silakan hubungi tim IT penyedia aplikasi.</p>
         <a href="{{ route('dashboard') }}" class="btn btn-primary"><i class="bi bi-house me-1"></i>Kembali ke Dashboard</a>
+        @if(\Illuminate\Support\Facades\Route::has('kamus-menu.show'))
+        <a href="{{ route('kamus-menu.show', 'cara-fitur-tidak-ada') }}" class="btn btn-outline-secondary ms-1">Kenapa menu tidak ada?</a>
+        @endif
     </div>
 </div>
 @endsection
