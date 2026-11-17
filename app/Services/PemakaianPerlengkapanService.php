@@ -39,7 +39,7 @@ class PemakaianPerlengkapanService
                 (int) $data['item_id'],
                 (int) $data['cabang_id'],
                 (float) $data['qty'],
-                'Pemakaian perlengkapan: ' . $item->nama_item . ($data['keterangan'] ? ' — ' . $data['keterangan'] : ''),
+                'Pemakaian perlengkapan: ' . $item->nama_item . (! empty($data['keterangan']) ? ' — ' . $data['keterangan'] : ''),
                 'pemakaian_perlengkapan',
                 $pemakaian->id,
             );
