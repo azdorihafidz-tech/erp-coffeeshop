@@ -129,6 +129,9 @@ Setiap fitur/menu BARU wajib:
 3. Tambah panduan di menu Panduan (via `PanduanKontenSeeder`)
 4. Tambah tooltip untuk form-form penting (via `TooltipKontenSeeder`)
 5. **Embed tombol "Cara Pakai" (`<x-panduan-button slug="{slug}" />`) di halaman fitur** — pojok kanan atas header halaman.
+6. **Kamus Menu** (sejak 4.61) — tambah/ubah entri di `database/seeders/kamus/{kelompok}.php`; `KamusMenuSeeder` ikut jalan lewat Update Database. Berlaku untuk **menu baru** DAN **perubahan perilaku menu lama** (tombol baru, saklar baru di menu lain, izin baru, efek ke stok/kas/laporan berubah). Isi dari KODE, urutan: Fungsi → Supaya menu ini muncul & bisa dipakai → Alur → Apa yang terjadi kalau tombol diklik → Wajib → Jangan → Menu yang mirip & bedanya. Isi `route_names`. Perbarui entri "Cara Melakukan" terkait. Penjaga `KamusMenuTest` gagal kalau ada link sidebar tanpa entri — tulis entrinya, jangan menambah pengecualian.
+7. **Paket modul** (sejak 4.58) — menu/izin baru milik modul berbayar WAJIB dipetakan di `App\Support\Paket::IZIN` & `::ROUTE` (tanpa peta = inti, selalu aktif); penjaga `PaketSidebarGuardTest` (menu inti baru → daftar inti di tes itu). POST baru yang hanya membaca/mengunduh ditambah ke `ModeBacaSaja::DIKECUALIKAN`.
+8. **Hak "khusus Owner"** baru memakai `aksesPenuh()` (Owner atau Tim IT), bukan `role === Owner`. Daftar/pilihan user untuk pelanggan memakai `User::pelanggan()` (akun Tim IT tersembunyi). Izin baru wajib masuk `UpdateDatabaseService::PERMISSION_BARU` (centangan bawaan hanya saat izin pertama dibuat).
 
 Ini WAJIB, bukan optional. Kalau lupa, kerjaan bakal dobel di akhir (pelajaran dari Dimsum: poin 3-5 silently missing kalau lupa, tidak menghasilkan error yang cepat ketahuan seperti poin 1-2).
 
@@ -1026,6 +1029,13 @@ Mengikuti dimsum 4.52 Tahap A–E (commit dimsum `6f8015f`…`3e1ade8`, versi ak
 - **Smoke DB dev (salinan go-live; 3 migration + PermissionSeeder + StokOpnameSeeder dijalankan di dev, centangan role hanya di transaksi uji)**: Owner, Admin Pusat (CAP1), Admin Gudang (GP001), Kasir (CAP1) × 12 halaman → 200/302/403 sesuai hak (Admin Gudang & Kasir tanpa Ganti Rugi/Laporan Kerugian), menu sesuai izin; alur nyata di CAP1 (Admin Pusat mulai, Kasir hitung buta, Admin Pusat rincian + ajukan + Berita Acara PDF, Owner setujui) → stok −1, 1 TK tanpa kas `SO-202611-0001-SUSUT`, laporan & dashboard 200; di-rollback.
 - **Temuan data go-live (bukan bug, belum diubah)**: `BB-CAF-032` ROASTED ARABIKA bersatuan **gram**, Harga Beli Terakhir Rp150/gram, tapi batch stok CAP1 = 2 gram @ **Rp150.000 per gram** (kemungkinan dulu diinput 2 kg @ Rp150.000/kg). Akibatnya nilai stok/HPP barang ini 1.000× terlalu besar dan stoknya hanya 2 gram (resep memakai 12 g & 0,015 kg per gelas). Perlu dikoreksi Owner lewat Penyesuaian Stok / Stok Opname.
 
+### 4.62 🟡 Porting Dimsum — Tahap E: Aturan Permanen + Skrip Deploy Gabungan (2026-11-17)
+
+- **Aturan permanen** (dimsum bagian 8) di **3.6 poin 6–8** (Kamus Menu, Paket modul, `aksesPenuh()`/`User::pelanggan()`/`PERMISSION_BARU`) dan checklist **13** (+ Kamus, Paket, kode semua-halaman aman sebelum migration).
+- **`public/deploy-porting-dimsum.php`** (`?confirm=YES-PORTING453&tahap=simulasi|jalankan`, opsional `&es_batu_gram=N`): memakai `UpdateDatabaseService` (8 migration 4.57–4.61, seeder Permission/Panduan/Tooltip/KategoriCoaBackfill/StokOpname/KamusMenu, 24 centangan izin opname hanya saat izin pertama dibuat) + **akun Tim IT pertama dari `.env`** (`TEKNISI_NAMA/EMAIL/PASSWORD`, dibaca `Dotenv::parse` file langsung; validasi min 12 huruf+angka; email dipakai akun lain → tidak dibuat; sandi tidak pernah ditampilkan) + **koreksi go-live bug 4** (hanya kalau barangnya ada: ICE `PJ-KOP-008` diberi komposisi ES BATU `BB-CAF-040` N gram kalau belum berkomposisi, TISU `BB-CAF-029` Lacak Stok dimatikan) + laporan baca-saja: migration, centangan, status akun Tim IT, **pemetaan akun COA yang berubah + total transaksinya** (simulasi = jalankan seeder di DB transaction lalu rollback), ICE/TISU + stok ES BATU, Item Tambahan yang akan "Habis", lokasi Roastery, status QR per outlet, user non-pusat tanpa cabang, jumlah data sebelum/sesudah. Kunci `storage/deploy-porting-dimsum.lock` → jalan kedua ditolak. `.env.example` + baris `TEKNISI_*`.
+- **Gladi** di `erp_coffeeshop_gladi` (salinan DB dev = salinan go-live; 8 migration dimundurkan + izin `stok_opname.*` dihapus = kondisi go-live): konfirmasi salah 403; simulasi 200 (8 migration, 24 centangan, 22 kategori dipetakan ke akun — PBB Rp300.000 ke 5-1101 tanpa efek dobel karena HPP Laba Rugi Formal dari `order_items.hpp`); jalankan: UPDATE BERHASIL, akun Tim IT dibuat (sandi cocok, `aksesPenuh`), ICE = ES BATU 150 gram, TISU Lacak Stok mati, lisensi 17 modul, Kamus 124, 0 migration tertunda, jumlah data sama (users +1); **jalan kedua ditolak**. Smoke DB gladi: Tim IT 28 halaman 200/302, Owner sama kecuali 3 menu Tim IT 403 & tidak melihat akun Tim IT di Manajemen User, Kasir sesuai hak, 0 error 500.
+- **Temuan go-live (dari laporan skrip)**: stok ES BATU 0 → ICE "Habis" sampai stok es batu diisi; 6 user non-pusat tanpa cabang (akun contoh "(TBD)"); belum ada cabang Roastery; QR CAP1 mati (0 meja).
+
 ### 4.61 🟡 Porting Dimsum — Tahap D: Kamus Menu (2026-11-17)
 
 Mengikuti dimsum 4.50 (infrastruktur sama persis, isi ditulis ulang dari kode coffeeshop). Bedanya dengan Panduan: Panduan = langkah klik; **Kamus = fungsi, syarat supaya menu muncul (termasuk saklar di menu lain), alur, akibat tiap tombol ke stok/kas/laporan, wajib, jangan, menu yang mirip**.
@@ -1508,7 +1518,10 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] **Tahap D** Kamus Menu (4.61)
 - [x] Temuan Tahap D diperbaiki: bug 20 (Laporan Absensi tanpa cek izin), bug 21 (Roastery terkunci kode RST001), saklar QR order per outlet (4.61)
 - [ ] Owner: kalau ingin memakai Roastery di go-live/WONGKO PI, buat cabang bertipe Roastery; nyalakan saklar QR di outlet yang memakai pesan lewat QR
-- [ ] **Tahap E** aturan permanen + skrip deploy gabungan (gladi → demo → go-live → WONGKO PI)
+- [x] **Tahap E** aturan permanen + skrip deploy gabungan + gladi (4.62)
+- [ ] Owner: isi `TEKNISI_*` di `.env` tiap instalasi, backup DB, Update from Remote → Deploy, lalu `/deploy-porting-dimsum.php?confirm=YES-PORTING453&tahap=simulasi` → `&tahap=jalankan` (go-live + `&es_batu_gram=N`) — urutan demo → go-live → WONGKO PI
+- [ ] Setelah dijalankan di ketiga instalasi: hapus `public/deploy-porting-dimsum.php` dari repo
+- [ ] Go-live: isi stok ES BATU (ICE "Habis" sampai ada stok)
 
 ---
 
@@ -1523,6 +1536,9 @@ Setiap kali mulai kerja fitur baru, Claude Code WAJIB:
 - [ ] Eksekusi dengan test bertahap
 - [ ] Update section "Riwayat" (section 4) & TODO (section 12) di file ini
 - [ ] Tambah permission + panduan + tooltip untuk fitur baru
+- [ ] Tambah/perbarui Kamus Menu (syarat di menu lain & efek tiap tombol)
+- [ ] Petakan menu/izin baru ke modul di `App\Support\Paket` kalau milik modul berbayar
+- [ ] Kode yang jalan di semua halaman (layout/sidebar/middleware) aman sebelum migration jalan (cek tabel/kolom dulu)
 - [ ] Cek filter cabang manual di query (SECURITY!)
 - [ ] Kabari user ketika selesai & minta test
 
