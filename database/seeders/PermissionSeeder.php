@@ -222,6 +222,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'retur.view',   'display_name' => 'Lihat Retur Cabang',                       'group' => 'stok'],
             ['name' => 'retur.create', 'display_name' => 'Buat / Batalkan Retur ke Gudang',          'group' => 'stok'],
             ['name' => 'retur.terima', 'display_name' => 'Terima / Tolak Retur dari Cabang',         'group' => 'stok'],
+            // Stok Opname (porting dimsum 4.52)
+            ...StokOpnameSeeder::PERMISSIONS,
 
             // Audit retroaktif 3.8 (2026-09-24) — permission yang dipakai di sidebar/controller
             // sejak warisan Dimsum tapi TIDAK pernah dibuat (RolePermissionSeeder melewatinya diam-diam,

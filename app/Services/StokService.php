@@ -190,6 +190,10 @@ class StokService
                 return;
             }
 
+            // Stok Opname — barang yang sedang diopname tidak boleh disesuaikan
+            // di sini (supaya selisihnya tidak terkoreksi dua kali).
+            $this->pastikanTidakDiopname($itemId, $lokasiId);
+
             $item   = Item::findOrFail($itemId);
             $cabang = Cabang::findOrFail($lokasiId);
 
@@ -365,6 +369,7 @@ class StokService
     public function resetStok(Stock $stock): void
     {
         DB::transaction(function () use ($stock) {
+            $this->pastikanTidakDiopname((int) $stock->item_id, (int) $stock->lokasi_id);
             $qtyLama  = (float) $stock->qty;
             $itemId   = $stock->item_id;
             $lokasiId = $stock->lokasi_id;
@@ -421,6 +426,127 @@ class StokService
      * Return total HPP (Harga Pokok Produksi/Penjualan) dari batch yang dikonsumsi.
      * Jika batch tidak cukup (data lama tanpa batch), fallback ke harga_beli_terakhir item.
      */
+    // ===================== Stok Opname (porting dimsum 4.52) =====================
+
+    /**
+     * Tolak kalau barang ini sedang ada di Stok Opname yang berjalan di lokasi itu
+     * (Penyesuaian Stok & Hapus Stok dikunci; POS/PO/transfer/produksi tetap jalan).
+     */
+    public function pastikanTidakDiopname(int $itemId, int $lokasiId): void
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('stok_opnames')) {
+            return;
+        }
+        $nomor = DB::table('stok_opname_items as i')
+            ->join('stok_opnames as o', 'o.id', '=', 'i.stok_opname_id')
+            ->where('i.item_id', $itemId)->where('o.cabang_id', $lokasiId)
+            ->whereIn('o.status', \App\Models\StokOpname::BERJALAN)
+            ->where('i.dikeluarkan', false)
+            ->value('o.nomor');
+        if ($nomor) {
+            $nama = Item::withTrashed()->find($itemId)?->nama_item ?? "barang #{$itemId}";
+            throw new \Exception("{$nama} sedang dihitung di Stok Opname {$nomor}. Selesaikan atau batalkan opname itu dulu, atau catat selisihnya lewat opname tersebut.");
+        }
+    }
+
+    /**
+     * Kurangi stok untuk penyesuaian (Stok Opname): kartu stok tipe Penyesuaian
+     * dengan referensi, potong batch FIFO. Baris stok harus sudah dikunci pemanggil.
+     *
+     * @return array{nilai: float, movement_id: int}
+     */
+    public function kurangiPenyesuaian(int $itemId, int $lokasiId, float $qty, string $catatan, string $referensiType, int $referensiId): array
+    {
+        $stokSaat = $this->getStok($itemId, $lokasiId);
+        if ($stokSaat + 0.0005 < $qty) {
+            $itemNama = Item::withTrashed()->find($itemId)?->nama_item ?? "barang #{$itemId}";
+            throw new \Exception("Stok '{$itemNama}' tidak cukup. Tersedia: {$stokSaat}, dibutuhkan: {$qty}.");
+        }
+
+        $this->updateStok($itemId, $lokasiId, -$qty);
+        $movement = StockMovement::create([
+            'item_id'          => $itemId,
+            'lokasi_asal_id'   => $lokasiId,
+            'lokasi_tujuan_id' => null,
+            'qty'              => $qty,
+            'tipe'             => TipeStockMovement::Adjustment,
+            'referensi_type'   => $referensiType,
+            'referensi_id'     => $referensiId,
+            'catatan'          => $catatan,
+            'user_id'          => auth()->id(),
+        ]);
+
+        return ['nilai' => round($this->consumeBatchesFifo($itemId, $lokasiId, $qty), 2), 'movement_id' => $movement->id];
+    }
+
+    /**
+     * Tambah stok untuk penyesuaian (Stok Opname "Lebih", barang rusak dipakai
+     * lagi / diganti pemasok): kartu stok tipe Penyesuaian + batch baru.
+     */
+    public function tambahPenyesuaian(int $itemId, int $lokasiId, float $qty, float $hargaPokok, string $catatan, string $referensiType, int $referensiId): int
+    {
+        $this->updateStok($itemId, $lokasiId, $qty);
+        $movement = StockMovement::create([
+            'item_id'          => $itemId,
+            'lokasi_asal_id'   => null,
+            'lokasi_tujuan_id' => $lokasiId,
+            'qty'              => $qty,
+            'tipe'             => TipeStockMovement::Adjustment,
+            'referensi_type'   => $referensiType,
+            'referensi_id'     => $referensiId,
+            'catatan'          => $catatan,
+            'user_id'          => auth()->id(),
+        ]);
+        StockBatch::create([
+            'item_id'             => $itemId,
+            'lokasi_id'           => $lokasiId,
+            'referensi_type'      => $referensiType,
+            'referensi_id'        => $referensiId,
+            'qty_awal'            => $qty,
+            'qty_sisa'            => $qty,
+            'harga_beli_per_unit' => round($hargaPokok, 2),
+            'tanggal_masuk'       => today(),
+        ]);
+
+        return $movement->id;
+    }
+
+    /** Harga pokok rata-rata batch yang masih ada (tanpa batch: Harga Beli Terakhir barang). */
+    public function hargaPokokRataRata(int $itemId, int $lokasiId): float
+    {
+        $row = StockBatch::where('item_id', $itemId)->where('lokasi_id', $lokasiId)
+            ->where('qty_sisa', '>', 0)->whereNull('deleted_at')
+            ->selectRaw('SUM(qty_sisa) as q, SUM(qty_sisa * harga_beli_per_unit) as n')->first();
+        if ($row && (float) $row->q > 0) {
+            return round((float) $row->n / (float) $row->q, 4);
+        }
+
+        return (float) (Item::withTrashed()->find($itemId)?->harga_beli_terakhir ?? 0);
+    }
+
+    /** Perkiraan nilai FIFO kalau $qty keluar sekarang (tanpa mengubah batch). */
+    public function perkiraanNilaiKeluar(int $itemId, int $lokasiId, float $qty): float
+    {
+        $sisa  = $qty;
+        $nilai = 0.0;
+        $batches = StockBatch::where('item_id', $itemId)->where('lokasi_id', $lokasiId)
+            ->where('qty_sisa', '>', 0)->whereNull('deleted_at')
+            ->orderBy('tanggal_masuk')->orderBy('id')->get(['qty_sisa', 'harga_beli_per_unit']);
+        foreach ($batches as $b) {
+            if ($sisa <= 0) {
+                break;
+            }
+            $ambil  = min((float) $b->qty_sisa, $sisa);
+            $nilai += $ambil * (float) $b->harga_beli_per_unit;
+            $sisa  -= $ambil;
+        }
+        if ($sisa > 0) {
+            $nilai += $sisa * (float) (Item::withTrashed()->find($itemId)?->harga_beli_terakhir ?? 0);
+        }
+
+        return round($nilai, 2);
+    }
+
     private function consumeBatchesFifo(int $itemId, int $lokasiId, float $qty): float
     {
         $sisaQty  = $qty;

@@ -247,6 +247,9 @@ class Item extends Model
         return $query->where('jenis', $jenis);
     }
 
+    /** Barang fisik (bisa dibeli & disimpan) — sama dengan ProduksiService::TIPE_BARANG. Dipakai Stok Opname. */
+    public const TIPE_DAPAT_DIBELI = ['bahan_baku', 'kemasan', 'tambahan_gratis'];
+
     public function scopePerlengkapan($query)
     {
         return $query->where('jenis', JenisItem::Perlengkapan->value);

@@ -96,7 +96,7 @@ class ResepBumbuItem extends Model
     }
 
     /** Faktor ke satuan dasar (gram / ml) per kelompok satuan. */
-    private const FAKTOR_SATUAN = [
+    public const FAKTOR_SATUAN = [ // dipakai juga Stok Opname (satuan boleh desimal)
         'massa'  => ['mg' => 0.001, 'g' => 1, 'gr' => 1, 'gram' => 1, 'ons' => 100, 'kg' => 1000, 'kilogram' => 1000],
         'volume' => ['ml' => 1, 'cc' => 1, 'l' => 1000, 'lt' => 1000, 'ltr' => 1000, 'liter' => 1000],
     ];

@@ -86,6 +86,7 @@ class RolePermissionSeeder extends Seeder
             // Closing Periode (2026-10-17) — semua kecuali buka kunci (Owner-only)
             'closing.view', 'closing.create', 'closing.finalize', 'closing.konsolidasi', 'closing.export',
             'dashboard.owner.view', 'laporan.setoran_kasir.view', 'laporan.setoran_kasir.export',
+            ...StokOpnameSeeder::ROLE_DEFAULTS['admin_pusat'], // Stok Opname (porting dimsum 4.52)
         ],
 
         'admin_gudang' => [
@@ -130,6 +131,7 @@ class RolePermissionSeeder extends Seeder
             'pemakaian_perlengkapan.view', 'pemakaian_perlengkapan.create',
             // Master Varian Produk (Tahap 2 D'mentai) — DB+Model saja, UI Tahap 3
             'master.item_varian.view', 'master.item_varian.create', 'master.item_varian.edit', 'master.item_varian.delete',
+            ...StokOpnameSeeder::ROLE_DEFAULTS['admin_gudang'], // Stok Opname (porting dimsum 4.52)
         ],
 
         'manajer_cabang' => [
@@ -183,6 +185,7 @@ class RolePermissionSeeder extends Seeder
             // Closing Periode (2026-10-17) — manajer buat draft cabangnya,
             // yang mengunci (Final) Owner/Admin Pusat
             'closing.view', 'closing.create', 'closing.export',
+            ...StokOpnameSeeder::ROLE_DEFAULTS['manajer_cabang'], // Stok Opname (porting dimsum 4.52)
         ],
 
         'kasir' => [
@@ -217,6 +220,7 @@ class RolePermissionSeeder extends Seeder
             'loyalty.klaim.view', 'loyalty.klaim.buat',
             // Tahap 5 D'mentai — kasir submit Setoran Kasir harian
             'setoran_kasir.view', 'setoran_kasir.create',
+            ...StokOpnameSeeder::ROLE_DEFAULTS['kasir'], // Stok Opname (porting dimsum 4.52)
         ],
 
         'operator_produksi' => [
@@ -241,6 +245,7 @@ class RolePermissionSeeder extends Seeder
             'antrian.lihat', 'antrian.kelola', 'antrian.display',
             // Kitchen Display (E5) — barista tandai item siap/komplain
             'kitchen.display.view', 'kitchen.item.mark',
+            ...StokOpnameSeeder::ROLE_DEFAULTS['operator_produksi'], // Stok Opname (porting dimsum 4.52)
         ],
 
         'helper' => [
@@ -252,6 +257,7 @@ class RolePermissionSeeder extends Seeder
             'antrian.lihat',
             // Roastery V2 — helper (mis. tenaga processing) boleh lihat progres batch
             'processing-batch.view',
+            ...StokOpnameSeeder::ROLE_DEFAULTS['helper'], // Stok Opname (porting dimsum 4.52)
         ],
     ];
 

@@ -274,6 +274,35 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
     Route::post('/stock-transfer/{stockTransfer}/terima', [StockTransferController::class, 'terima'])->name('stock-transfer.terima');
     Route::post('/stock-transfer/{stockTransfer}/batalkan', [StockTransferController::class, 'batalkan'])->name('stock-transfer.batalkan');
 
+    // ===== Stok Opname (porting dimsum 4.52) — izin dicek di StokOpnameService =====
+    Route::prefix('stok-opname')->name('stok-opname.')->controller(\App\Http\Controllers\StokOpnameController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/dashboard', 'dashboard')->name('dashboard');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{stokOpname}', 'show')->name('show');
+        Route::post('/{stokOpname}/hitung', 'hitung')->name('hitung');
+        Route::post('/{stokOpname}/scan', 'scan')->name('scan');
+        Route::post('/{stokOpname}/hitung-ulang', 'hitungUlang')->name('hitung-ulang');
+        Route::post('/{stokOpname}/keluarkan', 'keluarkan')->name('keluarkan');
+        Route::post('/{stokOpname}/rincian', 'rincian')->name('rincian');
+        Route::post('/{stokOpname}/ajukan', 'ajukan')->name('ajukan');
+        Route::post('/{stokOpname}/setujui', 'setujui')->name('setujui');
+        Route::post('/{stokOpname}/tolak', 'tolak')->name('tolak');
+        Route::post('/{stokOpname}/batal', 'batal')->name('batal');
+        Route::get('/{stokOpname}/berita-acara', 'beritaAcara')->name('berita-acara');
+    });
+    Route::prefix('ganti-rugi')->name('ganti-rugi.')->controller(\App\Http\Controllers\GantiRugiController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/opname/{stokOpname}', 'store')->name('store');
+        Route::post('/{gantiRugi}/batal', 'batal')->name('batal');
+    });
+
+    // Stok Rusak (Stok Opname Tahap C)
+    Route::get('/stok-rusak', [\App\Http\Controllers\StokRusakController::class, 'index'])->name('stok-rusak.index');
+    Route::post('/stok-rusak/{stokRusak}/tindak', [\App\Http\Controllers\StokRusakController::class, 'tindak'])->name('stok-rusak.tindak');
+    Route::get('/stok-rusak/berita-acara/{tindakan}', [\App\Http\Controllers\StokRusakController::class, 'beritaAcara'])->name('stok-rusak.berita-acara');
+
     // ===== KIRIMAN CABANG — gudang/roastery → cabang, Terima/Tolak (FASE_PRODUKSI_GEROBAK_DESIGN.md Tahap 2) =====
     Route::prefix('kiriman')->name('kiriman.')->controller(\App\Http\Controllers\KirimanCabangController::class)->group(function () {
         Route::get('/', 'index')->name('index');
@@ -797,6 +826,7 @@ Route::middleware(['auth', 'verified', 'cabang'])->group(function () {
         Route::get('/stok', [LaporanStokController::class, 'index'])->name('stok');
         Route::get('/stok/pergerakan', [LaporanStokController::class, 'pergerakan'])->name('stok.pergerakan');
         Route::get('/stok/minimum', [LaporanStokController::class, 'minimum'])->name('stok.minimum');
+        Route::get('/kerugian-stok', [\App\Http\Controllers\LaporanKerugianStokController::class, 'index'])->name('kerugian-stok'); // Stok Opname
         Route::get('/keuangan/laba-rugi', [LaporanKeuanganController::class, 'labaRugi'])->name('keuangan.laba-rugi');
         Route::get('/keuangan/arus-kas', [LaporanKeuanganController::class, 'arusKas'])->name('keuangan.arus-kas');
         Route::get('/keuangan/harian', [LaporanKeuanganController::class, 'harian'])->name('keuangan.harian');

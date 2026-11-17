@@ -21,6 +21,19 @@ class PengaturanUmum extends Model
         'warna_utama',
         'warna_sidebar',
         'warna_latar',
+        // Stok Opname (porting dimsum 4.52)
+        'opname_hitung_buta',
+        'opname_batas_foto_hilang',
+        'opname_pengingat_aktif',
+        'opname_pengingat_hari',
+        'opname_pengingat_jam',
+    ];
+
+    protected $casts = [
+        'opname_hitung_buta' => 'boolean',
+        'opname_batas_foto_hilang' => 'decimal:2',
+        'opname_pengingat_aktif' => 'boolean',
+        'opname_pengingat_hari' => 'integer',
     ];
 
     /** Singleton getter — selalu return instance baris pertama/satu-satunya */

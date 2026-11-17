@@ -1007,6 +1007,25 @@ Mengikuti dimsum 4.50/4.51 (+ perbaikan Penyesuaian Stok dari 4.52) dan 3 temuan
 - **Test** `PerbaikanP1Test` 13, `PerbaikanP2Test` 5, `PerbaikanP3Test` 12 (173 assertion).
 - **Insiden lokal 2026-11-17**: MariaDB XAMPP tidak mau menyala ("Aria recovery failed", komputer mati tidak normal). Atas izin Owner, `aria_log.00000001` + `aria_log_control` dipindah ke `D:\xampp\mysql\aria_backup_20261117`, MySQL dinyalakan ulang; semua DB terbaca (CHECK TABLE OK). MySQL saat ini dijalankan dari sesi Claude — nyalakan lewat XAMPP Control Panel kalau sesi ditutup.
 
+### 4.60 🟡 Porting Dimsum — Tahap C: Stok Opname Lengkap (2026-11-17)
+
+Mengikuti dimsum 4.52 Tahap A–E (commit dimsum `6f8015f`…`3e1ade8`, versi akhir file diambil dari dimsum HEAD). Nama kelas/tabel/route SAMA dengan dimsum supaya perbaikan berikutnya mudah di-porting. Prinsip: kerugian = **beban tanpa kas** (harga pokok FIFO), stok & keuangan baru berubah saat **disetujui**, yang diterapkan = **selisih** (fisik − stok sistem saat barang dihitung) → lokasi tetap boleh berjualan.
+
+- **Migration** `2026_11_18_100001` (`stok_opnames`, `stok_opname_penghitung`, `stok_opname_items`, `stok_opname_rincian`, `stok_rusak`, `pengaturan_umums.opname_*`, + `StokOpnameAkun::pastikan()`), `2026_11_18_200001` (`stok_rusak_tindakan`), `2026_11_18_300001` (`ganti_rugi`, `ganti_rugi_potongan`, `penggajians.potongan_ganti_rugi`). Nama dimsum `2026_11_17_*` diganti `2026_11_18_*` supaya tidak bertanggal sama dengan migration Tahap P. Rollback/migrate diuji 2×.
+- **Salinan apa adanya dari dimsum**: `StokOpnameService` (mulai, hitung buta, scan kode +1, hitung ulang, keluarkan barang, rincian penyebab + foto, ajukan, tolak, setujui, batal, berita acara, `badgeMenu()`), `StokRusakService`, `GantiRugiService`, `LaporanKerugianStokService`, `StokOpnameDashboardService`, `StokOpnamePengingat`, 4 controller, 7 model, `PenyebabSelisihStok`, 2 export, view `stok-opname/*`, `stok-rusak/*`, `ganti-rugi/*`, `laporan/kerugian-stok/*`, `StokOpnameSeeder` (izin, akun, panduan `stok-opname`/`stok-rusak`/`ganti-rugi-stok`/`laporan-kerugian-stok` + bagian `<!-- STOK-OPNAME-452 -->` di `penggajian` & `pengaturan-umum`, 12 tooltip). `StokService` + `pastikanTidakDiopname()` (Penyesuaian Stok & Hapus Stok dikunci untuk barang yang sedang diopname), `kurangiPenyesuaian()`, `tambahPenyesuaian()`, `hargaPokokRataRata()`, `perkiraanNilaiKeluar()` (fallback `harga_beli_terakhir`, bukan `hargaBeliDiCabang` dimsum). Penggajian (generate/bayar/batal bayar/hapus slip) memanggil `GantiRugiService` (aman tanpa tabel lewat `siap()`), slip & cetak menampilkan Potongan Ganti Rugi Stok. Pengaturan Umum → kartu Stok Opname. Tautan nomor SO di Kartu Stok & Kas.
+- **Penyesuaian coffeeshop**:
+  - `CabangAktif::id()` → `CabangLaporan::id()`; `ClosingLock::terkunci()` → `ClosingLockService::kunciUntuk()` (Closing Periode Final per cabang & Konsolidasi); `KonversiSatuan::FAKTOR` → `ResepBumbuItem::FAKTOR_SATUAN` (kini public). Pesan "Closing / Tutup Buku" → "Closing Periode … Keuangan → Closing Periode".
+  - **Barang global**: `StokOpnameService::barangLokasi()` = barang aktif bertipe `Item::TIPE_DAPAT_DIBELI` (konstanta baru, = `ProduksiService::TIPE_BARANG`) yang dilacak stoknya + barang APA PUN yang punya stok ≠ 0 di lokasi itu (pack Roastery Produk Jual, barang nonaktif yang stoknya masih ada). Produk Jual berkomposisi tidak ikut.
+  - **Lokasi** = `Cabang::bisaOpname()` (scope baru: aktif & bukan Head Office) di daftar lokasi, mulai opname, pengingat, badge, Stok Rusak, Ganti Rugi, Laporan Kerugian.
+  - Label `freezer_mati` → "Kulkas / pendingin mati" (nilai DB tetap); contoh Susut "thawing" → "menguap, tumpah".
+  - Izin: `StokOpnameSeeder::PERMISSIONS` di-spread ke `PermissionSeeder`; centangan bawaan (= dimsum: setujui & ganti rugi hanya Admin Pusat + Owner/Tim IT) di `RolePermissionSeeder` + `UpdateDatabaseService::PERMISSION_BARU`; `StokOpnameSeeder` ditambah ke `UpdateDatabaseService::SEEDERS` (paling akhir) & `DatabaseSeeder`.
+  - Sidebar: Stok & Gudang → Stok Opname (badge) + Stok Rusak; SDM → Ganti Rugi Stok; Laporan → Kerugian Stok. Modul paket `stok_opname` (sudah dipetakan di Tahap B). Pengingat dipicu `AppServiceProvider::triggerPengingatOpnameIfNeeded()` (sekali per jam) + `Schedule::call()->hourly()`, keduanya berhenti kalau modul mati / baca-saja.
+- **Test** `tests/Feature/StokOpname/*` 36 (319 assertion): 32 dari dimsum (Alur 15, Laporan 4, Stok Rusak 4, Ganti Rugi 5, Dashboard 4) + `StokOpnameCoffeeshopTest` 4 (barang global + pack Roastery, opname pack di Roastery sampai disetujui, Head Office ditolak, label Kulkas). Penyesuaian tes: `closings` → `closing_periodes` + `ClosingLockService::flush()`, barang tanpa `cabang_id`, baris Pengaturan Umum dibuat kalau belum ada (DB test & dev coffeeshop bisa tanpa baris). **Tanpa migration** (3 migration dimundurkan di DB test): dashboard, POS, stok, kartu stok, Pengaturan Umum (+ simpan), penggajian (+ generate slip), keuangan, Update Database, laporan stok, transfer → tidak ada 500.
+- **Temuan regresi (diperbaiki)**: bagian SDM sidebar kini juga tampil untuk `stok_opname.ganti_rugi` → blok **Absensi** (tidak punya syarat izin sendiri, "Absensi Saya" selalu tampil) muncul walau modul SDM mati (`PaketSidebarGuardTest`). Blok Absensi dibungkus `Paket::aktif('sdm')`; tampilan instalasi sekarang (semua modul aktif) tidak berubah.
+- **Regresi** (tanpa test RefreshDatabase): **69 gagal lama / 553 lulus, 0 baru**.
+- **Smoke DB dev (salinan go-live; 3 migration + PermissionSeeder + StokOpnameSeeder dijalankan di dev, centangan role hanya di transaksi uji)**: Owner, Admin Pusat (CAP1), Admin Gudang (GP001), Kasir (CAP1) × 12 halaman → 200/302/403 sesuai hak (Admin Gudang & Kasir tanpa Ganti Rugi/Laporan Kerugian), menu sesuai izin; alur nyata di CAP1 (Admin Pusat mulai, Kasir hitung buta, Admin Pusat rincian + ajukan + Berita Acara PDF, Owner setujui) → stok −1, 1 TK tanpa kas `SO-202611-0001-SUSUT`, laporan & dashboard 200; di-rollback.
+- **Temuan data go-live (bukan bug, belum diubah)**: `BB-CAF-032` ROASTED ARABIKA bersatuan **gram**, Harga Beli Terakhir Rp150/gram, tapi batch stok CAP1 = 2 gram @ **Rp150.000 per gram** (kemungkinan dulu diinput 2 kg @ Rp150.000/kg). Akibatnya nilai stok/HPP barang ini 1.000× terlalu besar dan stoknya hanya 2 gram (resep memakai 12 g & 0,015 kg per gelas). Perlu dikoreksi Owner lewat Penyesuaian Stok / Stok Opname.
+
 ---
 
 ## 5. STRATEGI PENGEMBANGAN
@@ -1470,7 +1489,8 @@ Rekomendasi takaran (belum disetujui, perlu validasi Owner):
 - [x] **Tahap B** Paket modul + masa langganan (4.58)
 - [x] **Tahap P** perbaikan bug 1–18 (4.59)
 - [ ] Deploy go-live: takaran ES BATU untuk ICE (tanya Owner), matikan Lacak Stok TISU
-- [ ] **Tahap C** Stok Opname lengkap
+- [x] **Tahap C** Stok Opname lengkap (4.60)
+- [ ] Owner: koreksi stok ROASTED ARABIKA (`BB-CAF-032`) di go-live — satuan gram tapi modal batch Rp150.000/gram (lihat 4.60)
 - [ ] **Tahap D** Kamus Menu
 - [ ] **Tahap E** aturan permanen + skrip deploy gabungan (gladi → demo → go-live → WONGKO PI)
 

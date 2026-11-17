@@ -758,7 +758,7 @@
         @endcanany
 
         <!-- STOK & GUDANG -->
-        @canany(['stok.view', 'stok.request', 'stok.transfer', 'master.meja.view', 'produksi.view', 'kiriman.view', 'retur.view'])
+        @canany(['stok.view', 'stok.request', 'stok.transfer', 'master.meja.view', 'produksi.view', 'kiriman.view', 'retur.view', 'stok_opname.view', 'stok_opname.hitung', 'stok_opname.ajukan', 'stok_opname.setujui', 'stok_opname.stok_rusak'])
         <div class="nav-section-title">Stok & Gudang</div>
         @can('stok.view')
         <a href="{{ route('stok.dashboard') }}"
@@ -786,6 +786,23 @@
             <span>Transfer Stok</span>
         </a>
         @endcan
+        {{-- Stok Opname (porting dimsum 4.52) — badge = menunggu persetujuan / menunggu dihitung --}}
+        @canany(['stok_opname.view', 'stok_opname.hitung', 'stok_opname.ajukan', 'stok_opname.setujui'])
+        @php $opnameBadge = \App\Services\StokOpnameService::badgeMenu(); @endphp
+        <a href="{{ route('stok-opname.index') }}"
+           class="nav-link {{ request()->routeIs('stok-opname.*') ? 'active' : '' }}">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Stok Opname</span>
+            @if($opnameBadge > 0)<span class="badge bg-danger ms-auto">{{ $opnameBadge }}</span>@endif
+        </a>
+        @endcanany
+        @canany(['stok_opname.stok_rusak', 'stok_opname.view'])
+        <a href="{{ route('stok-rusak.index') }}"
+           class="nav-link {{ request()->routeIs('stok-rusak.*') ? 'active' : '' }}">
+            <i class="bi bi-box-seam"></i>
+            <span>Stok Rusak</span>
+        </a>
+        @endcanany
         @can('kiriman.view')
         @php $kirimanMenunggu = \App\Http\Controllers\KirimanCabangController::jumlahMenunggu(); @endphp
         <a href="{{ route('kiriman.index') }}"
@@ -963,7 +980,7 @@
         @endcanany
 
         <!-- HR / SDM -->
-        @canany(['karyawan.view', 'absensi.view', 'absensi.manage', 'penggajian.view', 'evaluasi.view', 'evaluasi.fill'])
+        @canany(['karyawan.view', 'absensi.view', 'absensi.manage', 'penggajian.view', 'evaluasi.view', 'evaluasi.fill', 'stok_opname.ganti_rugi'])
         <div class="nav-section-title">SDM & Karyawan</div>
         @can('karyawan.view')
         <a href="{{ route('karyawan.index') }}"
@@ -972,6 +989,7 @@
             <span>Karyawan</span>
         </a>
         @endcan
+        @if(\App\Support\Paket::aktif('sdm')) {{-- Absensi ikut modul SDM (bagian ini juga tampil untuk Ganti Rugi Stok) --}}
         {{-- ABSENSI (collapsible) --}}
         @php
         $absensiActive = request()->routeIs(
@@ -1036,11 +1054,19 @@
             </a>
             @endcan
         </div>
+        @endif
         @can('penggajian.view')
         <a href="{{ route('penggajian.index') }}"
            class="nav-link {{ request()->routeIs('penggajian.*') ? 'active' : '' }}">
             <i class="bi bi-cash-stack"></i>
             <span>Penggajian</span>
+        </a>
+        @endcan
+        @can('stok_opname.ganti_rugi')
+        <a href="{{ route('ganti-rugi.index') }}"
+           class="nav-link {{ request()->routeIs('ganti-rugi.*') ? 'active' : '' }}">
+            <i class="bi bi-person-exclamation"></i>
+            <span>Ganti Rugi Stok</span>
         </a>
         @endcan
         @can('cuti.view')
@@ -1104,6 +1130,11 @@
             @can('stok.view')
             <a href="{{ route('laporan.stok') }}" class="nav-link {{ request()->routeIs('laporan.stok','laporan.stok.pergerakan','laporan.stok.minimum') ? 'active' : '' }}">
                 <i class="bi bi-boxes"></i><span>Stok</span>
+            </a>
+            @endcan
+            @can('stok_opname.laporan')
+            <a href="{{ route('laporan.kerugian-stok') }}" class="nav-link {{ request()->routeIs('laporan.kerugian-stok') ? 'active' : '' }}">
+                <i class="bi bi-graph-down-arrow"></i><span>Kerugian Stok</span>
             </a>
             @endcan
             @if(\App\Support\Paket::aktif('keuangan') && auth()->user()->can('keuangan.view'))

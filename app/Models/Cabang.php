@@ -189,6 +189,12 @@ class Cabang extends Model
         return $query->where('is_active', true);
     }
 
+    /** Lokasi yang bisa di-Stok Opname: aktif, selain Head Office (kantor, tidak menyimpan barang). */
+    public function scopeBisaOpname($query)
+    {
+        return $query->where('cabangs.is_active', true)->where('cabangs.tipe', '!=', TipeCabang::HeadOffice->value);
+    }
+
     public function scopeCabangSaja($query)
     {
         return $query->where('tipe', TipeCabang::Cabang);

@@ -51,9 +51,18 @@ class UpdateDatabaseService
         'retur.terima' => ['admin_pusat', 'admin_gudang'],
         // 4.52 — Ubah Harga Jual di POS: sengaja TIDAK dicentang untuk role mana pun (keputusan Owner)
         'order.ubah_harga' => [],
+        // Stok Opname (porting dimsum 4.52) — sama dengan StokOpnameSeeder::ROLE_DEFAULTS
+        'stok_opname.view'       => ['admin_pusat', 'admin_gudang', 'manajer_cabang', 'kasir', 'operator_produksi'],
+        'stok_opname.hitung'     => ['admin_pusat', 'admin_gudang', 'manajer_cabang', 'kasir', 'operator_produksi', 'helper'],
+        'stok_opname.ajukan'     => ['admin_pusat', 'admin_gudang', 'manajer_cabang'],
+        'stok_opname.setujui'    => ['admin_pusat'],
+        'stok_opname.batal'      => ['admin_pusat', 'admin_gudang', 'manajer_cabang'],
+        'stok_opname.stok_rusak' => ['admin_pusat', 'admin_gudang', 'manajer_cabang'],
+        'stok_opname.ganti_rugi' => ['admin_pusat'],
+        'stok_opname.laporan'    => ['admin_pusat', 'manajer_cabang'],
     ];
 
-    public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder', 'KategoriCoaBackfillSeeder'];
+    public const SEEDERS = ['PermissionSeeder', 'PanduanKontenSeeder', 'TooltipKontenSeeder', 'KategoriCoaBackfillSeeder', 'StokOpnameSeeder'];
 
     /** Tabel yang jumlah barisnya ditampilkan sebelum/sesudah, bukti data tidak hilang. */
     public const TABEL_CEK = ['orders', 'order_items', 'transaksi_keuangans', 'stocks', 'kas', 'users', 'cabangs'];

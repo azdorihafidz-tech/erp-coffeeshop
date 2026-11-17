@@ -118,7 +118,12 @@ class StokController extends Controller
             ? $this->stokService->getStok($item->id, $lokasi->id)
             : 0;
 
-        return view('stok.kartu', compact('items','lokasiList','movements','item','lokasi','stokSaat'));
+        // Stok Opname — nomor SO untuk tautan di kolom referensi
+        $nomorSO = $movements->isNotEmpty() && \Illuminate\Support\Facades\Schema::hasTable('stok_opnames')
+            ? \App\Models\StokOpname::whereIn('id', collect($movements->items())->where('referensi_type', 'stok_opname')->pluck('referensi_id'))->pluck('nomor', 'id')
+            : collect();
+
+        return view('stok.kartu', compact('items','lokasiList','movements','item','lokasi','stokSaat','nomorSO'));
     }
 
     /**
@@ -227,7 +232,11 @@ class StokController extends Controller
         }
 
         $namaCabang = $stock->lokasi?->nama_cabang ?? 'lokasi ini';
-        $this->stokService->resetStok($stock);
+        try {
+            $this->stokService->resetStok($stock);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', "Stok {$namaItem} di {$namaCabang} berhasil di-reset ke 0.");
     }
